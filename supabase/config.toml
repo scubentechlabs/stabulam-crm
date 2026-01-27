@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.generate-attendance-pdf]
 verify_jwt = false
+
+[functions.send-shoot-reminders]
+verify_jwt = false
