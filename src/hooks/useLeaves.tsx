@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { notifyLeaveRequest } from '@/lib/notifications';
 import type { Database } from '@/integrations/supabase/types';
 
 type LeaveType = Database['public']['Enums']['leave_type'];
@@ -117,7 +118,14 @@ export function useLeaves() {
     try {
       const hasAdvanceNotice = calculateAdvanceNotice(data.start_date);
       
-      const { error } = await supabase.from('leaves').insert({
+      // Get user profile for notification
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', user.id)
+        .single();
+
+      const { data: insertedLeave, error } = await supabase.from('leaves').insert({
         user_id: user.id,
         leave_type: data.leave_type,
         start_date: data.start_date,
@@ -128,9 +136,27 @@ export function useLeaves() {
         has_advance_notice: hasAdvanceNotice,
         status: 'pending',
         requested_at: new Date().toISOString(),
-      });
+      }).select('id').single();
 
       if (error) throw error;
+
+      // Notify all admins about the new leave request
+      const { data: adminRoles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+
+      if (adminRoles && adminRoles.length > 0 && insertedLeave) {
+        const adminUserIds = adminRoles.map(r => r.user_id);
+        const leaveTypeLabel = data.leave_type === 'half_day' ? 'Half Day' : 
+                               data.leave_type === 'full_day' ? 'Full Day' : 'Multiple Days';
+        await notifyLeaveRequest(
+          adminUserIds,
+          profile?.full_name || 'An employee',
+          leaveTypeLabel,
+          insertedLeave.id
+        );
+      }
 
       toast({
         title: 'Success',
