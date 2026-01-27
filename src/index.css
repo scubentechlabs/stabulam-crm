@@ -3,41 +3,41 @@
 @tailwind utilities;
 
 /* 
- * Digital Marketing Agency Operations Platform
- * Design System - Dashboard-Heavy Corporate Theme
+ * Stabulam Operations Platform
+ * Design System - Red & Black Theme
  * All colors in HSL
  */
 
 @layer base {
   :root {
-    /* Core Brand Colors - Professional Blue Theme */
-    --background: 220 20% 97%;
-    --foreground: 222 47% 11%;
+    /* Core Brand Colors - Red & Black Theme */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 0 0% 9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 0 0% 9%;
 
-    /* Primary - Corporate Blue */
-    --primary: 221 83% 53%;
+    /* Primary - Stabulam Red */
+    --primary: 0 84% 60%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary - Slate */
-    --secondary: 215 25% 93%;
-    --secondary-foreground: 222 47% 11%;
+    /* Secondary - Neutral Gray */
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
 
     /* Muted - Subtle backgrounds */
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    /* Accent - For highlights */
-    --accent: 221 83% 96%;
-    --accent-foreground: 221 83% 53%;
+    /* Accent - Light Red tint */
+    --accent: 0 84% 97%;
+    --accent-foreground: 0 84% 50%;
 
-    /* Destructive - Red for errors/delete */
-    --destructive: 0 84% 60%;
+    /* Destructive - Deep Red for errors/delete */
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
     /* Success - Green for positive states */
@@ -48,59 +48,59 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    /* Info - Cyan for information */
+    /* Info - Blue for information */
     --info: 199 89% 48%;
     --info-foreground: 0 0% 100%;
 
     /* Borders and Inputs */
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 221 83% 53%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 84% 60%;
 
     --radius: 0.75rem;
 
-    /* Sidebar - Dashboard navigation */
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 221 83% 53%;
+    /* Sidebar - Dark theme */
+    --sidebar-background: 0 0% 7%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 84% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 221 83% 53%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 0 84% 60%;
 
     /* Chart Colors */
-    --chart-1: 221 83% 53%;
+    --chart-1: 0 84% 60%;
     --chart-2: 142 76% 36%;
     --chart-3: 38 92% 50%;
     --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --chart-5: 199 89% 48%;
   }
 
   .dark {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    --background: 0 0% 5%;
+    --foreground: 0 0% 98%;
 
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 222 47% 8%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 221 83% 53%;
+    --primary: 0 84% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62% 30%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
     --success: 142 69% 28%;
     --success-foreground: 0 0% 100%;
@@ -111,24 +111,24 @@
     --info: 199 75% 40%;
     --info-foreground: 0 0% 100%;
 
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 221 83% 53%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 0 84% 60%;
 
-    --sidebar-background: 222 47% 6%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 221 83% 53%;
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 84% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 221 83% 53%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 0 84% 60%;
 
-    --chart-1: 221 83% 60%;
+    --chart-1: 0 84% 65%;
     --chart-2: 142 69% 45%;
     --chart-3: 38 85% 55%;
     --chart-4: 280 60% 65%;
-    --chart-5: 340 70% 60%;
+    --chart-5: 199 80% 50%;
   }
 }
 
@@ -250,12 +250,12 @@
     }
   }
 
-  /* Gradient utilities */
+  /* Gradient utilities - Updated for Stabulam red */
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(221 83% 45%) 100%);
+    background: linear-gradient(135deg, hsl(0 84% 60%) 0%, hsl(0 84% 50%) 100%);
   }
 
   .gradient-success {
-    background: linear-gradient(135deg, hsl(var(--success)) 0%, hsl(142 69% 30%) 100%);
+    background: linear-gradient(135deg, hsl(142 76% 36%) 0%, hsl(142 69% 30%) 100%);
   }
 }

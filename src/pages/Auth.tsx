@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Mail, Lock, User, BarChart3, PieChart, TrendingUp, Users } from 'lucide-react';
 import { z } from 'zod';
+import stabulamLogo from '@/assets/logo.webp';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -226,8 +227,12 @@ export default function Auth() {
           
           {/* Brand */}
           <div className="mt-12 text-center">
-            <h2 className="text-2xl font-bold text-foreground">AgencyOps</h2>
-            <p className="text-muted-foreground mt-1">Operations Management Platform</p>
+            <img 
+              src={stabulamLogo} 
+              alt="Stabulam" 
+              className="h-10 w-auto mx-auto"
+            />
+            <p className="text-muted-foreground mt-3">Operations Management Platform</p>
           </div>
         </div>
       </div>
@@ -236,11 +241,12 @@ export default function Auth() {
       <div className="w-full lg:w-[40%] flex flex-col justify-between bg-card">
         <div className="flex-1 flex flex-col justify-center px-8 sm:px-12 lg:px-16 py-12">
           {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center gap-3 mb-10">
-            <div className="h-10 w-10 rounded-xl gradient-primary flex items-center justify-center">
-              <BarChart3 className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold">AgencyOps</span>
+          <div className="lg:hidden flex items-center justify-center mb-10">
+            <img 
+              src={stabulamLogo} 
+              alt="Stabulam" 
+              className="h-8 w-auto"
+            />
           </div>
 
           {/* Header */}
@@ -473,7 +479,7 @@ export default function Auth() {
         {/* Footer */}
         <div className="px-8 sm:px-12 lg:px-16 py-6 border-t">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>© 2024 AgencyOps</span>
+            <span>© 2024 Stabulam</span>
             <div className="flex gap-4">
               <button className="hover:text-foreground transition-colors">Privacy Policy</button>
               <button className="hover:text-foreground transition-colors">Terms of Service</button>

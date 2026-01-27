@@ -25,6 +25,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
+import stabulamLogo from '@/assets/logo.webp';
 
 interface NavItem {
   title: string;
@@ -111,10 +112,11 @@ export function DashboardLayout() {
           {/* Logo */}
           <div className="flex items-center justify-between px-4 py-5 border-b border-sidebar-border">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg gradient-primary flex items-center justify-center">
-                <Briefcase className="h-5 w-5 text-white" />
-              </div>
-              <span className="font-bold text-sidebar-foreground">AgencyOps</span>
+              <img 
+                src={stabulamLogo} 
+                alt="Stabulam" 
+                className="h-8 w-auto brightness-0 invert"
+              />
             </div>
             <Button
               variant="ghost"
