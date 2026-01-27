@@ -1,6 +1,7 @@
 import { ProfileForm } from '@/components/settings/ProfileForm';
 import { AvatarUpload } from '@/components/settings/AvatarUpload';
 import { PasswordChange } from '@/components/settings/PasswordChange';
+import { PushNotificationToggle } from '@/components/settings/PushNotificationToggle';
 
 export default function Settings() {
   return (
@@ -20,6 +21,11 @@ export default function Settings() {
         <div className="lg:col-span-2">
           <ProfileForm />
         </div>
+      </div>
+
+      {/* Push Notifications */}
+      <div className="max-w-md">
+        <PushNotificationToggle />
       </div>
 
       {/* Password Change */}
