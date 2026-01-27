@@ -18,6 +18,7 @@ import {
   BarChart3,
   CheckSquare,
   TrendingUp,
+  UsersRound,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -39,6 +40,7 @@ const employeeNavItems: NavItem[] = [
   { title: 'Leave Requests', href: '/leaves', icon: Calendar },
   { title: 'Extra Work', href: '/extra-work', icon: Briefcase },
   { title: 'Shoots', href: '/shoots', icon: Camera },
+  { title: 'Team Calendar', href: '/team-calendar', icon: UsersRound },
   { title: 'Salary History', href: '/salary-history', icon: DollarSign },
   { title: 'Performance', href: '/performance', icon: TrendingUp },
 ];

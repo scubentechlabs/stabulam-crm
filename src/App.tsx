@@ -23,6 +23,7 @@ import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import SalaryHistory from "./pages/SalaryHistory";
 import Performance from "./pages/Performance";
+import TeamCalendar from "./pages/TeamCalendar";
 
 // Admin pages
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="/shoots" element={<Shoots />} />
               <Route path="/salary-history" element={<SalaryHistory />} />
               <Route path="/performance" element={<Performance />} />
+              <Route path="/team-calendar" element={<TeamCalendar />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/settings" element={<Settings />} />
 
