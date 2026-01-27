@@ -17,15 +17,43 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useState } from 'react';
+import { TableFilters, SortableHeader } from '@/components/ui/table-filters';
+import { useTableFilters } from '@/hooks/useTableFilters';
 import type { Regularization } from '@/hooks/useAttendanceRegularization';
 
 interface RegularizationTableProps {
   regularizations: Regularization[];
   emptyMessage?: string;
+  showFilters?: boolean;
 }
 
-export function RegularizationTable({ regularizations, emptyMessage = 'No regularization requests' }: RegularizationTableProps) {
+const STATUS_OPTIONS = [
+  { label: 'Pending', value: 'pending' },
+  { label: 'Approved', value: 'approved' },
+  { label: 'Rejected', value: 'rejected' },
+];
+
+export function RegularizationTable({ 
+  regularizations, 
+  emptyMessage = 'No regularization requests',
+  showFilters = true,
+}: RegularizationTableProps) {
   const [viewRegularization, setViewRegularization] = useState<Regularization | null>(null);
+
+  const {
+    searchValue,
+    setSearchValue,
+    statusFilter,
+    setStatusFilter,
+    sortConfig,
+    handleSort,
+    filteredData,
+  } = useTableFilters({
+    data: regularizations,
+    searchKeys: ['reason'] as (keyof Regularization)[],
+    defaultSortKey: 'request_date',
+    defaultSortDirection: 'desc',
+  });
 
   const formatTime = (time: string) => {
     const [hours, minutes] = time.split(':');
@@ -60,76 +88,103 @@ export function RegularizationTable({ regularizations, emptyMessage = 'No regula
     }
   };
 
-  if (regularizations.length === 0) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
-        <p>{emptyMessage}</p>
-      </div>
-    );
-  }
-
   return (
     <>
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Clock In</TableHead>
-              <TableHead>Clock Out</TableHead>
-              <TableHead>Reason</TableHead>
-              <TableHead className="text-center">Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {regularizations.map((reg) => (
-              <TableRow key={reg.id}>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>{format(new Date(reg.request_date), 'PP')}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5 text-green-500" />
-                    <span>{formatTime(reg.requested_clock_in)}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5 text-red-500" />
-                    <span>{formatTime(reg.requested_clock_out)}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="max-w-[200px] truncate">
-                  {reg.reason}
-                </TableCell>
-                <TableCell className="text-center">
-                  {getStatusBadge(reg.status)}
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-popover">
-                      <DropdownMenuItem onClick={() => setViewRegularization(reg)}>
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Details
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+      {showFilters && (
+        <TableFilters
+          searchPlaceholder="Search by reason..."
+          searchValue={searchValue}
+          onSearchChange={setSearchValue}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          statusOptions={STATUS_OPTIONS}
+          resultCount={filteredData.length}
+        />
+      )}
+
+      {filteredData.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+          <p>{searchValue || statusFilter !== 'all' ? 'No matching results' : emptyMessage}</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>
+                  <SortableHeader
+                    label="Date"
+                    sortKey="request_date"
+                    currentSortKey={sortConfig.key as string}
+                    currentDirection={sortConfig.direction}
+                    onSort={handleSort}
+                  />
+                </TableHead>
+                <TableHead>Clock In</TableHead>
+                <TableHead>Clock Out</TableHead>
+                <TableHead>Reason</TableHead>
+                <TableHead className="text-center">
+                  <SortableHeader
+                    label="Status"
+                    sortKey="status"
+                    currentSortKey={sortConfig.key as string}
+                    currentDirection={sortConfig.direction}
+                    onSort={handleSort}
+                    className="justify-center"
+                  />
+                </TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {filteredData.map((reg) => (
+                <TableRow key={reg.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span>{format(new Date(reg.request_date), 'PP')}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5 text-green-500" />
+                      <span>{formatTime(reg.requested_clock_in)}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5 text-red-500" />
+                      <span>{formatTime(reg.requested_clock_out)}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="max-w-[200px] truncate">
+                    {reg.reason}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {getStatusBadge(reg.status)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-popover">
+                        <DropdownMenuItem onClick={() => setViewRegularization(reg)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       {/* View Details Dialog */}
       <Dialog open={!!viewRegularization} onOpenChange={(open) => !open && setViewRegularization(null)}>
