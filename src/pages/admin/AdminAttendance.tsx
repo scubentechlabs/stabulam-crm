@@ -11,6 +11,7 @@ import { Clock, Calendar as CalendarIcon, Download, Users, Loader2 } from 'lucid
 import { supabase } from '@/integrations/supabase/client';
 import { useUsers } from '@/hooks/useUsers';
 import { BulkAttendanceManager } from '@/components/attendance/BulkAttendanceManager';
+import { AttendanceExportDialog } from '@/components/attendance/AttendanceExportDialog';
 import type { Database } from '@/integrations/supabase/types';
 
 type Attendance = Database['public']['Tables']['attendance']['Row'];
@@ -84,10 +85,14 @@ export default function AdminAttendance() {
           <h1 className="page-title">Attendance Monitor</h1>
           <p className="page-description">View and manage all employee attendance</p>
         </div>
-        <Button variant="outline">
-          <Download className="h-4 w-4 mr-2" />
-          Export
-        </Button>
+        <AttendanceExportDialog
+          trigger={
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+          }
+        />
       </div>
 
       <Tabs defaultValue="bulk" className="w-full">
