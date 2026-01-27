@@ -21,6 +21,7 @@ import ExtraWork from "./pages/ExtraWork";
 import Shoots from "./pages/Shoots";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
+import SalaryHistory from "./pages/SalaryHistory";
 
 // Admin pages
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -59,7 +60,9 @@ const App = () => (
               <Route path="/leaves" element={<Leaves />} />
               <Route path="/extra-work" element={<ExtraWork />} />
               <Route path="/shoots" element={<Shoots />} />
+              <Route path="/salary-history" element={<SalaryHistory />} />
               <Route path="/notifications" element={<Notifications />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="/settings" element={<Settings />} />
 
               {/* Admin routes */}
