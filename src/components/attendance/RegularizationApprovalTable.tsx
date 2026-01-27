@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { Clock, Calendar, Check, X, Eye, MoreHorizontal, FileText } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BulkActionsBar } from '@/components/ui/bulk-actions-bar';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -56,6 +57,17 @@ export function RegularizationApprovalTable({
     toggleAll,
     clearSelection,
   } = useBulkSelection(regularizations);
+
+  // Keyboard shortcuts
+  const shortcuts = useMemo(() => [
+    { key: 'a', ctrlKey: true, action: toggleAll, description: 'Select all' },
+    { key: 'Enter', action: () => selectedCount > 0 && setDialogType('bulk-approve'), description: 'Approve selected' },
+    { key: 'Delete', action: () => selectedCount > 0 && setDialogType('bulk-reject'), description: 'Reject selected' },
+    { key: 'Backspace', action: () => selectedCount > 0 && setDialogType('bulk-reject'), description: 'Reject selected' },
+    { key: 'Escape', action: clearSelection, description: 'Clear selection' },
+  ], [toggleAll, selectedCount, clearSelection]);
+
+  useKeyboardShortcuts(shortcuts, dialogType === null);
 
   const formatTime = (time: string) => {
     const [hours, minutes] = time.split(':');
