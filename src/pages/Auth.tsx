@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Mail, Lock, User, BarChart3, PieChart, TrendingUp, Users, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Mail, Lock, BarChart3, PieChart, TrendingUp, Users, Eye, EyeOff } from 'lucide-react';
 import { z } from 'zod';
 import stabulamLogo from '@/assets/logo.webp';
 
@@ -15,47 +15,20 @@ const loginSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
-const signupSchema = z.object({
-  fullName: z.string().min(2, 'Full name must be at least 2 characters'),
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
-
 export default function Auth() {
-  const { user, signIn, signUp, isLoading } = useAuth();
+  const { user, signIn, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  
-  // Password visibility state
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
-  const [showSignupPassword, setShowSignupPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
   // Login form state
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [loginErrors, setLoginErrors] = useState<{ email?: string; password?: string }>({});
-  
-  // Signup form state
-  const [signupFullName, setSignupFullName] = useState('');
-  const [signupEmail, setSignupEmail] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
-  const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
-  const [signupErrors, setSignupErrors] = useState<{ 
-    fullName?: string; 
-    email?: string; 
-    password?: string; 
-    confirmPassword?: string;
-  }>({});
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   // Redirect if already logged in
   useEffect(() => {
@@ -67,21 +40,21 @@ export default function Auth() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoginErrors({});
+    setErrors({});
     
-    const result = loginSchema.safeParse({ email: loginEmail, password: loginPassword });
+    const result = loginSchema.safeParse({ email, password });
     if (!result.success) {
-      const errors: { email?: string; password?: string } = {};
+      const fieldErrors: { email?: string; password?: string } = {};
       result.error.issues.forEach((issue) => {
-        if (issue.path[0] === 'email') errors.email = issue.message;
-        if (issue.path[0] === 'password') errors.password = issue.message;
+        if (issue.path[0] === 'email') fieldErrors.email = issue.message;
+        if (issue.path[0] === 'password') fieldErrors.password = issue.message;
       });
-      setLoginErrors(errors);
+      setErrors(fieldErrors);
       return;
     }
 
     setIsSubmitting(true);
-    const { error } = await signIn(loginEmail, loginPassword);
+    const { error } = await signIn(email, password);
     setIsSubmitting(false);
 
     if (error) {
@@ -96,55 +69,6 @@ export default function Auth() {
       toast({
         title: 'Welcome back!',
         description: 'You have successfully logged in.',
-      });
-    }
-  };
-
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSignupErrors({});
-    
-    const result = signupSchema.safeParse({
-      fullName: signupFullName,
-      email: signupEmail,
-      password: signupPassword,
-      confirmPassword: signupConfirmPassword,
-    });
-    
-    if (!result.success) {
-      const errors: typeof signupErrors = {};
-      result.error.issues.forEach((issue) => {
-        const path = issue.path[0] as keyof typeof errors;
-        errors[path] = issue.message;
-      });
-      setSignupErrors(errors);
-      return;
-    }
-
-    setIsSubmitting(true);
-    const { error } = await signUp(signupEmail, signupPassword, signupFullName);
-    setIsSubmitting(false);
-
-    if (error) {
-      if (error.message.includes('already registered')) {
-        toast({
-          variant: 'destructive',
-          title: 'Account Exists',
-          description: 'This email is already registered. Please log in instead.',
-        });
-        setIsSignUp(false);
-        setLoginEmail(signupEmail);
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Signup Failed',
-          description: error.message,
-        });
-      }
-    } else {
-      toast({
-        title: 'Account Created!',
-        description: 'Your account has been created successfully.',
       });
     }
   };
@@ -256,250 +180,93 @@ export default function Auth() {
 
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-foreground">
-              {isSignUp ? 'Create Account' : 'Welcome Back'}
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              {isSignUp ? 'Sign up to get started' : 'Please sign in to continue'}
-            </p>
+            <h1 className="text-2xl font-bold text-foreground">Welcome Back</h1>
+            <p className="text-muted-foreground mt-2">Please sign in to continue</p>
           </div>
 
           {/* Form */}
-          {isSignUp ? (
-            <form onSubmit={handleSignup} className="space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="signup-name" className="text-sm font-medium">
-                  Full Name
-                </Label>
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="signup-name"
-                    type="text"
-                    placeholder="John Doe"
-                    value={signupFullName}
-                    onChange={(e) => setSignupFullName(e.target.value)}
-                    className="h-12 pl-11 bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary"
-                  />
-                </div>
-                {signupErrors.fullName && (
-                  <p className="text-sm text-destructive">{signupErrors.fullName}</p>
-                )}
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium">
+                Email Address
+              </Label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-12 pl-11 bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary"
+                />
               </div>
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email}</p>
+              )}
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="signup-email" className="text-sm font-medium">
-                  Email Address
-                </Label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={signupEmail}
-                    onChange={(e) => setSignupEmail(e.target.value)}
-                    className="h-12 pl-11 bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary"
-                  />
-                </div>
-                {signupErrors.email && (
-                  <p className="text-sm text-destructive">{signupErrors.email}</p>
-                )}
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-medium">
+                Password
+              </Label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-12 pl-11 pr-11 bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
+              {errors.password && (
+                <p className="text-sm text-destructive">{errors.password}</p>
+              )}
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="signup-password" className="text-sm font-medium">
-                  Password
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="remember"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                />
+                <Label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">
+                  Remember me
                 </Label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="signup-password"
-                    type={showSignupPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={signupPassword}
-                    onChange={(e) => setSignupPassword(e.target.value)}
-                    className="h-12 pl-11 pr-11 bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowSignupPassword(!showSignupPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                {signupErrors.password && (
-                  <p className="text-sm text-destructive">{signupErrors.password}</p>
-                )}
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="signup-confirm" className="text-sm font-medium">
-                  Confirm Password
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="signup-confirm"
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={signupConfirmPassword}
-                    onChange={(e) => setSignupConfirmPassword(e.target.value)}
-                    className="h-12 pl-11 pr-11 bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                {signupErrors.confirmPassword && (
-                  <p className="text-sm text-destructive">{signupErrors.confirmPassword}</p>
-                )}
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full h-12 text-base font-medium rounded-xl" 
-                disabled={isSubmitting}
+              <button
+                type="button"
+                className="text-sm font-medium text-primary hover:underline"
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating account...
-                  </>
-                ) : (
-                  'Create Account'
-                )}
-              </Button>
+                Forgot password?
+              </button>
+            </div>
 
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-4 text-muted-foreground">or</span>
-                </div>
-              </div>
-
-              <p className="text-center text-sm text-muted-foreground">
-                Already have an account?{' '}
-                <button
-                  type="button"
-                  onClick={() => setIsSignUp(false)}
-                  className="font-medium text-primary hover:underline"
-                >
-                  Sign in
-                </button>
-              </p>
-            </form>
-          ) : (
-            <form onSubmit={handleLogin} className="space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="login-email" className="text-sm font-medium">
-                  Email Address
-                </Label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="login-email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    className="h-12 pl-11 bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary"
-                  />
-                </div>
-                {loginErrors.email && (
-                  <p className="text-sm text-destructive">{loginErrors.email}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="login-password" className="text-sm font-medium">
-                  Password
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="login-password"
-                    type={showLoginPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    className="h-12 pl-11 pr-11 bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowLoginPassword(!showLoginPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                {loginErrors.password && (
-                  <p className="text-sm text-destructive">{loginErrors.password}</p>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="remember"
-                    checked={rememberMe}
-                    onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                  />
-                  <Label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">
-                    Remember me
-                  </Label>
-                </div>
-                <button
-                  type="button"
-                  className="text-sm font-medium text-primary hover:underline"
-                >
-                  Forgot password?
-                </button>
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full h-12 text-base font-medium rounded-xl" 
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  'Sign In'
-                )}
-              </Button>
-
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-4 text-muted-foreground">or</span>
-                </div>
-              </div>
-
-              <p className="text-center text-sm text-muted-foreground">
-                Don't have an account?{' '}
-                <button
-                  type="button"
-                  onClick={() => setIsSignUp(true)}
-                  className="font-medium text-primary hover:underline"
-                >
-                  Sign up
-                </button>
-              </p>
-            </form>
-          )}
+            <Button 
+              type="submit" 
+              className="w-full h-12 text-base font-medium rounded-xl" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                'Sign In'
+              )}
+            </Button>
+          </form>
         </div>
 
         {/* Footer */}
