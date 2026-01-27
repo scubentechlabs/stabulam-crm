@@ -3,13 +3,17 @@ import { BarChart3, Users, Calendar } from 'lucide-react';
 import { AttendanceSummaryReport } from '@/components/reports/AttendanceSummaryReport';
 import { TaskSummaryReport } from '@/components/reports/TaskSummaryReport';
 import { LeaveSummaryReport } from '@/components/reports/LeaveSummaryReport';
+import { ReportExportDialog } from '@/components/reports/ReportExportDialog';
 
 export default function AdminReports() {
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="page-header">
-        <h1 className="page-title">Reports & Analytics</h1>
-        <p className="page-description">View detailed reports and analytics</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="page-header">
+          <h1 className="page-title">Reports & Analytics</h1>
+          <p className="page-description">View detailed reports and analytics</p>
+        </div>
+        <ReportExportDialog />
       </div>
 
       <Tabs defaultValue="attendance" className="space-y-6">
