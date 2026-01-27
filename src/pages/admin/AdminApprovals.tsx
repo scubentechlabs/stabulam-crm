@@ -1,8 +1,34 @@
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckSquare, Calendar, Briefcase } from 'lucide-react';
+import { Calendar, Briefcase, Loader2 } from 'lucide-react';
+import { useLeaves } from '@/hooks/useLeaves';
+import { LeaveApprovalCard } from '@/components/leaves/LeaveApprovalCard';
 
 export default function AdminApprovals() {
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { pendingLeaves, isLoading, updateLeaveStatus } = useLeaves();
+
+  const handleApprove = async (leaveId: string, comments?: string, penalty?: number) => {
+    setIsProcessing(true);
+    await updateLeaveStatus(leaveId, 'approved', comments, penalty);
+    setIsProcessing(false);
+  };
+
+  const handleReject = async (leaveId: string, comments?: string) => {
+    setIsProcessing(true);
+    await updateLeaveStatus(leaveId, 'rejected', comments);
+    setIsProcessing(false);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="page-header">
@@ -14,7 +40,7 @@ export default function AdminApprovals() {
         <TabsList>
           <TabsTrigger value="leaves" className="gap-2">
             <Calendar className="h-4 w-4" />
-            Leave Requests
+            Leave Requests ({pendingLeaves.length})
           </TabsTrigger>
           <TabsTrigger value="extra-work" className="gap-2">
             <Briefcase className="h-4 w-4" />
@@ -23,18 +49,40 @@ export default function AdminApprovals() {
         </TabsList>
 
         <TabsContent value="leaves" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Pending Leave Requests</CardTitle>
-              <CardDescription>Review and approve leave applications</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Calendar className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>No pending leave requests</p>
+          {pendingLeaves.length === 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Pending Leave Requests</CardTitle>
+                <CardDescription>Review and approve leave applications</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-muted-foreground">
+                  <Calendar className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No pending leave requests</p>
+                  <p className="text-sm mt-1">All caught up! 🎉</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">
+                  Pending Leave Requests ({pendingLeaves.length})
+                </h2>
               </div>
-            </CardContent>
-          </Card>
+              <div className="grid gap-4">
+                {pendingLeaves.map((leave) => (
+                  <LeaveApprovalCard
+                    key={leave.id}
+                    leave={leave}
+                    onApprove={handleApprove}
+                    onReject={handleReject}
+                    isProcessing={isProcessing}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="extra-work" className="mt-6">
@@ -47,6 +95,7 @@ export default function AdminApprovals() {
               <div className="text-center py-8 text-muted-foreground">
                 <Briefcase className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p>No pending extra work requests</p>
+                <p className="text-sm mt-1">Extra work module coming next!</p>
               </div>
             </CardContent>
           </Card>
