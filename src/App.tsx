@@ -27,6 +27,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAttendance from "./pages/admin/AdminAttendance";
 import AdminApprovals from "./pages/admin/AdminApprovals";
 import AdminSalary from "./pages/admin/AdminSalary";
+import AdminShoots from "./pages/admin/AdminShoots";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminRules from "./pages/admin/AdminRules";
 
@@ -99,6 +100,14 @@ const App = () => (
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminSalary />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/shoots"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminShoots />
                   </ProtectedRoute>
                 }
               />

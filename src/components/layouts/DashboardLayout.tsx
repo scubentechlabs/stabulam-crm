@@ -45,6 +45,7 @@ const adminNavItems: NavItem[] = [
   { title: 'User Management', href: '/admin/users', icon: Users, adminOnly: true },
   { title: 'Attendance Monitor', href: '/admin/attendance', icon: Clock, adminOnly: true },
   { title: 'Approvals', href: '/admin/approvals', icon: CheckSquare, adminOnly: true },
+  { title: 'Shoots Management', href: '/admin/shoots', icon: Camera, adminOnly: true },
   { title: 'Salary Generator', href: '/admin/salary', icon: DollarSign, adminOnly: true },
   { title: 'Reports', href: '/admin/reports', icon: BarChart3, adminOnly: true },
   { title: 'Rules Config', href: '/admin/rules', icon: Settings, adminOnly: true },
