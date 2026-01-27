@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.send-shoot-reminders]
 verify_jwt = false
+
+[functions.generate-report-pdf]
+verify_jwt = false
