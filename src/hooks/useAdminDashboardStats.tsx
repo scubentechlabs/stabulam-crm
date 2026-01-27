@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { format, addDays } from 'date-fns';
+import { useRealtimeDashboard } from './useRealtimeDashboard';
 
 interface AdminDashboardStats {
   totalEmployees: number;
@@ -173,6 +174,13 @@ export function useAdminDashboardStats() {
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
+
+  // Subscribe to realtime updates for admin-relevant tables
+  useRealtimeDashboard({
+    tables: ['attendance', 'leaves', 'tasks'],
+    onDataChange: fetchStats,
+    enabled: true,
+  });
 
   return {
     stats,
