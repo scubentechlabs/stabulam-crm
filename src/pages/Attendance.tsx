@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AttendanceStatus } from '@/components/attendance/AttendanceStatus';
 import { AttendanceCalendar } from '@/components/attendance/AttendanceCalendar';
+import { AttendanceExportDialog } from '@/components/attendance/AttendanceExportDialog';
 import { ClockInCard } from '@/components/attendance/ClockInCard';
 import { ClockOutCard } from '@/components/attendance/ClockOutCard';
 import { TodPanel } from '@/components/tasks/TodPanel';
@@ -11,8 +12,9 @@ import { TaskForm } from '@/components/tasks/TaskForm';
 import { TaskList } from '@/components/tasks/TaskList';
 import { useAttendance } from '@/hooks/useAttendance';
 import { useTasks } from '@/hooks/useTasks';
-import { Loader2, Clock, AlertTriangle, CheckCircle2, Calendar } from 'lucide-react';
+import { Loader2, Clock, AlertTriangle, CheckCircle2, Calendar, Download } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 
 type AttendanceStep = 'clock-in' | 'tod' | 'working' | 'eod' | 'clock-out' | 'complete';
 
@@ -82,9 +84,19 @@ export default function Attendance() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="page-header">
-        <h1 className="page-title">Attendance</h1>
-        <p className="page-description">Track your daily clock-in and clock-out</p>
+      <div className="flex items-center justify-between">
+        <div className="page-header mb-0">
+          <h1 className="page-title">Attendance</h1>
+          <p className="page-description">Track your daily clock-in and clock-out</p>
+        </div>
+        <AttendanceExportDialog
+          trigger={
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+          }
+        />
       </div>
 
       <Tabs defaultValue="today" className="w-full">
