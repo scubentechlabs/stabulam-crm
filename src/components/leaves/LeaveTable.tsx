@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { Calendar, Clock, X, Eye, MoreHorizontal } from 'lucide-react';
+import { Calendar, X, Eye, MoreHorizontal } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useState } from 'react';
+import { TableFilters, SortableHeader } from '@/components/ui/table-filters';
+import { useTableFilters } from '@/hooks/useTableFilters';
 import type { LeaveWithProfile } from '@/hooks/useLeaves';
 
 interface LeaveTableProps {
@@ -34,11 +36,39 @@ interface LeaveTableProps {
   onCancel?: (id: string) => void;
   showEmployeeName?: boolean;
   emptyMessage?: string;
+  showFilters?: boolean;
 }
 
-export function LeaveTable({ leaves, onCancel, showEmployeeName, emptyMessage = 'No leave requests' }: LeaveTableProps) {
+const STATUS_OPTIONS = [
+  { label: 'Pending', value: 'pending' },
+  { label: 'Approved', value: 'approved' },
+  { label: 'Rejected', value: 'rejected' },
+];
+
+export function LeaveTable({ 
+  leaves, 
+  onCancel, 
+  showEmployeeName, 
+  emptyMessage = 'No leave requests',
+  showFilters = true,
+}: LeaveTableProps) {
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [viewLeave, setViewLeave] = useState<LeaveWithProfile | null>(null);
+
+  const {
+    searchValue,
+    setSearchValue,
+    statusFilter,
+    setStatusFilter,
+    sortConfig,
+    handleSort,
+    filteredData,
+  } = useTableFilters({
+    data: leaves,
+    searchKeys: ['reason', 'delegation_notes', 'profiles'] as (keyof LeaveWithProfile)[],
+    defaultSortKey: 'start_date',
+    defaultSortDirection: 'desc',
+  });
 
   const getStatusBadge = (status: string | null) => {
     switch (status) {
@@ -71,89 +101,126 @@ export function LeaveTable({ leaves, onCancel, showEmployeeName, emptyMessage = 
     return `${format(new Date(leave.start_date), 'PP')} - ${format(new Date(leave.end_date), 'PP')}`;
   };
 
-  if (leaves.length === 0) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        <Calendar className="h-12 w-12 mx-auto mb-3 opacity-50" />
-        <p>{emptyMessage}</p>
-      </div>
-    );
-  }
-
   return (
     <>
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {showEmployeeName && <TableHead>Employee</TableHead>}
-              <TableHead>Date</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Reason</TableHead>
-              <TableHead className="text-center">Advance Notice</TableHead>
-              <TableHead className="text-center">Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {leaves.map((leave) => (
-              <TableRow key={leave.id}>
+      {showFilters && (
+        <TableFilters
+          searchPlaceholder="Search by reason or notes..."
+          searchValue={searchValue}
+          onSearchChange={setSearchValue}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          statusOptions={STATUS_OPTIONS}
+          resultCount={filteredData.length}
+        />
+      )}
+
+      {filteredData.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <Calendar className="h-12 w-12 mx-auto mb-3 opacity-50" />
+          <p>{searchValue || statusFilter !== 'all' ? 'No matching results' : emptyMessage}</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
                 {showEmployeeName && (
-                  <TableCell className="font-medium">
-                    {leave.profiles?.full_name || 'Unknown'}
-                  </TableCell>
+                  <TableHead>
+                    <SortableHeader
+                      label="Employee"
+                      sortKey="profiles"
+                      currentSortKey={sortConfig.key as string}
+                      currentDirection={sortConfig.direction}
+                      onSort={handleSort}
+                    />
+                  </TableHead>
                 )}
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="whitespace-nowrap">{formatDateRange(leave)}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">{getLeaveTypeLabel(leave)}</Badge>
-                </TableCell>
-                <TableCell className="max-w-[200px] truncate">
-                  {leave.reason || '-'}
-                </TableCell>
-                <TableCell className="text-center">
-                  {leave.has_advance_notice ? (
-                    <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Yes</Badge>
-                  ) : (
-                    <Badge variant="destructive" className="bg-red-500/10 text-red-600 border-red-500/20">No</Badge>
-                  )}
-                </TableCell>
-                <TableCell className="text-center">
-                  {getStatusBadge(leave.status)}
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-popover">
-                      <DropdownMenuItem onClick={() => setViewLeave(leave)}>
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Details
-                      </DropdownMenuItem>
-                      {leave.status === 'pending' && onCancel && (
-                        <DropdownMenuItem 
-                          onClick={() => setCancelId(leave.id)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <X className="h-4 w-4 mr-2" />
-                          Cancel Request
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+                <TableHead>
+                  <SortableHeader
+                    label="Date"
+                    sortKey="start_date"
+                    currentSortKey={sortConfig.key as string}
+                    currentDirection={sortConfig.direction}
+                    onSort={handleSort}
+                  />
+                </TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Reason</TableHead>
+                <TableHead className="text-center">Advance Notice</TableHead>
+                <TableHead className="text-center">
+                  <SortableHeader
+                    label="Status"
+                    sortKey="status"
+                    currentSortKey={sortConfig.key as string}
+                    currentDirection={sortConfig.direction}
+                    onSort={handleSort}
+                    className="justify-center"
+                  />
+                </TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {filteredData.map((leave) => (
+                <TableRow key={leave.id}>
+                  {showEmployeeName && (
+                    <TableCell className="font-medium">
+                      {leave.profiles?.full_name || 'Unknown'}
+                    </TableCell>
+                  )}
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="whitespace-nowrap">{formatDateRange(leave)}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{getLeaveTypeLabel(leave)}</Badge>
+                  </TableCell>
+                  <TableCell className="max-w-[200px] truncate">
+                    {leave.reason || '-'}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {leave.has_advance_notice ? (
+                      <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Yes</Badge>
+                    ) : (
+                      <Badge variant="destructive" className="bg-red-500/10 text-red-600 border-red-500/20">No</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {getStatusBadge(leave.status)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-popover">
+                        <DropdownMenuItem onClick={() => setViewLeave(leave)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </DropdownMenuItem>
+                        {leave.status === 'pending' && onCancel && (
+                          <DropdownMenuItem 
+                            onClick={() => setCancelId(leave.id)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <X className="h-4 w-4 mr-2" />
+                            Cancel Request
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       {/* Cancel Confirmation Dialog */}
       <AlertDialog open={!!cancelId} onOpenChange={(open) => !open && setCancelId(null)}>

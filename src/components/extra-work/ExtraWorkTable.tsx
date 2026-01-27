@@ -17,16 +17,45 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useState } from 'react';
+import { TableFilters, SortableHeader } from '@/components/ui/table-filters';
+import { useTableFilters } from '@/hooks/useTableFilters';
 import type { ExtraWorkWithProfile } from '@/hooks/useExtraWork';
 
 interface ExtraWorkTableProps {
   extraWorkList: ExtraWorkWithProfile[];
   showEmployeeName?: boolean;
   emptyMessage?: string;
+  showFilters?: boolean;
 }
 
-export function ExtraWorkTable({ extraWorkList, showEmployeeName, emptyMessage = 'No extra work requests' }: ExtraWorkTableProps) {
+const STATUS_OPTIONS = [
+  { label: 'Pending', value: 'pending' },
+  { label: 'Approved', value: 'approved' },
+  { label: 'Rejected', value: 'rejected' },
+];
+
+export function ExtraWorkTable({ 
+  extraWorkList, 
+  showEmployeeName, 
+  emptyMessage = 'No extra work requests',
+  showFilters = true,
+}: ExtraWorkTableProps) {
   const [viewExtraWork, setViewExtraWork] = useState<ExtraWorkWithProfile | null>(null);
+
+  const {
+    searchValue,
+    setSearchValue,
+    statusFilter,
+    setStatusFilter,
+    sortConfig,
+    handleSort,
+    filteredData,
+  } = useTableFilters({
+    data: extraWorkList,
+    searchKeys: ['task_description', 'notes', 'profiles'] as (keyof ExtraWorkWithProfile)[],
+    defaultSortKey: 'work_date',
+    defaultSortDirection: 'desc',
+  });
 
   const getStatusBadge = (status: string | null) => {
     switch (status) {
@@ -39,79 +68,134 @@ export function ExtraWorkTable({ extraWorkList, showEmployeeName, emptyMessage =
     }
   };
 
-  if (extraWorkList.length === 0) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        <Briefcase className="h-12 w-12 mx-auto mb-3 opacity-50" />
-        <p>{emptyMessage}</p>
-      </div>
-    );
-  }
-
   return (
     <>
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {showEmployeeName && <TableHead>Employee</TableHead>}
-              <TableHead>Date</TableHead>
-              <TableHead className="text-center">Hours</TableHead>
-              <TableHead>Task</TableHead>
-              <TableHead className="text-right">Compensation</TableHead>
-              <TableHead className="text-center">Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {extraWorkList.map((ew) => (
-              <TableRow key={ew.id}>
+      {showFilters && (
+        <TableFilters
+          searchPlaceholder="Search by task description..."
+          searchValue={searchValue}
+          onSearchChange={setSearchValue}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          statusOptions={STATUS_OPTIONS}
+          resultCount={filteredData.length}
+        />
+      )}
+
+      {filteredData.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <Briefcase className="h-12 w-12 mx-auto mb-3 opacity-50" />
+          <p>{searchValue || statusFilter !== 'all' ? 'No matching results' : emptyMessage}</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
                 {showEmployeeName && (
-                  <TableCell className="font-medium">
-                    {ew.profiles?.full_name || 'Unknown'}
-                  </TableCell>
+                  <TableHead>
+                    <SortableHeader
+                      label="Employee"
+                      sortKey="profiles"
+                      currentSortKey={sortConfig.key as string}
+                      currentDirection={sortConfig.direction}
+                      onSort={handleSort}
+                    />
+                  </TableHead>
                 )}
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span>{format(new Date(ew.work_date), 'PP')}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-center">
-                  <Badge variant="outline">{ew.hours} hr{ew.hours > 1 ? 's' : ''}</Badge>
-                </TableCell>
-                <TableCell className="max-w-[200px] truncate">
-                  {ew.task_description}
-                </TableCell>
-                <TableCell className="text-right">
-                  <span className="text-green-600 font-semibold flex items-center justify-end gap-1">
-                    <IndianRupee className="h-3.5 w-3.5" />
-                    {ew.compensation_amount?.toLocaleString('en-IN') || 0}
-                  </span>
-                </TableCell>
-                <TableCell className="text-center">
-                  {getStatusBadge(ew.status)}
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-popover">
-                      <DropdownMenuItem onClick={() => setViewExtraWork(ew)}>
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Details
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+                <TableHead>
+                  <SortableHeader
+                    label="Date"
+                    sortKey="work_date"
+                    currentSortKey={sortConfig.key as string}
+                    currentDirection={sortConfig.direction}
+                    onSort={handleSort}
+                  />
+                </TableHead>
+                <TableHead className="text-center">
+                  <SortableHeader
+                    label="Hours"
+                    sortKey="hours"
+                    currentSortKey={sortConfig.key as string}
+                    currentDirection={sortConfig.direction}
+                    onSort={handleSort}
+                    className="justify-center"
+                  />
+                </TableHead>
+                <TableHead>Task</TableHead>
+                <TableHead className="text-right">
+                  <SortableHeader
+                    label="Compensation"
+                    sortKey="compensation_amount"
+                    currentSortKey={sortConfig.key as string}
+                    currentDirection={sortConfig.direction}
+                    onSort={handleSort}
+                    className="justify-end"
+                  />
+                </TableHead>
+                <TableHead className="text-center">
+                  <SortableHeader
+                    label="Status"
+                    sortKey="status"
+                    currentSortKey={sortConfig.key as string}
+                    currentDirection={sortConfig.direction}
+                    onSort={handleSort}
+                    className="justify-center"
+                  />
+                </TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {filteredData.map((ew) => (
+                <TableRow key={ew.id}>
+                  {showEmployeeName && (
+                    <TableCell className="font-medium">
+                      {ew.profiles?.full_name || 'Unknown'}
+                    </TableCell>
+                  )}
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span>{format(new Date(ew.work_date), 'PP')}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant="outline">{ew.hours} hr{ew.hours > 1 ? 's' : ''}</Badge>
+                  </TableCell>
+                  <TableCell className="max-w-[200px] truncate">
+                    {ew.task_description}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <span className="text-green-600 font-semibold flex items-center justify-end gap-1">
+                      <IndianRupee className="h-3.5 w-3.5" />
+                      {ew.compensation_amount?.toLocaleString('en-IN') || 0}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {getStatusBadge(ew.status)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-popover">
+                        <DropdownMenuItem onClick={() => setViewExtraWork(ew)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       {/* View Details Dialog */}
       <Dialog open={!!viewExtraWork} onOpenChange={(open) => !open && setViewExtraWork(null)}>
