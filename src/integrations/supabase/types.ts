@@ -183,6 +183,42 @@ export type Database = {
           },
         ]
       }
+      leave_balances: {
+        Row: {
+          annual_allocation: number
+          carried_forward: number
+          created_at: string
+          id: string
+          pending_leaves: number
+          updated_at: string
+          used_leaves: number
+          user_id: string
+          year: number
+        }
+        Insert: {
+          annual_allocation?: number
+          carried_forward?: number
+          created_at?: string
+          id?: string
+          pending_leaves?: number
+          updated_at?: string
+          used_leaves?: number
+          user_id: string
+          year?: number
+        }
+        Update: {
+          annual_allocation?: number
+          carried_forward?: number
+          created_at?: string
+          id?: string
+          pending_leaves?: number
+          updated_at?: string
+          used_leaves?: number
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
       leaves: {
         Row: {
           admin_comments: string | null
@@ -690,6 +726,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_leave_days: {
+        Args: { _end_date: string; _leave_type: string; _start_date: string }
+        Returns: number
+      }
       get_or_create_notification_preferences: {
         Args: { _user_id: string }
         Returns: {
@@ -721,6 +761,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      sync_leave_balance: {
+        Args: { _user_id: string; _year: number }
+        Returns: undefined
       }
     }
     Enums: {

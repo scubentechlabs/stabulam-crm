@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, Briefcase, Clock, Loader2 } from 'lucide-react';
+import { Calendar, Briefcase, Clock, Loader2, Wallet } from 'lucide-react';
 import { useLeaves } from '@/hooks/useLeaves';
 import { useExtraWork } from '@/hooks/useExtraWork';
 import { useAttendanceRegularization } from '@/hooks/useAttendanceRegularization';
 import { LeaveApprovalCard } from '@/components/leaves/LeaveApprovalCard';
 import { ExtraWorkApprovalCard } from '@/components/extra-work/ExtraWorkApprovalCard';
 import { RegularizationApprovalCard } from '@/components/attendance/RegularizationApprovalCard';
+import { LeaveBalanceManager } from '@/components/leaves/LeaveBalanceManager';
 
 export default function AdminApprovals() {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -78,7 +79,7 @@ export default function AdminApprovals() {
       </div>
 
       <Tabs defaultValue="leaves">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="leaves" className="gap-2">
             <Calendar className="h-4 w-4" />
             Leaves ({pendingLeaves.length})
@@ -90,6 +91,10 @@ export default function AdminApprovals() {
           <TabsTrigger value="regularizations" className="gap-2">
             <Clock className="h-4 w-4" />
             Regularizations ({pendingRegularizations.length})
+          </TabsTrigger>
+          <TabsTrigger value="balances" className="gap-2">
+            <Wallet className="h-4 w-4" />
+            Leave Balances
           </TabsTrigger>
         </TabsList>
 
@@ -202,6 +207,10 @@ export default function AdminApprovals() {
               </div>
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="balances" className="mt-6">
+          <LeaveBalanceManager />
         </TabsContent>
       </Tabs>
     </div>
