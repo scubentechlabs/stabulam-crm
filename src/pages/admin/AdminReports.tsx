@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart3, Users, Calendar } from 'lucide-react';
 import { AttendanceSummaryReport } from '@/components/reports/AttendanceSummaryReport';
+import { TaskSummaryReport } from '@/components/reports/TaskSummaryReport';
 
 export default function AdminReports() {
   return (
@@ -32,19 +33,7 @@ export default function AdminReports() {
         </TabsContent>
 
         <TabsContent value="tasks">
-          <Card>
-            <CardHeader>
-              <CardTitle>Task Completion Report</CardTitle>
-              <CardDescription>Task performance metrics and trends</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <BarChart3 className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                <p className="text-lg">Task Analytics Coming Soon</p>
-                <p className="text-sm">Task completion trends and performance metrics will appear here</p>
-              </div>
-            </CardContent>
-          </Card>
+          <TaskSummaryReport />
         </TabsContent>
 
         <TabsContent value="leaves">
