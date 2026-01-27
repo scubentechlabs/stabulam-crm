@@ -72,6 +72,8 @@ export function LeaveTable({
     dateRange,
     setDateRange,
     clearDateRange,
+    hasActiveFilters,
+    resetAllFilters,
   } = useTableFilters({
     data: leaves,
     searchKeys: ['reason', 'delegation_notes', 'profiles'] as (keyof LeaveWithProfile)[],
@@ -128,6 +130,8 @@ export function LeaveTable({
           dateRange={dateRange}
           onDateRangeChange={setDateRange}
           onClearDateRange={clearDateRange}
+          hasActiveFilters={hasActiveFilters}
+          onResetAll={resetAllFilters}
         />
       )}
 

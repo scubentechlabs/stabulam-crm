@@ -69,6 +69,13 @@ export function useTableFilters<T extends Record<string, any>>({
     setCurrentPage(1);
   }, []);
 
+  const resetAllFilters = useCallback(() => {
+    setSearchValue('');
+    setStatusFilter('all');
+    setDateRange({ from: null, to: null });
+    setCurrentPage(1);
+  }, []);
+
   const filteredAndSortedData = useMemo(() => {
     let result = [...data];
 
@@ -179,6 +186,7 @@ export function useTableFilters<T extends Record<string, any>>({
   }
 
   const hasDateFilter = dateRange.from !== null && dateRange.to !== null;
+  const hasActiveFilters = searchValue.trim() !== '' || statusFilter !== 'all' || hasDateFilter;
 
   return {
     searchValue,
@@ -201,5 +209,8 @@ export function useTableFilters<T extends Record<string, any>>({
     setDateRange: handleDateRangeChange,
     clearDateRange,
     hasDateFilter,
+    // Reset all
+    hasActiveFilters,
+    resetAllFilters,
   };
 }
