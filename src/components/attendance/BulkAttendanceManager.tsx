@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { format } from 'date-fns';
-import { Clock, LogIn, LogOut, Users, CheckCircle2, XCircle, Loader2, Search } from 'lucide-react';
+import { format, isSameDay, subDays } from 'date-fns';
+import { Clock, LogIn, LogOut, Users, CheckCircle2, Loader2, Search, CalendarDays, CalendarCheck } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -31,9 +35,11 @@ export function BulkAttendanceManager() {
   const {
     isProcessing,
     isLoading: isLoadingAttendance,
+    selectedDate,
     bulkClockIn,
     bulkClockOut,
-    fetchTodayAttendance,
+    bulkMarkFullDay,
+    fetchAttendanceForDate,
     getAttendanceStatus,
   } = useBulkAttendance();
 
@@ -41,11 +47,23 @@ export function BulkAttendanceManager() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showClockInDialog, setShowClockInDialog] = useState(false);
   const [showClockOutDialog, setShowClockOutDialog] = useState(false);
+  const [showFullDayDialog, setShowFullDayDialog] = useState(false);
   const [notes, setNotes] = useState('');
+  const [clockInTime, setClockInTime] = useState('09:00');
+  const [clockOutTime, setClockOutTime] = useState('18:00');
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   useEffect(() => {
-    fetchTodayAttendance();
-  }, [fetchTodayAttendance]);
+    fetchAttendanceForDate(new Date());
+  }, [fetchAttendanceForDate]);
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      fetchAttendanceForDate(date);
+      setCalendarOpen(false);
+      setSelectedUserIds(new Set());
+    }
+  };
 
   const activeEmployees = useMemo(() => {
     return users.filter(u => u.is_active && u.role === 'employee');
@@ -112,7 +130,7 @@ export function BulkAttendanceManager() {
       .map(e => e.user_id);
     
     if (eligibleIds.length > 0) {
-      await bulkClockIn(eligibleIds, notes);
+      await bulkClockIn(eligibleIds, selectedDate, clockInTime, notes);
       setShowClockInDialog(false);
       setNotes('');
       setSelectedUserIds(new Set());
@@ -125,9 +143,24 @@ export function BulkAttendanceManager() {
       .map(e => e.user_id);
     
     if (eligibleIds.length > 0) {
-      await bulkClockOut(eligibleIds, notes);
+      await bulkClockOut(eligibleIds, selectedDate, clockOutTime, notes);
       setShowClockOutDialog(false);
       setNotes('');
+      setSelectedUserIds(new Set());
+    }
+  };
+
+  const handleBulkMarkFullDay = async () => {
+    const eligibleIds = selectedEmployees
+      .filter(e => e.attendanceStatus === 'not_clocked_in')
+      .map(e => e.user_id);
+    
+    if (eligibleIds.length > 0) {
+      await bulkMarkFullDay(eligibleIds, selectedDate, clockInTime, clockOutTime, notes);
+      setShowFullDayDialog(false);
+      setNotes('');
+      setClockInTime('09:00');
+      setClockOutTime('18:00');
       setSelectedUserIds(new Set());
     }
   };
@@ -135,15 +168,16 @@ export function BulkAttendanceManager() {
   const getStatusBadge = (status: AttendanceStatus) => {
     switch (status) {
       case 'not_clocked_in':
-        return <Badge variant="outline" className="text-muted-foreground">Not Clocked In</Badge>;
+        return <Badge variant="outline" className="text-muted-foreground">Not Marked</Badge>;
       case 'clocked_in':
-        return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Working</Badge>;
+        return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Clocked In</Badge>;
       case 'clocked_out':
         return <Badge variant="secondary">Completed</Badge>;
     }
   };
 
   const isLoading = isLoadingUsers || isLoadingAttendance;
+  const isToday = isSameDay(selectedDate, new Date());
 
   if (isLoading) {
     return (
@@ -159,16 +193,35 @@ export function BulkAttendanceManager() {
     <>
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
                 Bulk Attendance Management
               </CardTitle>
               <CardDescription>
-                Clock in/out multiple employees at once • {format(new Date(), 'EEEE, MMMM d, yyyy')}
+                Mark attendance for multiple employees at once
               </CardDescription>
             </div>
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-auto justify-start text-left font-normal">
+                  <CalendarDays className="mr-2 h-4 w-4" />
+                  {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+                  {isToday && <Badge variant="secondary" className="ml-2">Today</Badge>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={handleDateSelect}
+                  disabled={(date) => date > new Date()}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -180,11 +233,11 @@ export function BulkAttendanceManager() {
             </div>
             <div className="p-3 rounded-lg bg-yellow-500/10 text-center">
               <p className="text-2xl font-bold text-yellow-600">{stats.notClockedIn}</p>
-              <p className="text-xs text-muted-foreground">Not Clocked In</p>
+              <p className="text-xs text-muted-foreground">Not Marked</p>
             </div>
             <div className="p-3 rounded-lg bg-green-500/10 text-center">
               <p className="text-2xl font-bold text-green-600">{stats.clockedIn}</p>
-              <p className="text-xs text-muted-foreground">Currently Working</p>
+              <p className="text-xs text-muted-foreground">Clocked In Only</p>
             </div>
             <div className="p-3 rounded-lg bg-blue-500/10 text-center">
               <p className="text-2xl font-bold text-blue-600">{stats.clockedOut}</p>
@@ -193,8 +246,8 @@ export function BulkAttendanceManager() {
           </div>
 
           {/* Search and Actions */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
+          <div className="flex flex-col gap-3">
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search employees..."
@@ -203,10 +256,25 @@ export function BulkAttendanceManager() {
                 className="pl-9"
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="default"
+                onClick={() => {
+                  setClockInTime('09:00');
+                  setClockOutTime('18:00');
+                  setShowFullDayDialog(true);
+                }}
+                disabled={!canClockInSelected || selectedUserIds.size === 0}
+              >
+                <CalendarCheck className="h-4 w-4 mr-2" />
+                Mark Full Day ({selectedEmployees.filter(e => e.attendanceStatus === 'not_clocked_in').length})
+              </Button>
               <Button
                 variant="outline"
-                onClick={() => setShowClockInDialog(true)}
+                onClick={() => {
+                  setClockInTime('09:00');
+                  setShowClockInDialog(true);
+                }}
                 disabled={!canClockInSelected || selectedUserIds.size === 0}
               >
                 <LogIn className="h-4 w-4 mr-2" />
@@ -214,7 +282,10 @@ export function BulkAttendanceManager() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => setShowClockOutDialog(true)}
+                onClick={() => {
+                  setClockOutTime('18:00');
+                  setShowClockOutDialog(true);
+                }}
                 disabled={!canClockOutSelected || selectedUserIds.size === 0}
               >
                 <LogOut className="h-4 w-4 mr-2" />
@@ -282,6 +353,77 @@ export function BulkAttendanceManager() {
         </CardContent>
       </Card>
 
+      {/* Mark Full Day Dialog */}
+      <Dialog open={showFullDayDialog} onOpenChange={setShowFullDayDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarCheck className="h-5 w-5 text-primary" />
+              Mark Full Day Attendance
+            </DialogTitle>
+            <DialogDescription>
+              Mark complete attendance for {selectedEmployees.filter(e => e.attendanceStatus === 'not_clocked_in').length} employee(s) on {format(selectedDate, 'MMM d, yyyy')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="max-h-32 overflow-y-auto space-y-1">
+              {selectedEmployees
+                .filter(e => e.attendanceStatus === 'not_clocked_in')
+                .map(emp => (
+                  <div key={emp.user_id} className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <span>{emp.full_name}</span>
+                  </div>
+                ))}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="clockIn">Clock In Time</Label>
+                <Input
+                  id="clockIn"
+                  type="time"
+                  value={clockInTime}
+                  onChange={(e) => setClockInTime(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="clockOut">Clock Out Time</Label>
+                <Input
+                  id="clockOut"
+                  type="time"
+                  value={clockOutTime}
+                  onChange={(e) => setClockOutTime(e.target.value)}
+                />
+              </div>
+            </div>
+            <Textarea
+              placeholder="Optional notes (e.g., 'Team meeting', 'Field work')"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowFullDayDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleBulkMarkFullDay} disabled={isProcessing}>
+              {isProcessing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <CalendarCheck className="h-4 w-4 mr-2" />
+                  Mark Attendance
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Clock In Dialog */}
       <Dialog open={showClockInDialog} onOpenChange={setShowClockInDialog}>
         <DialogContent>
@@ -291,7 +433,7 @@ export function BulkAttendanceManager() {
               Bulk Clock In
             </DialogTitle>
             <DialogDescription>
-              Clock in {selectedEmployees.filter(e => e.attendanceStatus === 'not_clocked_in').length} employee(s) at {format(new Date(), 'h:mm a')}
+              Clock in {selectedEmployees.filter(e => e.attendanceStatus === 'not_clocked_in').length} employee(s) for {format(selectedDate, 'MMM d, yyyy')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -304,6 +446,15 @@ export function BulkAttendanceManager() {
                     <span>{emp.full_name}</span>
                   </div>
                 ))}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="clockInTime">Clock In Time</Label>
+              <Input
+                id="clockInTime"
+                type="time"
+                value={clockInTime}
+                onChange={(e) => setClockInTime(e.target.value)}
+              />
             </div>
             <Textarea
               placeholder="Optional notes (e.g., 'Team meeting attendance')"
@@ -342,7 +493,7 @@ export function BulkAttendanceManager() {
               Bulk Clock Out
             </DialogTitle>
             <DialogDescription>
-              Clock out {selectedEmployees.filter(e => e.attendanceStatus === 'clocked_in').length} employee(s) at {format(new Date(), 'h:mm a')}
+              Clock out {selectedEmployees.filter(e => e.attendanceStatus === 'clocked_in').length} employee(s) for {format(selectedDate, 'MMM d, yyyy')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -355,6 +506,15 @@ export function BulkAttendanceManager() {
                     <span>{emp.full_name}</span>
                   </div>
                 ))}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="clockOutTime">Clock Out Time</Label>
+              <Input
+                id="clockOutTime"
+                type="time"
+                value={clockOutTime}
+                onChange={(e) => setClockOutTime(e.target.value)}
+              />
             </div>
             <Textarea
               placeholder="Optional notes (e.g., 'End of shift')"
