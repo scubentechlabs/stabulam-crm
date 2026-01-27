@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { BulkActionsBar } from '@/components/ui/bulk-actions-bar';
+import { useBulkSelection } from '@/hooks/useBulkSelection';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,9 +43,21 @@ export function ExtraWorkApprovalTable({
   emptyMessage = 'No pending extra work requests'
 }: ExtraWorkApprovalTableProps) {
   const [selectedExtraWork, setSelectedExtraWork] = useState<ExtraWorkWithProfile | null>(null);
-  const [dialogType, setDialogType] = useState<'view' | 'approve' | 'reject' | null>(null);
+  const [dialogType, setDialogType] = useState<'view' | 'approve' | 'reject' | 'bulk-approve' | 'bulk-reject' | null>(null);
   const [comments, setComments] = useState('');
   const [adjustedCompensation, setAdjustedCompensation] = useState(0);
+  const [bulkProcessing, setBulkProcessing] = useState(false);
+
+  const {
+    selectedCount,
+    selectedItems,
+    isAllSelected,
+    isPartiallySelected,
+    isSelected,
+    toggleItem,
+    toggleAll,
+    clearSelection,
+  } = useBulkSelection(extraWorkList);
 
   const openDialog = (extraWork: ExtraWorkWithProfile, type: 'view' | 'approve' | 'reject') => {
     setSelectedExtraWork(extraWork);
@@ -74,6 +89,26 @@ export function ExtraWorkApprovalTable({
     }
   };
 
+  const handleBulkApprove = async () => {
+    setBulkProcessing(true);
+    for (const item of selectedItems) {
+      await onApprove(item.id, comments || undefined);
+    }
+    clearSelection();
+    setBulkProcessing(false);
+    closeDialog();
+  };
+
+  const handleBulkReject = async () => {
+    setBulkProcessing(true);
+    for (const item of selectedItems) {
+      await onReject(item.id, comments || undefined);
+    }
+    clearSelection();
+    setBulkProcessing(false);
+    closeDialog();
+  };
+
   if (extraWorkList.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -86,10 +121,26 @@ export function ExtraWorkApprovalTable({
 
   return (
     <>
+      <BulkActionsBar
+        selectedCount={selectedCount}
+        onApproveAll={() => setDialogType('bulk-approve')}
+        onRejectAll={() => setDialogType('bulk-reject')}
+        onClearSelection={clearSelection}
+        isProcessing={bulkProcessing}
+      />
+
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={isAllSelected}
+                  onCheckedChange={toggleAll}
+                  aria-label="Select all"
+                  className={isPartiallySelected ? 'data-[state=checked]:bg-primary/50' : ''}
+                />
+              </TableHead>
               <TableHead>Employee</TableHead>
               <TableHead>Date</TableHead>
               <TableHead className="text-center">Hours</TableHead>
@@ -100,7 +151,14 @@ export function ExtraWorkApprovalTable({
           </TableHeader>
           <TableBody>
             {extraWorkList.map((ew) => (
-              <TableRow key={ew.id}>
+              <TableRow key={ew.id} data-state={isSelected(ew.id) ? 'selected' : undefined}>
+                <TableCell>
+                  <Checkbox
+                    checked={isSelected(ew.id)}
+                    onCheckedChange={() => toggleItem(ew.id)}
+                    aria-label={`Select ${ew.profiles?.full_name}`}
+                  />
+                </TableCell>
                 <TableCell className="font-medium">
                   {ew.profiles?.full_name || 'Unknown'}
                 </TableCell>
@@ -284,6 +342,64 @@ export function ExtraWorkApprovalTable({
             <Button variant="outline" onClick={closeDialog}>Cancel</Button>
             <Button variant="destructive" onClick={handleReject} disabled={isProcessing}>
               {isProcessing ? 'Processing...' : 'Reject'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Approve Dialog */}
+      <Dialog open={dialogType === 'bulk-approve'} onOpenChange={(open) => !open && closeDialog()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Approve {selectedCount} Extra Work Requests</DialogTitle>
+            <DialogDescription>
+              This will approve all selected extra work requests with their default compensation amounts.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="bulk-approve-comments">Comments (Optional)</Label>
+              <Textarea
+                id="bulk-approve-comments"
+                placeholder="Add comments for all selected requests..."
+                value={comments}
+                onChange={(e) => setComments(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeDialog}>Cancel</Button>
+            <Button onClick={handleBulkApprove} disabled={bulkProcessing}>
+              {bulkProcessing ? 'Processing...' : `Approve ${selectedCount} Requests`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Reject Dialog */}
+      <Dialog open={dialogType === 'bulk-reject'} onOpenChange={(open) => !open && closeDialog()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject {selectedCount} Extra Work Requests</DialogTitle>
+            <DialogDescription>
+              This will reject all selected extra work requests.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="bulk-reject-comments">Reason for Rejection</Label>
+              <Textarea
+                id="bulk-reject-comments"
+                placeholder="Provide a reason for rejecting all selected requests..."
+                value={comments}
+                onChange={(e) => setComments(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeDialog}>Cancel</Button>
+            <Button variant="destructive" onClick={handleBulkReject} disabled={bulkProcessing}>
+              {bulkProcessing ? 'Processing...' : `Reject ${selectedCount} Requests`}
             </Button>
           </DialogFooter>
         </DialogContent>
