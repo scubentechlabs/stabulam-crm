@@ -14,7 +14,7 @@ import { Briefcase, Plus, Clock, CheckCircle, XCircle, Loader2, IndianRupee, Ale
 import { useExtraWork } from '@/hooks/useExtraWork';
 import { useAttendance } from '@/hooks/useAttendance';
 import { ExtraWorkRequestForm } from '@/components/extra-work/ExtraWorkRequestForm';
-import { ExtraWorkCard } from '@/components/extra-work/ExtraWorkCard';
+import { ExtraWorkTable } from '@/components/extra-work/ExtraWorkTable';
 
 export default function ExtraWork() {
   const [showNewRequest, setShowNewRequest] = useState(false);
@@ -187,48 +187,24 @@ export default function ExtraWork() {
             </TabsList>
 
             <TabsContent value="pending">
-              {pendingRequests.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Clock className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No pending extra work requests</p>
-                </div>
-              ) : (
-                <div className="grid gap-4">
-                  {pendingRequests.map((ew) => (
-                    <ExtraWorkCard key={ew.id} extraWork={ew} />
-                  ))}
-                </div>
-              )}
+              <ExtraWorkTable 
+                extraWorkList={pendingRequests}
+                emptyMessage="No pending extra work requests"
+              />
             </TabsContent>
 
             <TabsContent value="approved">
-              {approvedRequests.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No approved extra work requests</p>
-                </div>
-              ) : (
-                <div className="grid gap-4">
-                  {approvedRequests.map((ew) => (
-                    <ExtraWorkCard key={ew.id} extraWork={ew} />
-                  ))}
-                </div>
-              )}
+              <ExtraWorkTable 
+                extraWorkList={approvedRequests}
+                emptyMessage="No approved extra work requests"
+              />
             </TabsContent>
 
             <TabsContent value="rejected">
-              {rejectedRequests.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <XCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No rejected extra work requests</p>
-                </div>
-              ) : (
-                <div className="grid gap-4">
-                  {rejectedRequests.map((ew) => (
-                    <ExtraWorkCard key={ew.id} extraWork={ew} />
-                  ))}
-                </div>
-              )}
+              <ExtraWorkTable 
+                extraWorkList={rejectedRequests}
+                emptyMessage="No rejected extra work requests"
+              />
             </TabsContent>
           </Tabs>
         </CardContent>

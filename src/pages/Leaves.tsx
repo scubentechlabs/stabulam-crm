@@ -12,7 +12,7 @@ import {
 import { Calendar, Plus, Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { useLeaves } from '@/hooks/useLeaves';
 import { LeaveRequestForm } from '@/components/leaves/LeaveRequestForm';
-import { LeaveCard } from '@/components/leaves/LeaveCard';
+import { LeaveTable } from '@/components/leaves/LeaveTable';
 import { LeaveBalanceCard } from '@/components/leaves/LeaveBalanceCard';
 
 export default function Leaves() {
@@ -131,48 +131,25 @@ export default function Leaves() {
             </TabsList>
 
             <TabsContent value="pending">
-              {pendingLeaves.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Clock className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No pending leave requests</p>
-                </div>
-              ) : (
-                <div className="grid gap-4">
-                  {pendingLeaves.map((leave) => (
-                    <LeaveCard key={leave.id} leave={leave} onCancel={handleCancel} />
-                  ))}
-                </div>
-              )}
+              <LeaveTable 
+                leaves={pendingLeaves} 
+                onCancel={handleCancel}
+                emptyMessage="No pending leave requests"
+              />
             </TabsContent>
 
             <TabsContent value="approved">
-              {approvedLeaves.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No approved leave requests</p>
-                </div>
-              ) : (
-                <div className="grid gap-4">
-                  {approvedLeaves.map((leave) => (
-                    <LeaveCard key={leave.id} leave={leave} />
-                  ))}
-                </div>
-              )}
+              <LeaveTable 
+                leaves={approvedLeaves}
+                emptyMessage="No approved leave requests"
+              />
             </TabsContent>
 
             <TabsContent value="rejected">
-              {rejectedLeaves.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <XCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No rejected leave requests</p>
-                </div>
-              ) : (
-                <div className="grid gap-4">
-                  {rejectedLeaves.map((leave) => (
-                    <LeaveCard key={leave.id} leave={leave} />
-                  ))}
-                </div>
-              )}
+              <LeaveTable 
+                leaves={rejectedLeaves}
+                emptyMessage="No rejected leave requests"
+              />
             </TabsContent>
           </Tabs>
         </CardContent>

@@ -7,7 +7,7 @@ import { AttendanceExportDialog } from '@/components/attendance/AttendanceExport
 import { ClockInCard } from '@/components/attendance/ClockInCard';
 import { ClockOutCard } from '@/components/attendance/ClockOutCard';
 import { RegularizationRequestForm } from '@/components/attendance/RegularizationRequestForm';
-import { RegularizationCard } from '@/components/attendance/RegularizationCard';
+import { RegularizationTable } from '@/components/attendance/RegularizationTable';
 import { TodPanel } from '@/components/tasks/TodPanel';
 import { EodPanel } from '@/components/tasks/EodPanel';
 import { TaskForm } from '@/components/tasks/TaskForm';
@@ -267,25 +267,14 @@ export default function Attendance() {
               <RegularizationRequestForm />
             </div>
 
-            {regularizations.length === 0 ? (
-              <Card>
-                <CardContent className="py-12">
-                  <div className="text-center text-muted-foreground">
-                    <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No regularization requests yet</p>
-                    <p className="text-sm mt-1">
-                      Request a correction if you missed clocking in/out
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {regularizations.map((reg) => (
-                  <RegularizationCard key={reg.id} regularization={reg} />
-                ))}
-              </div>
-            )}
+            <Card>
+              <CardContent className="pt-6">
+                <RegularizationTable 
+                  regularizations={regularizations}
+                  emptyMessage="No regularization requests yet"
+                />
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
       </Tabs>
