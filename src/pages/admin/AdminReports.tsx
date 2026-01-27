@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart3, Users, Calendar, Download, TrendingUp } from 'lucide-react';
+import { BarChart3, Users, Calendar, TrendingUp } from 'lucide-react';
 import { AttendanceSummaryReport } from '@/components/reports/AttendanceSummaryReport';
 import { TaskSummaryReport } from '@/components/reports/TaskSummaryReport';
 import { LeaveSummaryReport } from '@/components/reports/LeaveSummaryReport';
 import { ReportExportDialog } from '@/components/reports/ReportExportDialog';
-import { Button } from '@/components/ui/button';
+import { LiveStatusIndicator } from '@/components/reports/LiveStatusIndicator';
 
 export default function AdminReports() {
   const [activeTab, setActiveTab] = useState('attendance');
@@ -28,6 +28,7 @@ export default function AdminReports() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <LiveStatusIndicator />
           <ReportExportDialog />
         </div>
       </div>

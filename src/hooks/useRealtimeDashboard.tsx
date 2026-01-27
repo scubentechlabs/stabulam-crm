@@ -1,13 +1,38 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 type TableName = 'attendance' | 'tasks' | 'leaves' | 'leave_balances';
 
+export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
+
 interface UseRealtimeDashboardOptions {
   tables: TableName[];
   onDataChange: () => void;
   enabled?: boolean;
+}
+
+// Global state for connection status (shared across all hook instances)
+let globalConnectionStatus: ConnectionStatus = 'disconnected';
+let globalListeners: Set<(status: ConnectionStatus) => void> = new Set();
+
+function notifyListeners(status: ConnectionStatus) {
+  globalConnectionStatus = status;
+  globalListeners.forEach(listener => listener(status));
+}
+
+export function useRealtimeConnectionStatus() {
+  const [status, setStatus] = useState<ConnectionStatus>(globalConnectionStatus);
+
+  useEffect(() => {
+    const listener = (newStatus: ConnectionStatus) => setStatus(newStatus);
+    globalListeners.add(listener);
+    return () => {
+      globalListeners.delete(listener);
+    };
+  }, []);
+
+  return status;
 }
 
 export function useRealtimeDashboard({
@@ -29,7 +54,11 @@ export function useRealtimeDashboard({
   }, [onDataChange]);
 
   useEffect(() => {
-    if (!enabled || tables.length === 0) return;
+    if (!enabled || tables.length === 0) {
+      return;
+    }
+
+    notifyListeners('connecting');
 
     // Create a single channel for all table subscriptions
     const channel = supabase.channel('dashboard-realtime');
@@ -53,6 +82,12 @@ export function useRealtimeDashboard({
     channel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
         console.log('Dashboard realtime subscribed to:', tables.join(', '));
+        notifyListeners('connected');
+      } else if (status === 'CHANNEL_ERROR') {
+        console.error('Dashboard realtime channel error');
+        notifyListeners('error');
+      } else if (status === 'CLOSED') {
+        notifyListeners('disconnected');
       }
     });
 
@@ -65,6 +100,7 @@ export function useRealtimeDashboard({
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
+        notifyListeners('disconnected');
       }
     };
   }, [tables, debouncedCallback, enabled]);
