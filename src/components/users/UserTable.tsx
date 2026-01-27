@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { TableFilters, SortableHeader } from '@/components/ui/table-filters';
+import { TableFilters, SortableHeader, TablePagination } from '@/components/ui/table-filters';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import type { UserWithRole } from '@/hooks/useUsers';
 
@@ -43,20 +43,35 @@ export function UserTable({
     setStatusFilter,
     sortConfig,
     handleSort,
+    paginatedData,
     filteredData,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    totalItems,
+    startIndex,
+    endIndex,
   } = useTableFilters({
     data: users,
     searchKeys: ['full_name', 'email', 'department', 'mobile'] as (keyof UserWithRole)[],
     defaultSortKey: 'full_name',
     defaultSortDirection: 'asc',
+    pageSize: 10,
   });
 
-  // Apply custom status filter for users
+  // Apply custom status filter for users (already applied in paginatedData via hook)
+  // For users, we need custom pagination handling
   const displayData = statusFilter === 'all' 
-    ? filteredData 
-    : filteredData.filter(user => 
+    ? paginatedData 
+    : paginatedData.filter(user => 
         statusFilter === 'active' ? user.is_active !== false : user.is_active === false
       );
+
+  const displayTotal = statusFilter === 'all' 
+    ? totalItems 
+    : filteredData.filter(user => 
+        statusFilter === 'active' ? user.is_active !== false : user.is_active === false
+      ).length;
 
   return (
     <>
@@ -68,18 +83,19 @@ export function UserTable({
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
           statusOptions={STATUS_OPTIONS}
-          resultCount={displayData.length}
+          resultCount={displayTotal}
         />
       )}
 
-      {displayData.length === 0 ? (
+      {displayTotal === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
           <p>{searchValue || statusFilter !== 'all' ? 'No matching results' : emptyMessage}</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <Table>
+        <>
+          <div className="overflow-x-auto">
+            <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>
@@ -233,7 +249,16 @@ export function UserTable({
               })}
             </TableBody>
           </Table>
-        </div>
+          </div>
+          <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={displayTotal}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            onPageChange={setCurrentPage}
+          />
+        </>
       )}
     </>
   );
