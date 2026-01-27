@@ -63,19 +63,23 @@ export function LeaveTable({
     sortConfig,
     handleSort,
     paginatedData,
-    filteredData,
     currentPage,
     setCurrentPage,
     totalPages,
     totalItems,
     startIndex,
     endIndex,
+    dateRange,
+    setDateRange,
+    clearDateRange,
   } = useTableFilters({
     data: leaves,
     searchKeys: ['reason', 'delegation_notes', 'profiles'] as (keyof LeaveWithProfile)[],
     defaultSortKey: 'start_date',
     defaultSortDirection: 'desc',
     pageSize: 10,
+    dateKey: 'start_date',
+    enableDateFilter: true,
   });
 
   const getStatusBadge = (status: string | null) => {
@@ -120,6 +124,10 @@ export function LeaveTable({
           onStatusFilterChange={setStatusFilter}
           statusOptions={STATUS_OPTIONS}
           resultCount={totalItems}
+          showDateFilter
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+          onClearDateRange={clearDateRange}
         />
       )}
 

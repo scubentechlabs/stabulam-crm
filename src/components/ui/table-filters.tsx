@@ -1,4 +1,5 @@
-import { Search, X, ArrowUpDown, ArrowUp, ArrowDown, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, X, ArrowUpDown, ArrowUp, ArrowDown, Filter, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
+import { format } from 'date-fns';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,6 +10,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import type { DateRange } from '@/hooks/useTableFilters';
 
 export type SortDirection = 'asc' | 'desc' | null;
 
@@ -31,6 +40,11 @@ interface TableFiltersProps {
   statusOptions?: FilterOption[];
   additionalFilters?: React.ReactNode;
   resultCount?: number;
+  // Date range props
+  dateRange?: DateRange;
+  onDateRangeChange?: (range: DateRange) => void;
+  onClearDateRange?: () => void;
+  showDateFilter?: boolean;
 }
 
 export function TableFilters({
@@ -42,8 +56,12 @@ export function TableFilters({
   statusOptions,
   additionalFilters,
   resultCount,
+  dateRange,
+  onDateRangeChange,
+  onClearDateRange,
+  showDateFilter = false,
 }: TableFiltersProps) {
-  const hasActiveFilters = searchValue || (statusFilter && statusFilter !== 'all');
+  const hasActiveFilters = searchValue || (statusFilter && statusFilter !== 'all') || (dateRange?.from && dateRange?.to);
 
   return (
     <div className="flex flex-col sm:flex-row gap-3 mb-4">
@@ -84,6 +102,14 @@ export function TableFilters({
         </Select>
       )}
 
+      {showDateFilter && onDateRangeChange && (
+        <TableDateRangePicker
+          dateRange={dateRange}
+          onDateRangeChange={onDateRangeChange}
+          onClear={onClearDateRange}
+        />
+      )}
+
       {additionalFilters}
 
       {hasActiveFilters && resultCount !== undefined && (
@@ -94,6 +120,67 @@ export function TableFilters({
         </div>
       )}
     </div>
+  );
+}
+
+interface TableDateRangePickerProps {
+  dateRange?: DateRange;
+  onDateRangeChange: (range: DateRange) => void;
+  onClear?: () => void;
+}
+
+function TableDateRangePicker({ dateRange, onDateRangeChange, onClear }: TableDateRangePickerProps) {
+  const hasDateRange = dateRange?.from && dateRange?.to;
+
+  const handleSelect = (range: { from?: Date; to?: Date } | undefined) => {
+    if (range?.from && range?.to) {
+      onDateRangeChange({ from: range.from, to: range.to });
+    } else if (range?.from) {
+      onDateRangeChange({ from: range.from, to: range.from });
+    }
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn(
+            'w-full sm:w-auto justify-start text-left font-normal',
+            !hasDateRange && 'text-muted-foreground'
+          )}
+        >
+          <CalendarDays className="mr-2 h-4 w-4" />
+          {hasDateRange ? (
+            <span className="truncate">
+              {format(dateRange.from!, 'MMM d')} - {format(dateRange.to!, 'MMM d, yyyy')}
+            </span>
+          ) : (
+            <span>Date Range</span>
+          )}
+          {hasDateRange && onClear && (
+            <X
+              className="ml-2 h-4 w-4 hover:text-destructive"
+              onClick={(e) => {
+                e.stopPropagation();
+                onClear();
+              }}
+            />
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
+        <Calendar
+          mode="range"
+          selected={hasDateRange ? { from: dateRange.from!, to: dateRange.to! } : undefined}
+          onSelect={handleSelect}
+          numberOfMonths={2}
+          disabled={(date) => date > new Date()}
+          className="pointer-events-auto"
+          initialFocus
+        />
+      </PopoverContent>
+    </Popover>
   );
 }
 
