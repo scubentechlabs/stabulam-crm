@@ -57,6 +57,7 @@ export default function AdminShoots() {
   const {
     shoots,
     isLoading,
+    updateShoot,
     updateShootStatus,
     deleteShoot,
     addAssignment,
@@ -461,6 +462,7 @@ export default function AdminShoots() {
         onStatusChange={updateShootStatus}
         onAddAssignment={addAssignment}
         onRemoveAssignment={removeAssignment}
+        onUpdateShoot={updateShoot}
       />
     </div>
   );

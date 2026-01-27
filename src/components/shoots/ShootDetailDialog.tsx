@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
-import { Calendar, Clock, MapPin, Users, FileText, StickyNote, X, UserPlus, Trash2 } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, FileText, StickyNote, X, UserPlus, Pencil } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUsers } from '@/hooks/useUsers';
+import { ShootEditForm } from './ShootEditForm';
 import type { ShootWithAssignments } from '@/hooks/useShoots';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -31,6 +33,15 @@ interface ShootDetailDialogProps {
   onStatusChange?: (shootId: string, status: ShootStatus) => void;
   onAddAssignment?: (shootId: string, userId: string) => void;
   onRemoveAssignment?: (assignmentId: string) => void;
+  onUpdateShoot?: (shootId: string, data: {
+    event_name?: string;
+    brand_name?: string;
+    shoot_date?: string;
+    shoot_time?: string;
+    location?: string;
+    brief?: string;
+    notes?: string;
+  }) => Promise<{ error: unknown | null }>;
 }
 
 const statusConfig: Record<ShootStatus, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
@@ -46,9 +57,12 @@ export function ShootDetailDialog({
   onStatusChange,
   onAddAssignment,
   onRemoveAssignment,
+  onUpdateShoot,
 }: ShootDetailDialogProps) {
   const { isAdmin, user } = useAuth();
   const { activeUsers } = useUsers();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!shoot) return null;
 
@@ -76,34 +90,85 @@ export function ShootDetailDialog({
   const assignedUserIds = shoot.assignments.map(a => a.user_id);
   const availableUsers = activeUsers.filter(u => !assignedUserIds.includes(u.user_id));
 
+  const handleSaveEdit = async (data: {
+    event_name: string;
+    brand_name: string;
+    shoot_date: string;
+    shoot_time: string;
+    location: string;
+    brief?: string;
+    notes?: string;
+  }) => {
+    if (!onUpdateShoot) return;
+    setIsSubmitting(true);
+    const { error } = await onUpdateShoot(shoot.id, data);
+    setIsSubmitting(false);
+    if (!error) {
+      setIsEditing(false);
+    }
+  };
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      setIsEditing(false);
+    }
+    onOpenChange(newOpen);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
-        <DialogHeader>
-          <div className="flex items-start justify-between">
-            <div>
-              <DialogTitle className="text-xl">{shoot.event_name}</DialogTitle>
-              <p className="text-sm text-muted-foreground mt-1">{shoot.brand_name}</p>
-            </div>
-            {canModify ? (
-              <Select
-                value={status}
-                onValueChange={(value) => onStatusChange?.(shoot.id, value as ShootStatus)}
-              >
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-            ) : (
-              <Badge variant={config.variant}>{config.label}</Badge>
-            )}
-          </div>
-        </DialogHeader>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+        {isEditing ? (
+          <>
+            <DialogHeader>
+              <DialogTitle>Edit Shoot</DialogTitle>
+            </DialogHeader>
+            <ShootEditForm
+              shoot={shoot}
+              onSave={handleSaveEdit}
+              onCancel={() => setIsEditing(false)}
+              isSubmitting={isSubmitting}
+            />
+          </>
+        ) : (
+          <>
+            <DialogHeader>
+              <div className="flex items-start justify-between">
+                <div>
+                  <DialogTitle className="text-xl">{shoot.event_name}</DialogTitle>
+                  <p className="text-sm text-muted-foreground mt-1">{shoot.brand_name}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {canModify && onUpdateShoot && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditing(true)}
+                    >
+                      <Pencil className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                  )}
+                  {canModify ? (
+                    <Select
+                      value={status}
+                      onValueChange={(value) => onStatusChange?.(shoot.id, value as ShootStatus)}
+                    >
+                      <SelectTrigger className="w-[130px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Badge variant={config.variant}>{config.label}</Badge>
+                  )}
+                </div>
+              </div>
+            </DialogHeader>
 
         <div className="space-y-4 mt-4">
           {/* Date & Time */}
@@ -210,6 +275,8 @@ export function ShootDetailDialog({
             </div>
           </div>
         </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
