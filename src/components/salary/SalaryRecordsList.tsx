@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { format } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,12 +8,18 @@ import {
   FileText, 
   Check, 
   Clock,
-  User
+  User,
+  Download,
+  Loader2,
 } from 'lucide-react';
 import { useSalaryCalculator } from '@/hooks/useSalaryCalculator';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export function SalaryRecordsList() {
   const { salaryRecords, isLoadingSalaryRecords, profiles, finalizeSalary } = useSalaryCalculator();
+  const { toast } = useToast();
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const getProfileName = (userId: string) => {
     const profile = profiles?.find(p => p.user_id === userId);
@@ -20,6 +27,62 @@ export function SalaryRecordsList() {
   };
 
   const formatCurrency = (amount: number) => `₹${amount.toLocaleString()}`;
+
+  const handleDownloadPDF = async (recordId: string, employeeName: string) => {
+    try {
+      setDownloadingId(recordId);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: 'Error',
+          description: 'You must be logged in to download salary slips',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const response = await supabase.functions.invoke('generate-salary-pdf', {
+        body: { salaryRecordId: recordId },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to generate PDF');
+      }
+
+      // The response is HTML - open in new window for printing/saving
+      const htmlContent = response.data;
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      
+      // Open in new window
+      const printWindow = window.open(url, '_blank');
+      
+      if (printWindow) {
+        printWindow.onload = () => {
+          // Auto-trigger print dialog
+          setTimeout(() => {
+            printWindow.print();
+          }, 500);
+        };
+      }
+
+      toast({
+        title: 'PDF Generated',
+        description: `Salary slip for ${employeeName} is ready. Use Print → Save as PDF.`,
+      });
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate salary PDF',
+        variant: 'destructive',
+      });
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   if (isLoadingSalaryRecords) {
     return (
@@ -80,13 +143,27 @@ export function SalaryRecordsList() {
                 </div>
               </div>
               
-              <div className="text-right flex items-center gap-4">
-                <div>
+              <div className="text-right flex items-center gap-2 md:gap-4">
+                <div className="hidden sm:block">
                   <p className="font-semibold text-lg">{formatCurrency(record.net_salary)}</p>
                   <p className="text-xs text-muted-foreground">
                     Base: {formatCurrency(record.base_salary)}
                   </p>
                 </div>
+                
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleDownloadPDF(record.id, getProfileName(record.user_id))}
+                  disabled={downloadingId === record.id}
+                  title="Download PDF"
+                >
+                  {downloadingId === record.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                </Button>
                 
                 {record.is_finalized ? (
                   <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
