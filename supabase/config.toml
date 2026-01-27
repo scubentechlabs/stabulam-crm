@@ -1,1 +1,7 @@
 project_id = "nhbumxmvtzuddribooks"
+
+[functions.generate-salary-pdf]
+verify_jwt = false
+
+[functions.send-salary-email]
+verify_jwt = false

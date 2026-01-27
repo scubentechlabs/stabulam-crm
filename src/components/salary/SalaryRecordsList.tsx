@@ -11,6 +11,7 @@ import {
   User,
   Download,
   Loader2,
+  Mail,
 } from 'lucide-react';
 import { useSalaryCalculator } from '@/hooks/useSalaryCalculator';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +21,7 @@ export function SalaryRecordsList() {
   const { salaryRecords, isLoadingSalaryRecords, profiles, finalizeSalary } = useSalaryCalculator();
   const { toast } = useToast();
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [emailingId, setEmailingId] = useState<string | null>(null);
 
   const getProfileName = (userId: string) => {
     const profile = profiles?.find(p => p.user_id === userId);
@@ -81,6 +83,45 @@ export function SalaryRecordsList() {
       });
     } finally {
       setDownloadingId(null);
+    }
+  };
+
+  const handleEmailSalary = async (recordId: string, employeeName: string) => {
+    try {
+      setEmailingId(recordId);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: 'Error',
+          description: 'You must be logged in to send emails',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const response = await supabase.functions.invoke('send-salary-email', {
+        body: { salaryRecordId: recordId },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to send email');
+      }
+
+      toast({
+        title: 'Email Sent',
+        description: response.data?.message || `Salary slip sent to ${employeeName}`,
+      });
+    } catch (error) {
+      console.error('Error sending email:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to send salary email',
+        variant: 'destructive',
+      });
+    } finally {
+      setEmailingId(null);
     }
   };
 
@@ -150,6 +191,20 @@ export function SalaryRecordsList() {
                     Base: {formatCurrency(record.base_salary)}
                   </p>
                 </div>
+                
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleEmailSalary(record.id, getProfileName(record.user_id))}
+                  disabled={emailingId === record.id}
+                  title="Email Salary Slip"
+                >
+                  {emailingId === record.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Mail className="h-4 w-4" />
+                  )}
+                </Button>
                 
                 <Button
                   size="sm"
