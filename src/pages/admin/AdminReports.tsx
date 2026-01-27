@@ -1,8 +1,8 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart3, Users, Calendar } from 'lucide-react';
 import { AttendanceSummaryReport } from '@/components/reports/AttendanceSummaryReport';
 import { TaskSummaryReport } from '@/components/reports/TaskSummaryReport';
+import { LeaveSummaryReport } from '@/components/reports/LeaveSummaryReport';
 
 export default function AdminReports() {
   return (
@@ -37,19 +37,7 @@ export default function AdminReports() {
         </TabsContent>
 
         <TabsContent value="leaves">
-          <Card>
-            <CardHeader>
-              <CardTitle>Leave Analysis Report</CardTitle>
-              <CardDescription>Leave patterns and usage trends</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <Calendar className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                <p className="text-lg">Leave Analytics Coming Soon</p>
-                <p className="text-sm">Leave patterns and trends will appear here</p>
-              </div>
-            </CardContent>
-          </Card>
+          <LeaveSummaryReport />
         </TabsContent>
       </Tabs>
     </div>
