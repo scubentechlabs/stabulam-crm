@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { startOfMonth, endOfMonth, format, differenceInMinutes, parseISO, eachDayOfInterval, isWeekend } from 'date-fns';
+import { useRealtimeDashboard } from './useRealtimeDashboard';
 
 interface EmployeeStats {
   userId: string;
@@ -188,6 +189,13 @@ export function useAttendanceStats() {
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
+
+  // Subscribe to realtime updates
+  useRealtimeDashboard({
+    tables: ['attendance', 'leaves'],
+    onDataChange: fetchStats,
+    enabled: true,
+  });
 
   return {
     stats,

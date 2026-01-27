@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { startOfMonth, endOfMonth, format, eachDayOfInterval, differenceInDays, parseISO } from 'date-fns';
+import { useRealtimeDashboard } from './useRealtimeDashboard';
 
 interface LeaveRecord {
   id: string;
@@ -107,6 +108,13 @@ export function useLeaveStats(selectedMonth: Date) {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Subscribe to realtime updates
+  useRealtimeDashboard({
+    tables: ['leaves', 'leave_balances'],
+    onDataChange: fetchData,
+    enabled: true,
+  });
 
   const employeeStats = useMemo((): EmployeeLeaveStats[] => {
     const profileMap = new Map(profiles.map(p => [p.user_id, p]));
