@@ -12,6 +12,58 @@ interface NotificationData {
   referenceType?: string;
 }
 
+interface NotificationPreferences {
+  leave_notifications: boolean;
+  extra_work_notifications: boolean;
+  shoot_notifications: boolean;
+  task_notifications: boolean;
+  salary_notifications: boolean;
+  push_enabled: boolean;
+}
+
+/**
+ * Check if a notification type is enabled for a user
+ */
+function isNotificationTypeEnabled(type: NotificationType, prefs: NotificationPreferences): boolean {
+  switch (type) {
+    case 'leave_request':
+    case 'request_approved':
+    case 'request_rejected':
+      return prefs.leave_notifications;
+    case 'extra_work_request':
+      return prefs.extra_work_notifications;
+    case 'shoot_reminder':
+      return prefs.shoot_notifications;
+    case 'missing_tod':
+    case 'missing_eod':
+      return prefs.task_notifications;
+    case 'salary_generated':
+      return prefs.salary_notifications;
+    default:
+      return true;
+  }
+}
+
+/**
+ * Get notification preferences for a user
+ */
+async function getNotificationPreferences(userId: string): Promise<NotificationPreferences | null> {
+  try {
+    const { data, error } = await supabase
+      .rpc('get_or_create_notification_preferences', { _user_id: userId });
+    
+    if (error) {
+      console.error('Error fetching notification preferences:', error);
+      return null;
+    }
+    
+    return data as NotificationPreferences;
+  } catch (error) {
+    console.error('Error fetching notification preferences:', error);
+    return null;
+  }
+}
+
 /**
  * Send a push notification to a user
  */
@@ -27,10 +79,19 @@ async function sendPushNotification(userId: string, title: string, body: string)
 }
 
 /**
- * Create a notification for a specific user
+ * Create a notification for a specific user (respects preferences)
  */
 export async function createNotification(data: NotificationData) {
   try {
+    // Check user preferences
+    const prefs = await getNotificationPreferences(data.userId);
+    
+    // If we can't get preferences, default to sending
+    if (prefs && !isNotificationTypeEnabled(data.type, prefs)) {
+      console.log(`Notification type ${data.type} disabled for user ${data.userId}`);
+      return { success: true, skipped: true };
+    }
+
     const { error } = await supabase
       .from('notifications')
       .insert({
@@ -44,8 +105,10 @@ export async function createNotification(data: NotificationData) {
 
     if (error) throw error;
     
-    // Also send push notification
-    await sendPushNotification(data.userId, data.title, data.message);
+    // Send push notification if enabled
+    if (prefs?.push_enabled !== false) {
+      await sendPushNotification(data.userId, data.title, data.message);
+    }
     
     return { success: true };
   } catch (error) {
