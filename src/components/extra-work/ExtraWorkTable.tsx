@@ -50,19 +50,23 @@ export function ExtraWorkTable({
     sortConfig,
     handleSort,
     paginatedData,
-    filteredData,
     currentPage,
     setCurrentPage,
     totalPages,
     totalItems,
     startIndex,
     endIndex,
+    dateRange,
+    setDateRange,
+    clearDateRange,
   } = useTableFilters({
     data: extraWorkList,
     searchKeys: ['task_description', 'notes', 'profiles'] as (keyof ExtraWorkWithProfile)[],
     defaultSortKey: 'work_date',
     defaultSortDirection: 'desc',
     pageSize: 10,
+    dateKey: 'work_date',
+    enableDateFilter: true,
   });
 
   const getStatusBadge = (status: string | null) => {
@@ -87,6 +91,10 @@ export function ExtraWorkTable({
           onStatusFilterChange={setStatusFilter}
           statusOptions={STATUS_OPTIONS}
           resultCount={totalItems}
+          showDateFilter
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+          onClearDateRange={clearDateRange}
         />
       )}
 

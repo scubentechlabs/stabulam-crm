@@ -48,19 +48,23 @@ export function RegularizationTable({
     sortConfig,
     handleSort,
     paginatedData,
-    filteredData,
     currentPage,
     setCurrentPage,
     totalPages,
     totalItems,
     startIndex,
     endIndex,
+    dateRange,
+    setDateRange,
+    clearDateRange,
   } = useTableFilters({
     data: regularizations,
     searchKeys: ['reason'] as (keyof Regularization)[],
     defaultSortKey: 'request_date',
     defaultSortDirection: 'desc',
     pageSize: 10,
+    dateKey: 'request_date',
+    enableDateFilter: true,
   });
 
   const formatTime = (time: string) => {
@@ -107,6 +111,10 @@ export function RegularizationTable({
           onStatusFilterChange={setStatusFilter}
           statusOptions={STATUS_OPTIONS}
           resultCount={totalItems}
+          showDateFilter
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+          onClearDateRange={clearDateRange}
         />
       )}
 

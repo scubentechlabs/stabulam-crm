@@ -1,12 +1,19 @@
 import { useState, useMemo, useCallback } from 'react';
 import type { SortDirection, SortConfig } from '@/components/ui/table-filters';
 
+export interface DateRange {
+  from: Date | null;
+  to: Date | null;
+}
+
 interface UseTableFiltersOptions<T> {
   data: T[];
   searchKeys: (keyof T)[];
   defaultSortKey?: keyof T;
   defaultSortDirection?: SortDirection;
   pageSize?: number;
+  dateKey?: keyof T;
+  enableDateFilter?: boolean;
 }
 
 export function useTableFilters<T extends Record<string, any>>({
@@ -15,10 +22,13 @@ export function useTableFilters<T extends Record<string, any>>({
   defaultSortKey,
   defaultSortDirection = 'desc',
   pageSize = 10,
+  dateKey,
+  enableDateFilter = false,
 }: UseTableFiltersOptions<T>) {
   const [searchValue, setSearchValue] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [dateRange, setDateRange] = useState<DateRange>({ from: null, to: null });
   const [sortConfig, setSortConfig] = useState<SortConfig<T>>({
     key: defaultSortKey || null,
     direction: defaultSortKey ? defaultSortDirection : null,
@@ -46,6 +56,16 @@ export function useTableFilters<T extends Record<string, any>>({
 
   const handleStatusChange = useCallback((value: string) => {
     setStatusFilter(value);
+    setCurrentPage(1);
+  }, []);
+
+  const handleDateRangeChange = useCallback((range: DateRange) => {
+    setDateRange(range);
+    setCurrentPage(1);
+  }, []);
+
+  const clearDateRange = useCallback(() => {
+    setDateRange({ from: null, to: null });
     setCurrentPage(1);
   }, []);
 
@@ -82,6 +102,26 @@ export function useTableFilters<T extends Record<string, any>>({
           return statusFilter === 'active' ? status : !status;
         }
         return status === statusFilter;
+      });
+    }
+
+    // Apply date range filter
+    if (enableDateFilter && dateKey && dateRange.from && dateRange.to) {
+      result = result.filter((item) => {
+        const itemDate = item[dateKey];
+        if (!itemDate) return false;
+        
+        const date = new Date(itemDate);
+        if (isNaN(date.getTime())) return false;
+        
+        // Set time to start/end of day for proper comparison
+        const fromDate = new Date(dateRange.from!);
+        fromDate.setHours(0, 0, 0, 0);
+        
+        const toDate = new Date(dateRange.to!);
+        toDate.setHours(23, 59, 59, 999);
+        
+        return date >= fromDate && date <= toDate;
       });
     }
 
@@ -123,7 +163,7 @@ export function useTableFilters<T extends Record<string, any>>({
     }
 
     return result;
-  }, [data, searchValue, statusFilter, sortConfig, searchKeys]);
+  }, [data, searchValue, statusFilter, sortConfig, searchKeys, enableDateFilter, dateKey, dateRange]);
 
   // Pagination calculations
   const totalItems = filteredAndSortedData.length;
@@ -137,6 +177,8 @@ export function useTableFilters<T extends Record<string, any>>({
   if (validCurrentPage !== currentPage && totalPages > 0) {
     setCurrentPage(validCurrentPage);
   }
+
+  const hasDateFilter = dateRange.from !== null && dateRange.to !== null;
 
   return {
     searchValue,
@@ -154,5 +196,10 @@ export function useTableFilters<T extends Record<string, any>>({
     pageSize,
     startIndex,
     endIndex: Math.min(endIndex, totalItems),
+    // Date range filter
+    dateRange,
+    setDateRange: handleDateRangeChange,
+    clearDateRange,
+    hasDateFilter,
   };
 }
