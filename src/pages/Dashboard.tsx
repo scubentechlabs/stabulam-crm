@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
+import { UpcomingShootsWidget } from '@/components/dashboard/UpcomingShootsWidget';
 
 export default function Dashboard() {
   const { profile } = useAuth();
@@ -166,7 +167,7 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Today's Status */}
+      {/* Today's Status & Upcoming Shoots */}
       <div className="grid lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
@@ -198,21 +199,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Upcoming Shoots</CardTitle>
-            <CardDescription>Your scheduled shoots for the week</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8 text-muted-foreground">
-              <Camera className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>No upcoming shoots</p>
-              <Button variant="link" asChild className="mt-2">
-                <Link to="/shoots">View all shoots</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <UpcomingShootsWidget />
       </div>
     </div>
   );
