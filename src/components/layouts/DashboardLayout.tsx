@@ -168,14 +168,6 @@ export function DashboardLayout() {
                   {isAdmin ? 'Administrator' : 'Employee'}
                 </p>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-sidebar-foreground/70 hover:text-sidebar-foreground"
-                onClick={handleSignOut}
-              >
-                <LogOut className="h-5 w-5" />
-              </Button>
             </div>
           </div>
         </div>
@@ -207,6 +199,14 @@ export function DashboardLayout() {
               <Link to="/settings">
                 <Settings className="h-5 w-5" />
               </Link>
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSignOut}
+              title="Sign out"
+            >
+              <LogOut className="h-5 w-5" />
             </Button>
           </div>
         </header>
