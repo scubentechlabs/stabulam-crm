@@ -32,6 +32,9 @@ const iconMap: Record<NotificationType, React.ReactNode> = {
   missing_tod: <AlertCircle className="h-5 w-5 text-yellow-500" />,
   missing_eod: <FileText className="h-5 w-5 text-yellow-500" />,
   salary_generated: <DollarSign className="h-5 w-5 text-green-500" />,
+  regularization_request: <Clock className="h-5 w-5 text-blue-500" />,
+  regularization_approved: <CheckCircle className="h-5 w-5 text-green-500" />,
+  regularization_rejected: <XCircle className="h-5 w-5 text-destructive" />,
 };
 
 export function NotificationItem({ notification, onMarkRead, onClick }: NotificationItemProps) {
