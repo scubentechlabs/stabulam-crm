@@ -9,13 +9,11 @@ import {
   Briefcase,
   Users,
   Settings,
-  Bell,
   LogOut,
   Menu,
   X,
   ChevronRight,
   Camera,
-  FileText,
   DollarSign,
   BarChart3,
   CheckSquare,
@@ -24,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 interface NavItem {
   title: string;
@@ -195,11 +194,7 @@ export function DashboardLayout() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" asChild>
-              <Link to="/notifications">
-                <Bell className="h-5 w-5" />
-              </Link>
-            </Button>
+            <NotificationBell />
             <Button variant="ghost" size="icon" asChild>
               <Link to="/settings">
                 <Settings className="h-5 w-5" />
