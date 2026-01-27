@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Mail, Lock, User, BarChart3, PieChart, TrendingUp, Users } from 'lucide-react';
+import { Loader2, Mail, Lock, User, BarChart3, PieChart, TrendingUp, Users, Eye, EyeOff } from 'lucide-react';
 import { z } from 'zod';
 import stabulamLogo from '@/assets/logo.webp';
 
@@ -34,6 +34,11 @@ export default function Auth() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  
+  // Password visibility state
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -310,12 +315,19 @@ export default function Auth() {
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="signup-password"
-                    type="password"
+                    type={showSignupPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={signupPassword}
                     onChange={(e) => setSignupPassword(e.target.value)}
-                    className="h-12 pl-11 bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary"
+                    className="h-12 pl-11 pr-11 bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowSignupPassword(!showSignupPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
                 {signupErrors.password && (
                   <p className="text-sm text-destructive">{signupErrors.password}</p>
@@ -330,12 +342,19 @@ export default function Auth() {
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="signup-confirm"
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={signupConfirmPassword}
                     onChange={(e) => setSignupConfirmPassword(e.target.value)}
-                    className="h-12 pl-11 bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary"
+                    className="h-12 pl-11 pr-11 bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
                 {signupErrors.confirmPassword && (
                   <p className="text-sm text-destructive">{signupErrors.confirmPassword}</p>
@@ -407,12 +426,19 @@ export default function Auth() {
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="login-password"
-                    type="password"
+                    type={showLoginPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
-                    className="h-12 pl-11 bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary"
+                    className="h-12 pl-11 pr-11 bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
                 {loginErrors.password && (
                   <p className="text-sm text-destructive">{loginErrors.password}</p>
