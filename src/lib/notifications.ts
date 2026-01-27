@@ -13,6 +13,20 @@ interface NotificationData {
 }
 
 /**
+ * Send a push notification to a user
+ */
+async function sendPushNotification(userId: string, title: string, body: string) {
+  try {
+    await supabase.functions.invoke('send-push-notification', {
+      body: { userId, title, body },
+    });
+  } catch (error) {
+    console.error('Error sending push notification:', error);
+    // Don't throw - push notifications are best-effort
+  }
+}
+
+/**
  * Create a notification for a specific user
  */
 export async function createNotification(data: NotificationData) {
@@ -29,6 +43,10 @@ export async function createNotification(data: NotificationData) {
       });
 
     if (error) throw error;
+    
+    // Also send push notification
+    await sendPushNotification(data.userId, data.title, data.message);
+    
     return { success: true };
   } catch (error) {
     console.error('Error creating notification:', error);
