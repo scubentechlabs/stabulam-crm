@@ -1,48 +1,36 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { DollarSign, Calculator, Download } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calculator, FileText } from 'lucide-react';
+import { SalaryCalculator } from '@/components/salary/SalaryCalculator';
+import { SalaryRecordsList } from '@/components/salary/SalaryRecordsList';
 
 export default function AdminSalary() {
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div className="page-header mb-0">
-          <h1 className="page-title">Salary Generator</h1>
-          <p className="page-description">Calculate and generate employee salaries</p>
-        </div>
-        <Button>
-          <Calculator className="h-4 w-4 mr-2" />
-          Generate Salary
-        </Button>
+      <div className="page-header">
+        <h1 className="page-title">Salary Generator</h1>
+        <p className="page-description">Calculate and generate employee salaries with penalty rules</p>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Select Period</CardTitle>
-            <CardDescription>Choose salary calculation period</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8 text-muted-foreground">
-              <DollarSign className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>Select employees and period to generate salary</p>
-            </div>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="calculate" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="calculate" className="flex items-center gap-2">
+            <Calculator className="h-4 w-4" />
+            Calculate
+          </TabsTrigger>
+          <TabsTrigger value="records" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Records
+          </TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Salary Records</CardTitle>
-            <CardDescription>Previously generated salary slips</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8 text-muted-foreground">
-              <Download className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>No salary records yet</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        <TabsContent value="calculate">
+          <SalaryCalculator />
+        </TabsContent>
+
+        <TabsContent value="records">
+          <SalaryRecordsList />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
