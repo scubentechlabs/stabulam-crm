@@ -155,6 +155,15 @@ export function useExtraWork() {
     if (!user || !isAdmin) return { error: new Error('Not authorized') };
 
     try {
+      // First get the extra work to find the user_id and details
+      const { data: ewData, error: fetchError } = await supabase
+        .from('extra_work')
+        .select('user_id, hours, work_date, compensation_amount')
+        .eq('id', extraWorkId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
       const updateData: Record<string, unknown> = {
         status,
         admin_comments: adminComments || null,
@@ -173,6 +182,19 @@ export function useExtraWork() {
         .eq('id', extraWorkId);
 
       if (error) throw error;
+
+      // Send notification to the employee
+      const notificationType = status === 'approved' ? 'request_approved' : 'request_rejected';
+      const finalCompensation = adjustedCompensation ?? ewData.compensation_amount ?? 0;
+      
+      await supabase.from('notifications').insert({
+        user_id: ewData.user_id,
+        notification_type: notificationType,
+        title: `Extra Work Request ${status === 'approved' ? 'Approved' : 'Rejected'}`,
+        message: `Your ${ewData.hours}-hour extra work request for ${ewData.work_date} has been ${status}.${status === 'approved' ? ` Compensation: ₹${finalCompensation}` : ''}${adminComments ? ` Comment: ${adminComments}` : ''}`,
+        reference_id: extraWorkId,
+        reference_type: 'extra_work',
+      });
 
       toast({
         title: 'Success',

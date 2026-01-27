@@ -159,6 +159,15 @@ export function useLeaves() {
     if (!user || !isAdmin) return { error: new Error('Not authorized') };
 
     try {
+      // First get the leave to find the user_id
+      const { data: leaveData, error: fetchError } = await supabase
+        .from('leaves')
+        .select('user_id, leave_type, start_date, end_date')
+        .eq('id', leaveId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
       const { error } = await supabase
         .from('leaves')
         .update({
@@ -171,6 +180,20 @@ export function useLeaves() {
         .eq('id', leaveId);
 
       if (error) throw error;
+
+      // Send notification to the employee
+      const notificationType = status === 'approved' ? 'request_approved' : 'request_rejected';
+      const leaveTypeLabel = leaveData.leave_type === 'half_day' ? 'Half Day' : 
+                             leaveData.leave_type === 'full_day' ? 'Full Day' : 'Multiple Days';
+      
+      await supabase.from('notifications').insert({
+        user_id: leaveData.user_id,
+        notification_type: notificationType,
+        title: `Leave Request ${status === 'approved' ? 'Approved' : 'Rejected'}`,
+        message: `Your ${leaveTypeLabel} leave request for ${leaveData.start_date}${leaveData.start_date !== leaveData.end_date ? ` to ${leaveData.end_date}` : ''} has been ${status}.${adminComments ? ` Comment: ${adminComments}` : ''}`,
+        reference_id: leaveId,
+        reference_type: 'leave',
+      });
 
       toast({
         title: 'Success',
