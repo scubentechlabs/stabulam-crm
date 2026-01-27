@@ -1,31 +1,53 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Users, 
   Clock, 
   CheckSquare, 
-  DollarSign,
   TrendingUp,
   AlertTriangle,
   Camera,
   Calendar,
   ArrowRight,
-  UserPlus
+  UserPlus,
+  DollarSign,
+  FileText,
+  Briefcase
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
+import { useAdminDashboardStats } from '@/hooks/useAdminDashboardStats';
 
 export default function AdminDashboard() {
   const today = new Date();
+  const { stats, pendingApprovalsList, isLoading } = useAdminDashboardStats();
 
-  // Placeholder stats - will be replaced with real data
-  const stats = {
-    totalEmployees: 24,
-    presentToday: 18,
-    pendingApprovals: 5,
-    upcomingShoots: 3,
-    lateArrivals: 2,
-    onLeave: 4,
+  const getApprovalTypeIcon = (type: string) => {
+    switch (type) {
+      case 'leave':
+        return <Calendar className="h-4 w-4 text-info" />;
+      case 'extra_work':
+        return <Briefcase className="h-4 w-4 text-warning" />;
+      case 'regularization':
+        return <Clock className="h-4 w-4 text-primary" />;
+      default:
+        return <FileText className="h-4 w-4" />;
+    }
+  };
+
+  const getApprovalTypeBadge = (type: string) => {
+    switch (type) {
+      case 'leave':
+        return <Badge variant="secondary" className="text-xs">Leave</Badge>;
+      case 'extra_work':
+        return <Badge variant="outline" className="text-xs">Extra Work</Badge>;
+      case 'regularization':
+        return <Badge className="text-xs">Regularization</Badge>;
+      default:
+        return null;
+    }
   };
 
   return (
@@ -48,7 +70,7 @@ export default function AdminDashboard() {
           <Button asChild>
             <Link to="/admin/approvals">
               <CheckSquare className="h-4 w-4 mr-2" />
-              Approvals ({stats.pendingApprovals})
+              Approvals ({isLoading ? '...' : stats.pendingApprovals})
             </Link>
           </Button>
         </div>
@@ -56,148 +78,80 @@ export default function AdminDashboard() {
 
       {/* Key Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <Card className="stat-card">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Employees</p>
-              <p className="text-2xl font-bold mt-1">{stats.totalEmployees}</p>
-            </div>
-            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Users className="h-5 w-5 text-primary" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="stat-card">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Present Today</p>
-              <p className="text-2xl font-bold mt-1">{stats.presentToday}</p>
-            </div>
-            <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
-              <Clock className="h-5 w-5 text-success" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="stat-card">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Pending Approvals</p>
-              <p className="text-2xl font-bold mt-1">{stats.pendingApprovals}</p>
-            </div>
-            <div className="h-10 w-10 rounded-lg bg-warning/10 flex items-center justify-center">
-              <CheckSquare className="h-5 w-5 text-warning" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="stat-card">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Late Today</p>
-              <p className="text-2xl font-bold mt-1">{stats.lateArrivals}</p>
-            </div>
-            <div className="h-10 w-10 rounded-lg bg-destructive/10 flex items-center justify-center">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="stat-card">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">On Leave</p>
-              <p className="text-2xl font-bold mt-1">{stats.onLeave}</p>
-            </div>
-            <div className="h-10 w-10 rounded-lg bg-info/10 flex items-center justify-center">
-              <Calendar className="h-5 w-5 text-info" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="stat-card">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Upcoming Shoots</p>
-              <p className="text-2xl font-bold mt-1">{stats.upcomingShoots}</p>
-            </div>
-            <div className="h-10 w-10 rounded-lg bg-chart-4/10 flex items-center justify-center">
-              <Camera className="h-5 w-5 text-chart-4" />
-            </div>
-          </div>
-        </Card>
+        <StatCard
+          label="Total Employees"
+          value={stats.totalEmployees}
+          icon={<Users className="h-5 w-5 text-primary" />}
+          bgColor="bg-primary/10"
+          isLoading={isLoading}
+        />
+        <StatCard
+          label="Present Today"
+          value={stats.presentToday}
+          icon={<Clock className="h-5 w-5 text-success" />}
+          bgColor="bg-success/10"
+          isLoading={isLoading}
+        />
+        <StatCard
+          label="Pending Approvals"
+          value={stats.pendingApprovals}
+          icon={<CheckSquare className="h-5 w-5 text-warning" />}
+          bgColor="bg-warning/10"
+          isLoading={isLoading}
+        />
+        <StatCard
+          label="Late Today"
+          value={stats.lateArrivals}
+          icon={<AlertTriangle className="h-5 w-5 text-destructive" />}
+          bgColor="bg-destructive/10"
+          isLoading={isLoading}
+        />
+        <StatCard
+          label="On Leave"
+          value={stats.onLeave}
+          icon={<Calendar className="h-5 w-5 text-info" />}
+          bgColor="bg-info/10"
+          isLoading={isLoading}
+        />
+        <StatCard
+          label="Upcoming Shoots"
+          value={stats.upcomingShoots}
+          icon={<Camera className="h-5 w-5 text-chart-4" />}
+          bgColor="bg-chart-4/10"
+          isLoading={isLoading}
+        />
       </div>
 
       {/* Quick Actions Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="dashboard-card hover:border-primary/50 transition-colors">
-          <Link to="/admin/users" className="block p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Users className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">User Management</h3>
-                  <p className="text-sm text-muted-foreground">Manage employees</p>
-                </div>
-              </div>
-              <ArrowRight className="h-5 w-5 text-muted-foreground" />
-            </div>
-          </Link>
-        </Card>
-
-        <Card className="dashboard-card hover:border-primary/50 transition-colors">
-          <Link to="/admin/attendance" className="block p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-xl bg-success/10 flex items-center justify-center">
-                  <Clock className="h-6 w-6 text-success" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Attendance Monitor</h3>
-                  <p className="text-sm text-muted-foreground">View all attendance</p>
-                </div>
-              </div>
-              <ArrowRight className="h-5 w-5 text-muted-foreground" />
-            </div>
-          </Link>
-        </Card>
-
-        <Card className="dashboard-card hover:border-primary/50 transition-colors">
-          <Link to="/admin/salary" className="block p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-xl bg-warning/10 flex items-center justify-center">
-                  <DollarSign className="h-6 w-6 text-warning" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Salary Generator</h3>
-                  <p className="text-sm text-muted-foreground">Calculate salaries</p>
-                </div>
-              </div>
-              <ArrowRight className="h-5 w-5 text-muted-foreground" />
-            </div>
-          </Link>
-        </Card>
-
-        <Card className="dashboard-card hover:border-primary/50 transition-colors">
-          <Link to="/admin/reports" className="block p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-xl bg-info/10 flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-info" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Reports</h3>
-                  <p className="text-sm text-muted-foreground">Analytics & exports</p>
-                </div>
-              </div>
-              <ArrowRight className="h-5 w-5 text-muted-foreground" />
-            </div>
-          </Link>
-        </Card>
+        <QuickActionCard
+          to="/admin/users"
+          icon={<Users className="h-6 w-6 text-primary" />}
+          iconBg="bg-primary/10"
+          title="User Management"
+          description="Manage employees"
+        />
+        <QuickActionCard
+          to="/admin/attendance"
+          icon={<Clock className="h-6 w-6 text-success" />}
+          iconBg="bg-success/10"
+          title="Attendance Monitor"
+          description="View all attendance"
+        />
+        <QuickActionCard
+          to="/admin/salary"
+          icon={<DollarSign className="h-6 w-6 text-warning" />}
+          iconBg="bg-warning/10"
+          title="Salary Generator"
+          description="Calculate salaries"
+        />
+        <QuickActionCard
+          to="/admin/reports"
+          icon={<TrendingUp className="h-6 w-6 text-info" />}
+          iconBg="bg-info/10"
+          title="Reports"
+          description="Analytics & exports"
+        />
       </div>
 
       {/* Main Content Grid */}
@@ -214,10 +168,43 @@ export default function AdminDashboard() {
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8 text-muted-foreground">
-              <CheckSquare className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>No pending approvals</p>
-            </div>
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
+            ) : pendingApprovalsList.length > 0 ? (
+              <div className="space-y-3">
+                {pendingApprovalsList.map((approval) => (
+                  <div
+                    key={approval.id}
+                    className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                      {getApprovalTypeIcon(approval.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm">{approval.userName}</span>
+                        {getApprovalTypeBadge(approval.type)}
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">
+                        {approval.details}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {format(new Date(approval.requestDate), 'MMM d, yyyy')}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <CheckSquare className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>No pending approvals</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -233,29 +220,103 @@ export default function AdminDashboard() {
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-success/5 border border-success/20">
-                <span className="text-sm font-medium">Present</span>
-                <span className="text-lg font-bold text-success">{stats.presentToday}</span>
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map(i => (
+                  <Skeleton key={i} className="h-14 w-full" />
+                ))}
               </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-destructive/5 border border-destructive/20">
-                <span className="text-sm font-medium">Late Arrivals</span>
-                <span className="text-lg font-bold text-destructive">{stats.lateArrivals}</span>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-success/5 border border-success/20">
+                  <span className="text-sm font-medium">Present</span>
+                  <span className="text-lg font-bold text-success">{stats.presentToday}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-destructive/5 border border-destructive/20">
+                  <span className="text-sm font-medium">Late Arrivals</span>
+                  <span className="text-lg font-bold text-destructive">{stats.lateArrivals}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-info/5 border border-info/20">
+                  <span className="text-sm font-medium">On Leave</span>
+                  <span className="text-lg font-bold text-info">{stats.onLeave}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
+                  <span className="text-sm font-medium">Not Yet In</span>
+                  <span className="text-lg font-bold text-muted-foreground">
+                    {Math.max(0, stats.totalEmployees - stats.presentToday - stats.onLeave)}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-info/5 border border-info/20">
-                <span className="text-sm font-medium">On Leave</span>
-                <span className="text-lg font-bold text-info">{stats.onLeave}</span>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
-                <span className="text-sm font-medium">Not Yet In</span>
-                <span className="text-lg font-bold text-muted-foreground">
-                  {stats.totalEmployees - stats.presentToday - stats.onLeave}
-                </span>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
     </div>
+  );
+}
+
+// Extracted components for better organization
+function StatCard({
+  label,
+  value,
+  icon,
+  bgColor,
+  isLoading,
+}: {
+  label: string;
+  value: number;
+  icon: React.ReactNode;
+  bgColor: string;
+  isLoading: boolean;
+}) {
+  return (
+    <Card className="stat-card">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm text-muted-foreground">{label}</p>
+          {isLoading ? (
+            <Skeleton className="h-8 w-12 mt-1" />
+          ) : (
+            <p className="text-2xl font-bold mt-1">{value}</p>
+          )}
+        </div>
+        <div className={`h-10 w-10 rounded-lg ${bgColor} flex items-center justify-center`}>
+          {icon}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function QuickActionCard({
+  to,
+  icon,
+  iconBg,
+  title,
+  description,
+}: {
+  to: string;
+  icon: React.ReactNode;
+  iconBg: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <Card className="dashboard-card hover:border-primary/50 transition-colors">
+      <Link to={to} className="block p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className={`h-12 w-12 rounded-xl ${iconBg} flex items-center justify-center`}>
+              {icon}
+            </div>
+            <div>
+              <h3 className="font-semibold">{title}</h3>
+              <p className="text-sm text-muted-foreground">{description}</p>
+            </div>
+          </div>
+          <ArrowRight className="h-5 w-5 text-muted-foreground" />
+        </div>
+      </Link>
+    </Card>
   );
 }
