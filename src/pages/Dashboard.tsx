@@ -9,14 +9,17 @@ import {
   CheckCircle2, 
   AlertCircle,
   TrendingUp,
-  Camera
+  Camera,
+  Loader2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { UpcomingShootsWidget } from '@/components/dashboard/UpcomingShootsWidget';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 export default function Dashboard() {
   const { profile } = useAuth();
+  const { stats, todayStatus, isLoading } = useDashboardStats();
   const today = new Date();
   const greeting = getGreeting();
 
@@ -27,12 +30,9 @@ export default function Dashboard() {
     return 'Good evening';
   }
 
-  // Placeholder stats - will be replaced with real data
-  const stats = {
-    attendanceStreak: 12,
-    tasksCompleted: 45,
-    pendingLeaves: 0,
-    upcomingShoots: 2,
+  const formatTime = (timeStr: string | null) => {
+    if (!timeStr) return null;
+    return format(new Date(timeStr), 'h:mm a');
   };
 
   return (
@@ -51,7 +51,7 @@ export default function Dashboard() {
           <Button asChild size="lg" className="gap-2">
             <Link to="/attendance">
               <Clock className="h-4 w-4" />
-              Clock In
+              {todayStatus.clockedIn ? (todayStatus.clockOutTime ? 'View Attendance' : 'Clock Out') : 'Clock In'}
             </Link>
           </Button>
         </div>
@@ -63,7 +63,11 @@ export default function Dashboard() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Attendance Streak</p>
-              <p className="text-2xl font-bold mt-1">{stats.attendanceStreak} days</p>
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin mt-2" />
+              ) : (
+                <p className="text-2xl font-bold mt-1">{stats.attendanceStreak} days</p>
+              )}
             </div>
             <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-success" />
@@ -75,7 +79,11 @@ export default function Dashboard() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Tasks Completed</p>
-              <p className="text-2xl font-bold mt-1">{stats.tasksCompleted}</p>
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin mt-2" />
+              ) : (
+                <p className="text-2xl font-bold mt-1">{stats.tasksCompleted}</p>
+              )}
             </div>
             <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
               <CheckCircle2 className="h-5 w-5 text-primary" />
@@ -87,7 +95,11 @@ export default function Dashboard() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Pending Leaves</p>
-              <p className="text-2xl font-bold mt-1">{stats.pendingLeaves}</p>
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin mt-2" />
+              ) : (
+                <p className="text-2xl font-bold mt-1">{stats.pendingLeaves}</p>
+              )}
             </div>
             <div className="h-10 w-10 rounded-lg bg-warning/10 flex items-center justify-center">
               <Calendar className="h-5 w-5 text-warning" />
@@ -99,7 +111,11 @@ export default function Dashboard() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Upcoming Shoots</p>
-              <p className="text-2xl font-bold mt-1">{stats.upcomingShoots}</p>
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin mt-2" />
+              ) : (
+                <p className="text-2xl font-bold mt-1">{stats.upcomingShoots}</p>
+              )}
             </div>
             <div className="h-10 w-10 rounded-lg bg-info/10 flex items-center justify-center">
               <Camera className="h-5 w-5 text-info" />
@@ -177,25 +193,70 @@ export default function Dashboard() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
               <div className="flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-warning" />
-                <span>Clock-in Status</span>
+                {todayStatus.clockedIn ? (
+                  <CheckCircle2 className="h-5 w-5 text-success" />
+                ) : (
+                  <AlertCircle className="h-5 w-5 text-warning" />
+                )}
+                <div>
+                  <span>Clock-in Status</span>
+                  {todayStatus.clockInTime && (
+                    <p className="text-xs text-muted-foreground">
+                      {formatTime(todayStatus.clockInTime)}
+                      {todayStatus.isLate && ` (${todayStatus.lateMinutes} min late)`}
+                    </p>
+                  )}
+                </div>
               </div>
-              <span className="status-badge status-badge-pending">Not clocked in</span>
+              <span className={`status-badge ${
+                todayStatus.clockedIn 
+                  ? (todayStatus.isLate ? 'status-badge-rejected' : 'status-badge-approved')
+                  : 'status-badge-pending'
+              }`}>
+                {todayStatus.clockedIn 
+                  ? (todayStatus.isLate ? 'Late' : 'Clocked in')
+                  : 'Not clocked in'}
+              </span>
             </div>
             <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
               <div className="flex items-center gap-3">
-                <ClipboardList className="h-5 w-5 text-muted-foreground" />
+                {todayStatus.todSubmitted ? (
+                  <CheckCircle2 className="h-5 w-5 text-success" />
+                ) : (
+                  <ClipboardList className="h-5 w-5 text-muted-foreground" />
+                )}
                 <span>TOD Submitted</span>
               </div>
-              <span className="status-badge status-badge-pending">Pending</span>
+              <span className={`status-badge ${
+                todayStatus.todSubmitted ? 'status-badge-approved' : 'status-badge-pending'
+              }`}>
+                {todayStatus.todSubmitted ? 'Submitted' : 'Pending'}
+              </span>
             </div>
             <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
               <div className="flex items-center gap-3">
-                <ClipboardList className="h-5 w-5 text-muted-foreground" />
+                {todayStatus.eodSubmitted ? (
+                  <CheckCircle2 className="h-5 w-5 text-success" />
+                ) : (
+                  <ClipboardList className="h-5 w-5 text-muted-foreground" />
+                )}
                 <span>EOD Submitted</span>
               </div>
-              <span className="status-badge status-badge-pending">Pending</span>
+              <span className={`status-badge ${
+                todayStatus.eodSubmitted ? 'status-badge-approved' : 'status-badge-pending'
+              }`}>
+                {todayStatus.eodSubmitted ? 'Submitted' : 'Pending'}
+              </span>
             </div>
+            {todayStatus.clockOutTime && (
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-success" />
+                  <span>Clock-out Time</span>
+                </div>
+                <span className="text-sm font-medium">{formatTime(todayStatus.clockOutTime)}</span>
+              </div>
+            )}
           </CardContent>
         </Card>
 
