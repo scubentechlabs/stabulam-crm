@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, Briefcase, Loader2 } from 'lucide-react';
+import { Calendar, Briefcase, Clock, Loader2 } from 'lucide-react';
 import { useLeaves } from '@/hooks/useLeaves';
 import { useExtraWork } from '@/hooks/useExtraWork';
+import { useAttendanceRegularization } from '@/hooks/useAttendanceRegularization';
 import { LeaveApprovalCard } from '@/components/leaves/LeaveApprovalCard';
 import { ExtraWorkApprovalCard } from '@/components/extra-work/ExtraWorkApprovalCard';
+import { RegularizationApprovalCard } from '@/components/attendance/RegularizationApprovalCard';
 
 export default function AdminApprovals() {
   const [isProcessing, setIsProcessing] = useState(false);
   const { pendingLeaves, isLoading: leavesLoading, updateLeaveStatus } = useLeaves();
   const { pendingRequests: pendingExtraWork, isLoading: extraWorkLoading, updateExtraWorkStatus } = useExtraWork();
+  const { pendingRegularizations, isLoading: regularizationsLoading, updateRegularizationStatus } = useAttendanceRegularization();
 
-  const isLoading = leavesLoading || extraWorkLoading;
+  const isLoading = leavesLoading || extraWorkLoading || regularizationsLoading;
 
   const handleApproveLeave = async (leaveId: string, comments?: string, penalty?: number) => {
     setIsProcessing(true);
@@ -38,6 +41,18 @@ export default function AdminApprovals() {
     setIsProcessing(false);
   };
 
+  const handleApproveRegularization = async (regularizationId: string, comments?: string) => {
+    setIsProcessing(true);
+    await updateRegularizationStatus(regularizationId, 'approved', comments);
+    setIsProcessing(false);
+  };
+
+  const handleRejectRegularization = async (regularizationId: string, comments?: string) => {
+    setIsProcessing(true);
+    await updateRegularizationStatus(regularizationId, 'rejected', comments);
+    setIsProcessing(false);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -46,7 +61,7 @@ export default function AdminApprovals() {
     );
   }
 
-  const totalPending = pendingLeaves.length + pendingExtraWork.length;
+  const totalPending = pendingLeaves.length + pendingExtraWork.length + pendingRegularizations.length;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -66,11 +81,15 @@ export default function AdminApprovals() {
         <TabsList>
           <TabsTrigger value="leaves" className="gap-2">
             <Calendar className="h-4 w-4" />
-            Leave Requests ({pendingLeaves.length})
+            Leaves ({pendingLeaves.length})
           </TabsTrigger>
           <TabsTrigger value="extra-work" className="gap-2">
             <Briefcase className="h-4 w-4" />
             Extra Work ({pendingExtraWork.length})
+          </TabsTrigger>
+          <TabsTrigger value="regularizations" className="gap-2">
+            <Clock className="h-4 w-4" />
+            Regularizations ({pendingRegularizations.length})
           </TabsTrigger>
         </TabsList>
 
@@ -140,6 +159,43 @@ export default function AdminApprovals() {
                     extraWork={extraWork}
                     onApprove={handleApproveExtraWork}
                     onReject={handleRejectExtraWork}
+                    isProcessing={isProcessing}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="regularizations" className="mt-6">
+          {pendingRegularizations.length === 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Pending Regularization Requests</CardTitle>
+                <CardDescription>Review and approve attendance corrections</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-muted-foreground">
+                  <Clock className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No pending regularization requests</p>
+                  <p className="text-sm mt-1">All caught up! 🎉</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">
+                  Pending Regularization Requests ({pendingRegularizations.length})
+                </h2>
+              </div>
+              <div className="grid gap-4">
+                {pendingRegularizations.map((regularization) => (
+                  <RegularizationApprovalCard
+                    key={regularization.id}
+                    regularization={regularization}
+                    onApprove={handleApproveRegularization}
+                    onReject={handleRejectRegularization}
                     isProcessing={isProcessing}
                   />
                 ))}

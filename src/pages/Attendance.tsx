@@ -6,13 +6,16 @@ import { AttendanceCalendar } from '@/components/attendance/AttendanceCalendar';
 import { AttendanceExportDialog } from '@/components/attendance/AttendanceExportDialog';
 import { ClockInCard } from '@/components/attendance/ClockInCard';
 import { ClockOutCard } from '@/components/attendance/ClockOutCard';
+import { RegularizationRequestForm } from '@/components/attendance/RegularizationRequestForm';
+import { RegularizationCard } from '@/components/attendance/RegularizationCard';
 import { TodPanel } from '@/components/tasks/TodPanel';
 import { EodPanel } from '@/components/tasks/EodPanel';
 import { TaskForm } from '@/components/tasks/TaskForm';
 import { TaskList } from '@/components/tasks/TaskList';
 import { useAttendance } from '@/hooks/useAttendance';
 import { useTasks } from '@/hooks/useTasks';
-import { Loader2, Clock, AlertTriangle, CheckCircle2, Calendar, Download } from 'lucide-react';
+import { useAttendanceRegularization } from '@/hooks/useAttendanceRegularization';
+import { Loader2, Clock, AlertTriangle, CheckCircle2, Calendar, Download, FileText } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 
@@ -21,6 +24,7 @@ type AttendanceStep = 'clock-in' | 'tod' | 'working' | 'eod' | 'clock-out' | 'co
 export default function Attendance() {
   const { todayAttendance, isLoading, refetch } = useAttendance();
   const { addTask, urgentTasks, todTasks, refetch: refetchTasks } = useTasks(todayAttendance?.id);
+  const { regularizations, isLoading: regularizationsLoading } = useAttendanceRegularization();
   const [currentStep, setCurrentStep] = useState<AttendanceStep>('clock-in');
   const [showEod, setShowEod] = useState(false);
 
@@ -74,7 +78,7 @@ export default function Attendance() {
     return !!result;
   };
 
-  if (isLoading) {
+  if (isLoading || regularizationsLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -84,19 +88,29 @@ export default function Attendance() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="page-header mb-0">
           <h1 className="page-title">Attendance</h1>
           <p className="page-description">Track your daily clock-in and clock-out</p>
         </div>
-        <AttendanceExportDialog
-          trigger={
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-          }
-        />
+        <div className="flex gap-2">
+          <AttendanceExportDialog
+            trigger={
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+            }
+          />
+          <RegularizationRequestForm
+            trigger={
+              <Button variant="outline" size="sm">
+                <FileText className="h-4 w-4 mr-2" />
+                Request Correction
+              </Button>
+            }
+          />
+        </div>
       </div>
 
       <Tabs defaultValue="today" className="w-full">
@@ -108,6 +122,10 @@ export default function Attendance() {
           <TabsTrigger value="history" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             History
+          </TabsTrigger>
+          <TabsTrigger value="regularizations" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Corrections
           </TabsTrigger>
         </TabsList>
 
@@ -235,6 +253,40 @@ export default function Attendance() {
 
         <TabsContent value="history" className="mt-6">
           <AttendanceCalendar />
+        </TabsContent>
+
+        <TabsContent value="regularizations" className="mt-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">Attendance Corrections</h2>
+                <p className="text-sm text-muted-foreground">
+                  Your submitted regularization requests
+                </p>
+              </div>
+              <RegularizationRequestForm />
+            </div>
+
+            {regularizations.length === 0 ? (
+              <Card>
+                <CardContent className="py-12">
+                  <div className="text-center text-muted-foreground">
+                    <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No regularization requests yet</p>
+                    <p className="text-sm mt-1">
+                      Request a correction if you missed clocking in/out
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {regularizations.map((reg) => (
+                  <RegularizationCard key={reg.id} regularization={reg} />
+                ))}
+              </div>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

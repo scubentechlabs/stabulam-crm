@@ -65,6 +65,62 @@ export type Database = {
         }
         Relationships: []
       }
+      attendance_regularizations: {
+        Row: {
+          admin_comments: string | null
+          approved_by: string | null
+          attendance_id: string | null
+          created_at: string
+          id: string
+          processed_at: string | null
+          reason: string
+          request_date: string
+          requested_clock_in: string
+          requested_clock_out: string
+          status: Database["public"]["Enums"]["regularization_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_comments?: string | null
+          approved_by?: string | null
+          attendance_id?: string | null
+          created_at?: string
+          id?: string
+          processed_at?: string | null
+          reason: string
+          request_date: string
+          requested_clock_in: string
+          requested_clock_out: string
+          status?: Database["public"]["Enums"]["regularization_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_comments?: string | null
+          approved_by?: string | null
+          attendance_id?: string | null
+          created_at?: string
+          id?: string
+          processed_at?: string | null
+          reason?: string
+          request_date?: string
+          requested_clock_in?: string
+          requested_clock_out?: string
+          status?: Database["public"]["Enums"]["regularization_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_regularizations_attendance_id_fkey"
+            columns: ["attendance_id"]
+            isOneToOne: false
+            referencedRelation: "attendance"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       extra_work: {
         Row: {
           admin_comments: string | null
@@ -681,6 +737,10 @@ export type Database = {
         | "missing_tod"
         | "missing_eod"
         | "salary_generated"
+        | "regularization_request"
+        | "regularization_approved"
+        | "regularization_rejected"
+      regularization_status: "pending" | "approved" | "rejected"
       salary_cycle_type: "monthly" | "bi_weekly" | "custom"
       shoot_status: "pending" | "in_progress" | "completed"
       task_status: "pending" | "completed"
@@ -825,7 +885,11 @@ export const Constants = {
         "missing_tod",
         "missing_eod",
         "salary_generated",
+        "regularization_request",
+        "regularization_approved",
+        "regularization_rejected",
       ],
+      regularization_status: ["pending", "approved", "rejected"],
       salary_cycle_type: ["monthly", "bi_weekly", "custom"],
       shoot_status: ["pending", "in_progress", "completed"],
       task_status: ["pending", "completed"],
