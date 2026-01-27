@@ -14,7 +14,7 @@ import { Users, Plus, Search, Loader2, Shield, UserCheck, UserX } from 'lucide-r
 import { useUsers, type UserWithRole } from '@/hooks/useUsers';
 import { CreateUserForm } from '@/components/users/CreateUserForm';
 import { EditUserForm } from '@/components/users/EditUserForm';
-import { UserCard } from '@/components/users/UserCard';
+import { UserTable } from '@/components/users/UserTable';
 
 export default function AdminUsers() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -44,6 +44,26 @@ export default function AdminUsers() {
         user.department?.toLowerCase().includes(query)
     );
   }, [users, searchQuery]);
+
+  const filteredActiveUsers = useMemo(() => {
+    if (!searchQuery.trim()) return activeUsers;
+    const query = searchQuery.toLowerCase();
+    return activeUsers.filter(
+      user =>
+        user.full_name.toLowerCase().includes(query) ||
+        user.email.toLowerCase().includes(query)
+    );
+  }, [activeUsers, searchQuery]);
+
+  const filteredInactiveUsers = useMemo(() => {
+    if (!searchQuery.trim()) return inactiveUsers;
+    const query = searchQuery.toLowerCase();
+    return inactiveUsers.filter(
+      user =>
+        user.full_name.toLowerCase().includes(query) ||
+        user.email.toLowerCase().includes(query)
+    );
+  }, [inactiveUsers, searchQuery]);
 
   const handleCreateUser = async (data: Parameters<typeof createUser>[0]) => {
     setIsSubmitting(true);
@@ -176,79 +196,33 @@ export default function AdminUsers() {
             </TabsList>
 
             <TabsContent value="all">
-              {filteredUsers.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>{searchQuery ? 'No matching employees found' : 'No employees added yet'}</p>
-                  {!searchQuery && (
-                    <p className="text-sm">Click "Add Employee" to get started</p>
-                  )}
-                </div>
-              ) : (
-                <div className="grid gap-4">
-                  {filteredUsers.map((user) => (
-                    <UserCard
-                      key={user.id}
-                      user={user}
-                      onEdit={setEditingUser}
-                      onToggleActive={handleToggleActive}
-                      onChangeRole={handleChangeRole}
-                    />
-                  ))}
-                </div>
-              )}
+              <UserTable 
+                users={filteredUsers}
+                onEdit={setEditingUser}
+                onToggleActive={handleToggleActive}
+                onChangeRole={handleChangeRole}
+                emptyMessage={searchQuery ? 'No matching employees found' : 'No employees added yet'}
+              />
             </TabsContent>
 
             <TabsContent value="active">
-              {activeUsers.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <UserCheck className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No active employees</p>
-                </div>
-              ) : (
-                <div className="grid gap-4">
-                  {activeUsers
-                    .filter(u => !searchQuery || 
-                      u.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                      u.email.toLowerCase().includes(searchQuery.toLowerCase())
-                    )
-                    .map((user) => (
-                      <UserCard
-                        key={user.id}
-                        user={user}
-                        onEdit={setEditingUser}
-                        onToggleActive={handleToggleActive}
-                        onChangeRole={handleChangeRole}
-                      />
-                    ))}
-                </div>
-              )}
+              <UserTable 
+                users={filteredActiveUsers}
+                onEdit={setEditingUser}
+                onToggleActive={handleToggleActive}
+                onChangeRole={handleChangeRole}
+                emptyMessage="No active employees"
+              />
             </TabsContent>
 
             <TabsContent value="inactive">
-              {inactiveUsers.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <UserX className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No inactive employees</p>
-                </div>
-              ) : (
-                <div className="grid gap-4">
-                  {inactiveUsers
-                    .filter(u => !searchQuery || 
-                      u.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                      u.email.toLowerCase().includes(searchQuery.toLowerCase())
-                    )
-                    .map((user) => (
-                      <UserCard
-                        key={user.id}
-                        user={user}
-                        onEdit={setEditingUser}
-                        onToggleActive={handleToggleActive}
-                        onChangeRole={handleChangeRole}
-                      />
-                    ))}
-                </div>
-              )}
+              <UserTable 
+                users={filteredInactiveUsers}
+                onEdit={setEditingUser}
+                onToggleActive={handleToggleActive}
+                onChangeRole={handleChangeRole}
+                emptyMessage="No inactive employees"
+              />
             </TabsContent>
           </Tabs>
         </CardContent>

@@ -5,9 +5,9 @@ import { Calendar, Briefcase, Clock, Loader2, Wallet } from 'lucide-react';
 import { useLeaves } from '@/hooks/useLeaves';
 import { useExtraWork } from '@/hooks/useExtraWork';
 import { useAttendanceRegularization } from '@/hooks/useAttendanceRegularization';
-import { LeaveApprovalCard } from '@/components/leaves/LeaveApprovalCard';
-import { ExtraWorkApprovalCard } from '@/components/extra-work/ExtraWorkApprovalCard';
-import { RegularizationApprovalCard } from '@/components/attendance/RegularizationApprovalCard';
+import { LeaveApprovalTable } from '@/components/leaves/LeaveApprovalTable';
+import { ExtraWorkApprovalTable } from '@/components/extra-work/ExtraWorkApprovalTable';
+import { RegularizationApprovalTable } from '@/components/attendance/RegularizationApprovalTable';
 import { LeaveBalanceManager } from '@/components/leaves/LeaveBalanceManager';
 
 export default function AdminApprovals() {
@@ -99,114 +99,54 @@ export default function AdminApprovals() {
         </TabsList>
 
         <TabsContent value="leaves" className="mt-6">
-          {pendingLeaves.length === 0 ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Pending Leave Requests</CardTitle>
-                <CardDescription>Review and approve leave applications</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <Calendar className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No pending leave requests</p>
-                  <p className="text-sm mt-1">All caught up! 🎉</p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">
-                  Pending Leave Requests ({pendingLeaves.length})
-                </h2>
-              </div>
-              <div className="grid gap-4">
-                {pendingLeaves.map((leave) => (
-                  <LeaveApprovalCard
-                    key={leave.id}
-                    leave={leave}
-                    onApprove={handleApproveLeave}
-                    onReject={handleRejectLeave}
-                    isProcessing={isProcessing}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+          <Card>
+            <CardHeader>
+              <CardTitle>Pending Leave Requests</CardTitle>
+              <CardDescription>Review and approve leave applications</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <LeaveApprovalTable
+                leaves={pendingLeaves}
+                onApprove={handleApproveLeave}
+                onReject={handleRejectLeave}
+                isProcessing={isProcessing}
+              />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="extra-work" className="mt-6">
-          {pendingExtraWork.length === 0 ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Pending Extra Work Requests</CardTitle>
-                <CardDescription>Review and approve overtime claims</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <Briefcase className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No pending extra work requests</p>
-                  <p className="text-sm mt-1">All caught up! 🎉</p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">
-                  Pending Extra Work Requests ({pendingExtraWork.length})
-                </h2>
-              </div>
-              <div className="grid gap-4">
-                {pendingExtraWork.map((extraWork) => (
-                  <ExtraWorkApprovalCard
-                    key={extraWork.id}
-                    extraWork={extraWork}
-                    onApprove={handleApproveExtraWork}
-                    onReject={handleRejectExtraWork}
-                    isProcessing={isProcessing}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+          <Card>
+            <CardHeader>
+              <CardTitle>Pending Extra Work Requests</CardTitle>
+              <CardDescription>Review and approve overtime claims</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ExtraWorkApprovalTable
+                extraWorkList={pendingExtraWork}
+                onApprove={handleApproveExtraWork}
+                onReject={handleRejectExtraWork}
+                isProcessing={isProcessing}
+              />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="regularizations" className="mt-6">
-          {pendingRegularizations.length === 0 ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Pending Regularization Requests</CardTitle>
-                <CardDescription>Review and approve attendance corrections</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <Clock className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>No pending regularization requests</p>
-                  <p className="text-sm mt-1">All caught up! 🎉</p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">
-                  Pending Regularization Requests ({pendingRegularizations.length})
-                </h2>
-              </div>
-              <div className="grid gap-4">
-                {pendingRegularizations.map((regularization) => (
-                  <RegularizationApprovalCard
-                    key={regularization.id}
-                    regularization={regularization}
-                    onApprove={handleApproveRegularization}
-                    onReject={handleRejectRegularization}
-                    isProcessing={isProcessing}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+          <Card>
+            <CardHeader>
+              <CardTitle>Pending Regularization Requests</CardTitle>
+              <CardDescription>Review and approve attendance corrections</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RegularizationApprovalTable
+                regularizations={pendingRegularizations}
+                onApprove={handleApproveRegularization}
+                onReject={handleRejectRegularization}
+                isProcessing={isProcessing}
+              />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="balances" className="mt-6">
