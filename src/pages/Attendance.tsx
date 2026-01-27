@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AttendanceStatus } from '@/components/attendance/AttendanceStatus';
+import { AttendanceCalendar } from '@/components/attendance/AttendanceCalendar';
 import { ClockInCard } from '@/components/attendance/ClockInCard';
 import { ClockOutCard } from '@/components/attendance/ClockOutCard';
 import { TodPanel } from '@/components/tasks/TodPanel';
@@ -10,7 +11,7 @@ import { TaskForm } from '@/components/tasks/TaskForm';
 import { TaskList } from '@/components/tasks/TaskList';
 import { useAttendance } from '@/hooks/useAttendance';
 import { useTasks } from '@/hooks/useTasks';
-import { Loader2, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Loader2, Clock, AlertTriangle, CheckCircle2, Calendar } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type AttendanceStep = 'clock-in' | 'tod' | 'working' | 'eod' | 'clock-out' | 'complete';
@@ -85,6 +86,20 @@ export default function Attendance() {
         <h1 className="page-title">Attendance</h1>
         <p className="page-description">Track your daily clock-in and clock-out</p>
       </div>
+
+      <Tabs defaultValue="today" className="w-full">
+        <TabsList>
+          <TabsTrigger value="today" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Today
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            History
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="today" className="mt-6 space-y-6">
 
       {/* Status Bar - Always visible when clocked in */}
       {todayAttendance?.clock_in_time && (
@@ -204,6 +219,12 @@ export default function Attendance() {
           </CardContent>
         </Card>
       )}
+        </TabsContent>
+
+        <TabsContent value="history" className="mt-6">
+          <AttendanceCalendar />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
