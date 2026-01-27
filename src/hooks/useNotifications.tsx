@@ -64,7 +64,7 @@ export function useNotifications() {
 
     fetchNotifications();
 
-    // Set up real-time subscription
+    // Set up real-time subscription for INSERT and UPDATE events
     const channel = supabase
       .channel(`notifications:${user.id}`)
       .on(
@@ -84,6 +84,23 @@ export function useNotifications() {
             title: newNotification.title,
             description: newNotification.message,
           });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const updatedNotification = payload.new as Notification;
+          setNotifications(prev =>
+            prev.map(n =>
+              n.id === updatedNotification.id ? updatedNotification : n
+            )
+          );
         }
       )
       .subscribe();
