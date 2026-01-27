@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { notifyExtraWorkRequest } from '@/lib/notifications';
 import type { Database } from '@/integrations/supabase/types';
 
 type ExtraWorkStatus = Database['public']['Enums']['extra_work_status'];
@@ -114,7 +115,14 @@ export function useExtraWork() {
       const compensation = EXTRA_WORK_TIERS[data.hours];
       const today = new Date().toISOString().split('T')[0];
 
-      const { error } = await supabase.from('extra_work').insert({
+      // Get user profile for notification
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', user.id)
+        .single();
+
+      const { data: insertedExtraWork, error } = await supabase.from('extra_work').insert({
         user_id: user.id,
         work_date: today,
         hours: data.hours,
@@ -124,9 +132,25 @@ export function useExtraWork() {
         compensation_amount: compensation,
         status: 'pending',
         requested_at: new Date().toISOString(),
-      });
+      }).select('id').single();
 
       if (error) throw error;
+
+      // Notify all admins about the new extra work request
+      const { data: adminRoles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin');
+
+      if (adminRoles && adminRoles.length > 0 && insertedExtraWork) {
+        const adminUserIds = adminRoles.map(r => r.user_id);
+        await notifyExtraWorkRequest(
+          adminUserIds,
+          profile?.full_name || 'An employee',
+          data.hours,
+          insertedExtraWork.id
+        );
+      }
 
       toast({
         title: 'Success',
