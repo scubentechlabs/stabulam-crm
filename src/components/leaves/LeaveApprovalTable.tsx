@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { Calendar, Check, X, Eye, MoreHorizontal } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BulkActionsBar } from '@/components/ui/bulk-actions-bar';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,6 +59,17 @@ export function LeaveApprovalTable({
     toggleAll,
     clearSelection,
   } = useBulkSelection(leaves);
+
+  // Keyboard shortcuts
+  const shortcuts = useMemo(() => [
+    { key: 'a', ctrlKey: true, action: toggleAll, description: 'Select all' },
+    { key: 'Enter', action: () => selectedCount > 0 && setDialogType('bulk-approve'), description: 'Approve selected' },
+    { key: 'Delete', action: () => selectedCount > 0 && setDialogType('bulk-reject'), description: 'Reject selected' },
+    { key: 'Backspace', action: () => selectedCount > 0 && setDialogType('bulk-reject'), description: 'Reject selected' },
+    { key: 'Escape', action: clearSelection, description: 'Clear selection' },
+  ], [toggleAll, selectedCount, clearSelection]);
+
+  useKeyboardShortcuts(shortcuts, dialogType === null);
 
   const getLeaveTypeLabel = (leave: LeaveWithProfile) => {
     switch (leave.leave_type) {
