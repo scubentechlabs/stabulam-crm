@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { startOfMonth, endOfMonth, format, eachDayOfInterval, isWeekend } from 'date-fns';
+import { format, eachDayOfInterval, isWeekend, startOfMonth, endOfMonth } from 'date-fns';
 import { useRealtimeDashboard } from './useRealtimeDashboard';
+
+export interface DateRange {
+  from: Date;
+  to: Date;
+}
 
 interface EmployeeTaskStats {
   userId: string;
@@ -40,15 +45,16 @@ interface TaskStats {
 export function useTaskStats() {
   const [stats, setStats] = useState<TaskStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date()),
+  });
 
   const fetchStats = useCallback(async () => {
     setIsLoading(true);
     try {
-      const monthStart = startOfMonth(selectedMonth);
-      const monthEnd = endOfMonth(selectedMonth);
-      const startStr = format(monthStart, 'yyyy-MM-dd');
-      const endStr = format(monthEnd, 'yyyy-MM-dd');
+      const startStr = format(dateRange.from, 'yyyy-MM-dd');
+      const endStr = format(dateRange.to, 'yyyy-MM-dd');
 
       // Fetch all active employees
       const { data: profiles, error: profilesError } = await supabase
@@ -58,7 +64,7 @@ export function useTaskStats() {
 
       if (profilesError) throw profilesError;
 
-      // Fetch tasks for the month
+      // Fetch tasks for the date range
       const { data: tasks, error: tasksError } = await supabase
         .from('tasks')
         .select('*')
@@ -77,7 +83,7 @@ export function useTaskStats() {
       if (attendanceError) throw attendanceError;
 
       // Calculate working days
-      const allDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+      const allDays = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
       const workingDays = allDays.filter(day => !isWeekend(day));
 
       // Calculate employee stats
@@ -158,7 +164,7 @@ export function useTaskStats() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedMonth]);
+  }, [dateRange]);
 
   useEffect(() => {
     fetchStats();
@@ -174,8 +180,8 @@ export function useTaskStats() {
   return {
     stats,
     isLoading,
-    selectedMonth,
-    setSelectedMonth,
+    dateRange,
+    setDateRange,
     refetch: fetchStats,
   };
 }

@@ -1,28 +1,20 @@
-import { format, subMonths, addMonths } from 'date-fns';
 import { 
-  ChevronLeft, 
-  ChevronRight, 
   FileText, 
   CheckCircle, 
   Clock, 
-  AlertCircle,
+  Target,
   ArrowUpRight,
   ArrowDownRight,
-  Calendar,
-  Target
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTaskStats } from '@/hooks/useTaskStats';
 import { TaskCharts } from './TaskCharts';
 import { TaskStatsTable } from './TaskStatsTable';
+import { DateRangePicker } from './DateRangePicker';
 
 export function TaskSummaryReport() {
-  const { stats, isLoading, selectedMonth, setSelectedMonth } = useTaskStats();
-
-  const handlePrevMonth = () => setSelectedMonth(subMonths(selectedMonth, 1));
-  const handleNextMonth = () => setSelectedMonth(addMonths(selectedMonth, 1));
+  const { stats, isLoading, dateRange, setDateRange } = useTaskStats();
 
   if (isLoading) {
     return (
@@ -50,7 +42,7 @@ export function TaskSummaryReport() {
       suffix: '%',
       trend: '+8.2%',
       trendUp: true,
-      trendLabel: 'from last month',
+      trendLabel: 'from last period',
       icon: FileText,
       color: 'text-blue-600',
       bgColor: 'bg-blue-500/10',
@@ -61,7 +53,7 @@ export function TaskSummaryReport() {
       suffix: '%',
       trend: '+5.4%',
       trendUp: true,
-      trendLabel: 'from last month',
+      trendLabel: 'from last period',
       icon: CheckCircle,
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-500/10',
@@ -83,7 +75,7 @@ export function TaskSummaryReport() {
       suffix: '',
       trend: '-15',
       trendUp: true,
-      trendLabel: 'fewer than last month',
+      trendLabel: 'fewer than last period',
       icon: Clock,
       color: 'text-amber-600',
       bgColor: 'bg-amber-500/10',
@@ -92,7 +84,7 @@ export function TaskSummaryReport() {
 
   return (
     <div className="space-y-6">
-      {/* Month Selector - Modern Style */}
+      {/* Header with Date Range Picker */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold">Task Performance</h2>
@@ -100,29 +92,10 @@ export function TaskSummaryReport() {
             TOD/EOD submission rates and task completion trends
           </p>
         </div>
-        <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl border">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handlePrevMonth}
-            className="h-9 w-9 rounded-lg hover:bg-background"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <div className="flex items-center gap-2 px-4 py-2 min-w-[160px] justify-center">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">{format(selectedMonth, 'MMMM yyyy')}</span>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleNextMonth}
-            disabled={selectedMonth >= new Date()}
-            className="h-9 w-9 rounded-lg hover:bg-background"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <DateRangePicker 
+          dateRange={dateRange} 
+          onDateRangeChange={setDateRange} 
+        />
       </div>
 
       {/* KPI Cards - CRM Style */}

@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { startOfMonth, endOfMonth, format, eachDayOfInterval, differenceInDays, parseISO } from 'date-fns';
+import { format, eachDayOfInterval, differenceInDays, parseISO, startOfMonth, endOfMonth } from 'date-fns';
 import { useRealtimeDashboard } from './useRealtimeDashboard';
+
+export interface DateRange {
+  from: Date;
+  to: Date;
+}
 
 interface LeaveRecord {
   id: string;
@@ -68,25 +73,30 @@ export interface LeaveStatsSummary {
   totalPenalties: number;
 }
 
-export function useLeaveStats(selectedMonth: Date) {
+export function useLeaveStats(initialDateRange?: DateRange) {
+  const [dateRange, setDateRange] = useState<DateRange>(
+    initialDateRange || {
+      from: startOfMonth(new Date()),
+      to: endOfMonth(new Date()),
+    }
+  );
   const [leaves, setLeaves] = useState<LeaveRecord[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const monthStart = startOfMonth(selectedMonth);
-  const monthEnd = endOfMonth(selectedMonth);
-
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Fetch leaves that overlap with the selected month
+      const startStr = format(dateRange.from, 'yyyy-MM-dd');
+      const endStr = format(dateRange.to, 'yyyy-MM-dd');
+
+      // Fetch leaves that overlap with the selected date range
       const [leavesRes, profilesRes] = await Promise.all([
         supabase
           .from('leaves')
           .select('*')
-          .or(`start_date.lte.${format(monthEnd, 'yyyy-MM-dd')},end_date.gte.${format(monthStart, 'yyyy-MM-dd')}`)
-          .gte('start_date', format(monthStart, 'yyyy-MM-dd'))
-          .lte('start_date', format(monthEnd, 'yyyy-MM-dd')),
+          .gte('start_date', startStr)
+          .lte('start_date', endStr),
         supabase
           .from('profiles')
           .select('user_id, full_name, email')
@@ -103,7 +113,7 @@ export function useLeaveStats(selectedMonth: Date) {
     } finally {
       setIsLoading(false);
     }
-  }, [monthStart, monthEnd]);
+  }, [dateRange]);
 
   useEffect(() => {
     fetchData();
@@ -117,7 +127,6 @@ export function useLeaveStats(selectedMonth: Date) {
   });
 
   const employeeStats = useMemo((): EmployeeLeaveStats[] => {
-    const profileMap = new Map(profiles.map(p => [p.user_id, p]));
     const statsMap = new Map<string, EmployeeLeaveStats>();
 
     // Initialize stats for all employees
@@ -178,7 +187,7 @@ export function useLeaveStats(selectedMonth: Date) {
   }, [leaves, profiles]);
 
   const dailyTrends = useMemo((): DailyLeaveTrend[] => {
-    const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+    const days = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
     
     return days.map(day => {
       const dayStr = format(day, 'yyyy-MM-dd');
@@ -196,7 +205,7 @@ export function useLeaveStats(selectedMonth: Date) {
         rejected: dayLeaves.filter(l => l.status === 'rejected').length,
       };
     });
-  }, [leaves, monthStart, monthEnd]);
+  }, [leaves, dateRange]);
 
   const leaveTypeDistribution = useMemo((): LeaveTypeDistribution[] => {
     const halfDay = leaves.filter(l => l.leave_type === 'half_day').length;
@@ -251,6 +260,8 @@ export function useLeaveStats(selectedMonth: Date) {
     statusDistribution,
     summary,
     isLoading,
+    dateRange,
+    setDateRange,
     refreshStats: fetchData,
   };
 }

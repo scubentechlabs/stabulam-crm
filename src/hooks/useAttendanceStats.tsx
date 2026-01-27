@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { startOfMonth, endOfMonth, format, differenceInMinutes, parseISO, eachDayOfInterval, isWeekend } from 'date-fns';
+import { format, differenceInMinutes, parseISO, eachDayOfInterval, isWeekend, startOfMonth, endOfMonth } from 'date-fns';
 import { useRealtimeDashboard } from './useRealtimeDashboard';
+
+export interface DateRange {
+  from: Date;
+  to: Date;
+}
 
 interface EmployeeStats {
   userId: string;
@@ -39,15 +44,16 @@ interface AttendanceStats {
 export function useAttendanceStats() {
   const [stats, setStats] = useState<AttendanceStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date()),
+  });
 
   const fetchStats = useCallback(async () => {
     setIsLoading(true);
     try {
-      const monthStart = startOfMonth(selectedMonth);
-      const monthEnd = endOfMonth(selectedMonth);
-      const startStr = format(monthStart, 'yyyy-MM-dd');
-      const endStr = format(monthEnd, 'yyyy-MM-dd');
+      const startStr = format(dateRange.from, 'yyyy-MM-dd');
+      const endStr = format(dateRange.to, 'yyyy-MM-dd');
 
       // Fetch all active employees
       const { data: profiles, error: profilesError } = await supabase
@@ -57,7 +63,7 @@ export function useAttendanceStats() {
 
       if (profilesError) throw profilesError;
 
-      // Fetch attendance records for the month
+      // Fetch attendance records for the date range
       const { data: attendance, error: attendanceError } = await supabase
         .from('attendance')
         .select('*')
@@ -66,7 +72,7 @@ export function useAttendanceStats() {
 
       if (attendanceError) throw attendanceError;
 
-      // Fetch approved leaves for the month
+      // Fetch approved leaves for the date range
       const { data: leaves, error: leavesError } = await supabase
         .from('leaves')
         .select('*')
@@ -76,8 +82,8 @@ export function useAttendanceStats() {
 
       if (leavesError) throw leavesError;
 
-      // Calculate working days in the month (excluding weekends)
-      const allDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+      // Calculate working days in the range (excluding weekends)
+      const allDays = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
       const workingDays = allDays.filter(day => !isWeekend(day));
       const totalWorkingDays = workingDays.length;
 
@@ -91,15 +97,15 @@ export function useAttendanceStats() {
         userLeaves.forEach(leave => {
           const leaveStart = parseISO(leave.start_date);
           const leaveEnd = parseISO(leave.end_date);
-          const leaveDaysInMonth = eachDayOfInterval({
-            start: leaveStart < monthStart ? monthStart : leaveStart,
-            end: leaveEnd > monthEnd ? monthEnd : leaveEnd
+          const leaveDaysInRange = eachDayOfInterval({
+            start: leaveStart < dateRange.from ? dateRange.from : leaveStart,
+            end: leaveEnd > dateRange.to ? dateRange.to : leaveEnd
           }).filter(d => !isWeekend(d)).length;
           
           if (leave.leave_type === 'half_day') {
             leaveDays += 0.5;
           } else {
-            leaveDays += leaveDaysInMonth;
+            leaveDays += leaveDaysInRange;
           }
         });
 
@@ -184,7 +190,7 @@ export function useAttendanceStats() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedMonth]);
+  }, [dateRange]);
 
   useEffect(() => {
     fetchStats();
@@ -200,8 +206,8 @@ export function useAttendanceStats() {
   return {
     stats,
     isLoading,
-    selectedMonth,
-    setSelectedMonth,
+    dateRange,
+    setDateRange,
     refetch: fetchStats,
   };
 }

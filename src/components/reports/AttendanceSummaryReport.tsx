@@ -1,28 +1,20 @@
-import { format, subMonths, addMonths } from 'date-fns';
 import { 
-  ChevronLeft, 
-  ChevronRight, 
   Users, 
   Clock, 
   AlertTriangle, 
   TrendingUp,
-  TrendingDown,
   ArrowUpRight,
   ArrowDownRight,
-  Calendar
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAttendanceStats } from '@/hooks/useAttendanceStats';
 import { AttendanceCharts } from './AttendanceCharts';
 import { EmployeeStatsTable } from './EmployeeStatsTable';
+import { DateRangePicker } from './DateRangePicker';
 
 export function AttendanceSummaryReport() {
-  const { stats, isLoading, selectedMonth, setSelectedMonth } = useAttendanceStats();
-
-  const handlePrevMonth = () => setSelectedMonth(subMonths(selectedMonth, 1));
-  const handleNextMonth = () => setSelectedMonth(addMonths(selectedMonth, 1));
+  const { stats, isLoading, dateRange, setDateRange } = useAttendanceStats();
 
   if (isLoading) {
     return (
@@ -55,7 +47,7 @@ export function AttendanceSummaryReport() {
       suffix: '',
       trend: '+3',
       trendUp: true,
-      trendLabel: 'from last month',
+      trendLabel: 'from last period',
       icon: Users,
       color: 'text-primary',
       bgColor: 'bg-primary/10',
@@ -66,7 +58,7 @@ export function AttendanceSummaryReport() {
       suffix: '%',
       trend: '+5.2%',
       trendUp: true,
-      trendLabel: 'from last month',
+      trendLabel: 'from last period',
       icon: TrendingUp,
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-500/10',
@@ -77,7 +69,7 @@ export function AttendanceSummaryReport() {
       suffix: '%',
       trend: '-2.1%',
       trendUp: false,
-      trendLabel: 'from last month',
+      trendLabel: 'from last period',
       icon: AlertTriangle,
       color: 'text-amber-600',
       bgColor: 'bg-amber-500/10',
@@ -97,37 +89,18 @@ export function AttendanceSummaryReport() {
 
   return (
     <div className="space-y-6">
-      {/* Month Selector - Modern Style */}
+      {/* Header with Date Range Picker */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold">Attendance Overview</h2>
           <p className="text-sm text-muted-foreground">
-            Monthly attendance statistics and employee performance
+            Attendance statistics and employee performance
           </p>
         </div>
-        <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl border">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handlePrevMonth}
-            className="h-9 w-9 rounded-lg hover:bg-background"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <div className="flex items-center gap-2 px-4 py-2 min-w-[160px] justify-center">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">{format(selectedMonth, 'MMMM yyyy')}</span>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleNextMonth}
-            disabled={selectedMonth >= new Date()}
-            className="h-9 w-9 rounded-lg hover:bg-background"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <DateRangePicker 
+          dateRange={dateRange} 
+          onDateRangeChange={setDateRange} 
+        />
       </div>
 
       {/* KPI Cards - CRM Style */}

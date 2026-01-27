@@ -1,39 +1,29 @@
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
-  ChevronLeft, 
-  ChevronRight, 
   Calendar, 
   CheckCircle, 
-  XCircle, 
-  Clock, 
-  AlertTriangle, 
   IndianRupee,
   ArrowUpRight,
   ArrowDownRight,
   Timer
 } from 'lucide-react';
-import { format, subMonths, addMonths } from 'date-fns';
 import { useLeaveStats } from '@/hooks/useLeaveStats';
 import { LeaveCharts } from './LeaveCharts';
 import { LeaveStatsTable } from './LeaveStatsTable';
+import { DateRangePicker } from './DateRangePicker';
 
 export function LeaveSummaryReport() {
-  const [selectedMonth, setSelectedMonth] = useState(new Date());
   const { 
     employeeStats, 
     dailyTrends, 
     leaveTypeDistribution, 
     statusDistribution,
     summary, 
-    isLoading 
-  } = useLeaveStats(selectedMonth);
-
-  const goToPreviousMonth = () => setSelectedMonth(prev => subMonths(prev, 1));
-  const goToNextMonth = () => setSelectedMonth(prev => addMonths(prev, 1));
-  const isCurrentMonth = format(selectedMonth, 'yyyy-MM') === format(new Date(), 'yyyy-MM');
+    isLoading,
+    dateRange,
+    setDateRange
+  } = useLeaveStats();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -113,37 +103,18 @@ export function LeaveSummaryReport() {
 
   return (
     <div className="space-y-6">
-      {/* Header with month navigation */}
+      {/* Header with Date Range Picker */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold">Leave Analysis</h2>
           <p className="text-sm text-muted-foreground">
-            Leave patterns and usage trends for {format(selectedMonth, 'MMMM yyyy')}
+            Leave patterns and usage trends
           </p>
         </div>
-        <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl border">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={goToPreviousMonth}
-            className="h-9 w-9 rounded-lg hover:bg-background"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <div className="flex items-center gap-2 px-4 py-2 min-w-[160px] justify-center">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">{format(selectedMonth, 'MMMM yyyy')}</span>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={goToNextMonth}
-            disabled={isCurrentMonth}
-            className="h-9 w-9 rounded-lg hover:bg-background"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <DateRangePicker 
+          dateRange={dateRange} 
+          onDateRangeChange={setDateRange} 
+        />
       </div>
 
       {/* KPI Cards - CRM Style */}
