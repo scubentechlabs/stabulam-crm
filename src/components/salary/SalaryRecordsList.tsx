@@ -12,6 +12,7 @@ import {
   Download,
   Loader2,
   Mail,
+  Send,
 } from 'lucide-react';
 import { useSalaryCalculator } from '@/hooks/useSalaryCalculator';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,6 +23,7 @@ export function SalaryRecordsList() {
   const { toast } = useToast();
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [emailingId, setEmailingId] = useState<string | null>(null);
+  const [isSendingAll, setIsSendingAll] = useState(false);
 
   const getProfileName = (userId: string) => {
     const profile = profiles?.find(p => p.user_id === userId);
@@ -125,6 +127,66 @@ export function SalaryRecordsList() {
     }
   };
 
+  const handleSendAllEmails = async () => {
+    if (!salaryRecords || salaryRecords.length === 0) return;
+    
+    try {
+      setIsSendingAll(true);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: 'Error',
+          description: 'You must be logged in to send emails',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const record of salaryRecords) {
+        try {
+          const response = await supabase.functions.invoke('send-salary-email', {
+            body: { salaryRecordId: record.id },
+          });
+
+          if (response.error) {
+            failCount++;
+          } else {
+            successCount++;
+          }
+        } catch {
+          failCount++;
+        }
+      }
+
+      if (failCount === 0) {
+        toast({
+          title: 'All Emails Sent',
+          description: `Successfully sent ${successCount} salary slip${successCount > 1 ? 's' : ''} to employees`,
+        });
+      } else {
+        toast({
+          title: 'Emails Partially Sent',
+          description: `Sent ${successCount} email${successCount > 1 ? 's' : ''}, ${failCount} failed`,
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error sending bulk emails:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to send bulk emails',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSendingAll(false);
+    }
+  };
+
   if (isLoadingSalaryRecords) {
     return (
       <Card>
@@ -161,9 +223,28 @@ export function SalaryRecordsList() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Recent Salary Records</CardTitle>
-        <CardDescription>Previously generated salary slips</CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <div>
+          <CardTitle>Recent Salary Records</CardTitle>
+          <CardDescription>Previously generated salary slips</CardDescription>
+        </div>
+        <Button
+          onClick={handleSendAllEmails}
+          disabled={isSendingAll || !salaryRecords || salaryRecords.length === 0}
+          size="sm"
+        >
+          {isSendingAll ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Sending...
+            </>
+          ) : (
+            <>
+              <Send className="h-4 w-4 mr-2" />
+              Email All ({salaryRecords?.length || 0})
+            </>
+          )}
+        </Button>
       </CardHeader>
       <CardContent className="space-y-3">
         {salaryRecords.map(record => (
