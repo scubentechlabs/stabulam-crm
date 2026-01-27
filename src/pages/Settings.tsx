@@ -2,6 +2,7 @@ import { ProfileForm } from '@/components/settings/ProfileForm';
 import { AvatarUpload } from '@/components/settings/AvatarUpload';
 import { PasswordChange } from '@/components/settings/PasswordChange';
 import { PushNotificationToggle } from '@/components/settings/PushNotificationToggle';
+import { NotificationPreferencesCard } from '@/components/settings/NotificationPreferencesCard';
 
 export default function Settings() {
   return (
@@ -23,7 +24,12 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* Push Notifications */}
+      {/* Notification Preferences */}
+      <div className="max-w-2xl">
+        <NotificationPreferencesCard />
+      </div>
+
+      {/* Push Notifications Toggle */}
       <div className="max-w-md">
         <PushNotificationToggle />
       </div>

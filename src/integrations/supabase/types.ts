@@ -187,6 +187,45 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          extra_work_notifications: boolean
+          id: string
+          leave_notifications: boolean
+          push_enabled: boolean
+          salary_notifications: boolean
+          shoot_notifications: boolean
+          task_notifications: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          extra_work_notifications?: boolean
+          id?: string
+          leave_notifications?: boolean
+          push_enabled?: boolean
+          salary_notifications?: boolean
+          shoot_notifications?: boolean
+          task_notifications?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          extra_work_notifications?: boolean
+          id?: string
+          leave_notifications?: boolean
+          push_enabled?: boolean
+          salary_notifications?: boolean
+          shoot_notifications?: boolean
+          task_notifications?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -595,6 +634,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_or_create_notification_preferences: {
+        Args: { _user_id: string }
+        Returns: {
+          created_at: string
+          extra_work_notifications: boolean
+          id: string
+          leave_notifications: boolean
+          push_enabled: boolean
+          salary_notifications: boolean
+          shoot_notifications: boolean
+          task_notifications: boolean
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "notification_preferences"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
