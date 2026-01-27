@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useState } from 'react';
-import { TableFilters, SortableHeader } from '@/components/ui/table-filters';
+import { TableFilters, SortableHeader, TablePagination } from '@/components/ui/table-filters';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import type { Regularization } from '@/hooks/useAttendanceRegularization';
 
@@ -47,12 +47,20 @@ export function RegularizationTable({
     setStatusFilter,
     sortConfig,
     handleSort,
+    paginatedData,
     filteredData,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    totalItems,
+    startIndex,
+    endIndex,
   } = useTableFilters({
     data: regularizations,
     searchKeys: ['reason'] as (keyof Regularization)[],
     defaultSortKey: 'request_date',
     defaultSortDirection: 'desc',
+    pageSize: 10,
   });
 
   const formatTime = (time: string) => {
@@ -98,17 +106,18 @@ export function RegularizationTable({
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
           statusOptions={STATUS_OPTIONS}
-          resultCount={filteredData.length}
+          resultCount={totalItems}
         />
       )}
 
-      {filteredData.length === 0 ? (
+      {totalItems === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
           <p>{searchValue || statusFilter !== 'all' ? 'No matching results' : emptyMessage}</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <>
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -138,7 +147,7 @@ export function RegularizationTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredData.map((reg) => (
+              {paginatedData.map((reg) => (
                 <TableRow key={reg.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -183,7 +192,16 @@ export function RegularizationTable({
               ))}
             </TableBody>
           </Table>
-        </div>
+          </div>
+          <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            onPageChange={setCurrentPage}
+          />
+        </>
       )}
 
       {/* View Details Dialog */}

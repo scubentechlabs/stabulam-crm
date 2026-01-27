@@ -6,6 +6,7 @@ interface UseTableFiltersOptions<T> {
   searchKeys: (keyof T)[];
   defaultSortKey?: keyof T;
   defaultSortDirection?: SortDirection;
+  pageSize?: number;
 }
 
 export function useTableFilters<T extends Record<string, any>>({
@@ -13,9 +14,11 @@ export function useTableFilters<T extends Record<string, any>>({
   searchKeys,
   defaultSortKey,
   defaultSortDirection = 'desc',
+  pageSize = 10,
 }: UseTableFiltersOptions<T>) {
   const [searchValue, setSearchValue] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<SortConfig<T>>({
     key: defaultSortKey || null,
     direction: defaultSortKey ? defaultSortDirection : null,
@@ -33,6 +36,17 @@ export function useTableFilters<T extends Record<string, any>>({
       }
       return { key: key as keyof T, direction: 'asc' };
     });
+  }, []);
+
+  // Reset to page 1 when filters change
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchValue(value);
+    setCurrentPage(1);
+  }, []);
+
+  const handleStatusChange = useCallback((value: string) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
   }, []);
 
   const filteredAndSortedData = useMemo(() => {
@@ -111,13 +125,34 @@ export function useTableFilters<T extends Record<string, any>>({
     return result;
   }, [data, searchValue, statusFilter, sortConfig, searchKeys]);
 
+  // Pagination calculations
+  const totalItems = filteredAndSortedData.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedData = filteredAndSortedData.slice(startIndex, endIndex);
+
+  // Ensure current page is valid
+  const validCurrentPage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages));
+  if (validCurrentPage !== currentPage && totalPages > 0) {
+    setCurrentPage(validCurrentPage);
+  }
+
   return {
     searchValue,
-    setSearchValue,
+    setSearchValue: handleSearchChange,
     statusFilter,
-    setStatusFilter,
+    setStatusFilter: handleStatusChange,
     sortConfig,
     handleSort,
     filteredData: filteredAndSortedData,
+    paginatedData,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    totalItems,
+    pageSize,
+    startIndex,
+    endIndex: Math.min(endIndex, totalItems),
   };
 }

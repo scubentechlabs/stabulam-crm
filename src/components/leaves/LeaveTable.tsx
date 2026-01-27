@@ -27,7 +27,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useState } from 'react';
-import { TableFilters, SortableHeader } from '@/components/ui/table-filters';
+import { TableFilters, SortableHeader, TablePagination } from '@/components/ui/table-filters';
 import { useTableFilters } from '@/hooks/useTableFilters';
 import type { LeaveWithProfile } from '@/hooks/useLeaves';
 
@@ -62,12 +62,20 @@ export function LeaveTable({
     setStatusFilter,
     sortConfig,
     handleSort,
+    paginatedData,
     filteredData,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    totalItems,
+    startIndex,
+    endIndex,
   } = useTableFilters({
     data: leaves,
     searchKeys: ['reason', 'delegation_notes', 'profiles'] as (keyof LeaveWithProfile)[],
     defaultSortKey: 'start_date',
     defaultSortDirection: 'desc',
+    pageSize: 10,
   });
 
   const getStatusBadge = (status: string | null) => {
@@ -111,17 +119,18 @@ export function LeaveTable({
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
           statusOptions={STATUS_OPTIONS}
-          resultCount={filteredData.length}
+          resultCount={totalItems}
         />
       )}
 
-      {filteredData.length === 0 ? (
+      {totalItems === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           <Calendar className="h-12 w-12 mx-auto mb-3 opacity-50" />
           <p>{searchValue || statusFilter !== 'all' ? 'No matching results' : emptyMessage}</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <>
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -162,7 +171,7 @@ export function LeaveTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredData.map((leave) => (
+              {paginatedData.map((leave) => (
                 <TableRow key={leave.id}>
                   {showEmployeeName && (
                     <TableCell className="font-medium">
@@ -220,6 +229,15 @@ export function LeaveTable({
             </TableBody>
           </Table>
         </div>
+          <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            startIndex={startIndex}
+            endIndex={endIndex}
+            onPageChange={setCurrentPage}
+          />
+        </>
       )}
 
       {/* Cancel Confirmation Dialog */}
