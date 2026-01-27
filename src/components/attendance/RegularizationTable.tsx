@@ -57,6 +57,8 @@ export function RegularizationTable({
     dateRange,
     setDateRange,
     clearDateRange,
+    hasActiveFilters,
+    resetAllFilters,
   } = useTableFilters({
     data: regularizations,
     searchKeys: ['reason'] as (keyof Regularization)[],
@@ -115,6 +117,8 @@ export function RegularizationTable({
           dateRange={dateRange}
           onDateRangeChange={setDateRange}
           onClearDateRange={clearDateRange}
+          hasActiveFilters={hasActiveFilters}
+          onResetAll={resetAllFilters}
         />
       )}
 

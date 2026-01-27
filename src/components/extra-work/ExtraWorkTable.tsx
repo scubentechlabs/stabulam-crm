@@ -59,6 +59,8 @@ export function ExtraWorkTable({
     dateRange,
     setDateRange,
     clearDateRange,
+    hasActiveFilters,
+    resetAllFilters,
   } = useTableFilters({
     data: extraWorkList,
     searchKeys: ['task_description', 'notes', 'profiles'] as (keyof ExtraWorkWithProfile)[],
@@ -95,6 +97,8 @@ export function ExtraWorkTable({
           dateRange={dateRange}
           onDateRangeChange={setDateRange}
           onClearDateRange={clearDateRange}
+          hasActiveFilters={hasActiveFilters}
+          onResetAll={resetAllFilters}
         />
       )}
 

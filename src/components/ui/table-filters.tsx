@@ -1,4 +1,4 @@
-import { Search, X, ArrowUpDown, ArrowUp, ArrowDown, Filter, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
+import { Search, X, ArrowUpDown, ArrowUp, ArrowDown, Filter, ChevronLeft, ChevronRight, CalendarDays, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,9 @@ interface TableFiltersProps {
   onDateRangeChange?: (range: DateRange) => void;
   onClearDateRange?: () => void;
   showDateFilter?: boolean;
+  // Reset all
+  hasActiveFilters?: boolean;
+  onResetAll?: () => void;
 }
 
 export function TableFilters({
@@ -60,11 +63,11 @@ export function TableFilters({
   onDateRangeChange,
   onClearDateRange,
   showDateFilter = false,
+  hasActiveFilters = false,
+  onResetAll,
 }: TableFiltersProps) {
-  const hasActiveFilters = searchValue || (statusFilter && statusFilter !== 'all') || (dateRange?.from && dateRange?.to);
-
   return (
-    <div className="flex flex-col sm:flex-row gap-3 mb-4">
+    <div className="flex flex-col sm:flex-row gap-3 mb-4 flex-wrap">
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
@@ -111,6 +114,18 @@ export function TableFilters({
       )}
 
       {additionalFilters}
+
+      {hasActiveFilters && onResetAll && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onResetAll}
+          className="h-10 px-3 text-muted-foreground hover:text-foreground"
+        >
+          <RotateCcw className="h-4 w-4 mr-2" />
+          Reset
+        </Button>
+      )}
 
       {hasActiveFilters && resultCount !== undefined && (
         <div className="flex items-center">
