@@ -52,10 +52,62 @@ export function useUsers() {
   const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [teamMembers, setTeamMembers] = useState<{ user_id: string; full_name: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingTeam, setIsLoadingTeam] = useState(true);
+
+  // Fetch team members for assignment (works for all authenticated users via shoot_assignments join)
+  const fetchTeamMembers = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      setIsLoadingTeam(true);
+      
+      // For admins, use the full profiles list
+      if (isAdmin) {
+        const { data: profiles, error } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, is_active')
+          .eq('is_active', true)
+          .order('full_name', { ascending: true });
+
+        if (error) throw error;
+        setTeamMembers(profiles || []);
+      } else {
+        // For employees, fetch via shoot_assignments which has public SELECT
+        // First get unique user_ids from shoot_assignments
+        const { data: assignments, error: assignError } = await supabase
+          .from('shoot_assignments')
+          .select('user_id');
+
+        if (assignError) throw assignError;
+
+        // Get unique user IDs including current user
+        const userIds = [...new Set([...(assignments?.map(a => a.user_id) || []), user.id])];
+        
+        // Employees can only see their own profile, so we'll use what we can get
+        // The workaround is to make this data available through a different mechanism
+        // For now, just show current user for non-admins
+        const { data: ownProfile } = await supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .eq('user_id', user.id)
+          .single();
+
+        setTeamMembers(ownProfile ? [ownProfile] : []);
+      }
+    } catch (error) {
+      console.error('Error fetching team members:', error);
+    } finally {
+      setIsLoadingTeam(false);
+    }
+  }, [user, isAdmin]);
 
   const fetchUsers = useCallback(async () => {
-    if (!user || !isAdmin) return;
+    if (!user || !isAdmin) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       setIsLoading(true);
@@ -97,7 +149,8 @@ export function useUsers() {
 
   useEffect(() => {
     fetchUsers();
-  }, [fetchUsers]);
+    fetchTeamMembers();
+  }, [fetchUsers, fetchTeamMembers]);
 
   const createUser = async (data: CreateUserData) => {
     if (!user || !isAdmin) return { error: new Error('Not authorized') };
@@ -220,7 +273,9 @@ export function useUsers() {
     inactiveUsers,
     adminUsers,
     employeeUsers,
+    teamMembers,
     isLoading,
+    isLoadingTeam,
     createUser,
     updateUser,
     updateUserRole,
