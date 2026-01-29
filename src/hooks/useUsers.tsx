@@ -103,54 +103,23 @@ export function useUsers() {
     if (!user || !isAdmin) return { error: new Error('Not authorized') };
 
     try {
-      // Create auth user via edge function would be ideal, but for now we'll create via signup
-      // Note: In production, this should use a server-side function
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
-            full_name: data.full_name,
-          },
+      // Use edge function to create user without affecting current session
+      const { data: result, error } = await supabase.functions.invoke('create-user', {
+        body: {
+          email: data.email,
+          password: data.password,
+          full_name: data.full_name,
+          mobile: data.mobile,
+          department: data.department,
+          monthly_salary: data.monthly_salary,
+          work_start_time: data.work_start_time,
+          work_end_time: data.work_end_time,
+          role: data.role,
         },
       });
 
-      if (authError) throw authError;
-
-      if (!authData.user) {
-        throw new Error('Failed to create user');
-      }
-
-      // Wait a bit for the trigger to create the profile
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Update the profile with additional data
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          mobile: data.mobile || null,
-          department: data.department || null,
-          monthly_salary: data.monthly_salary || 0,
-          work_start_time: data.work_start_time || '09:00:00',
-          work_end_time: data.work_end_time || '18:00:00',
-        })
-        .eq('user_id', authData.user.id);
-
-      if (profileError) {
-        console.error('Profile update error:', profileError);
-      }
-
-      // Update role if different from default
-      if (data.role && data.role !== 'employee') {
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .update({ role: data.role })
-          .eq('user_id', authData.user.id);
-
-        if (roleError) {
-          console.error('Role update error:', roleError);
-        }
-      }
+      if (error) throw error;
+      if (result?.error) throw new Error(result.error);
 
       toast({
         title: 'Success',
@@ -158,7 +127,7 @@ export function useUsers() {
       });
 
       await fetchUsers();
-      return { error: null, user: authData.user };
+      return { error: null, user: result?.user };
     } catch (error) {
       console.error('Error creating user:', error);
       toast({
