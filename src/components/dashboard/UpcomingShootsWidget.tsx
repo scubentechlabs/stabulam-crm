@@ -13,17 +13,16 @@ export function UpcomingShootsWidget() {
   const { shoots, isLoading } = useShoots();
   const [selectedShoot, setSelectedShoot] = useState<typeof shoots[0] | null>(null);
 
-  // Filter shoots for the next 7 days
+  // Filter shoots for today only
   const today = startOfDay(new Date());
-  const sevenDaysFromNow = addDays(today, 7);
+  const todayEnd = addDays(today, 1);
 
-  const upcomingShoots = shoots
+  const todayShoots = shoots
     .filter(shoot => {
       const shootDate = new Date(shoot.shoot_date);
-      return shootDate >= today && shootDate <= sevenDaysFromNow;
+      return shootDate >= today && shootDate < todayEnd;
     })
-    .sort((a, b) => new Date(a.shoot_date).getTime() - new Date(b.shoot_date).getTime())
-    .slice(0, 5);
+    .sort((a, b) => new Date(a.shoot_date).getTime() - new Date(b.shoot_date).getTime());
 
   const getDateLabel = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -49,9 +48,9 @@ export function UpcomingShootsWidget() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Camera className="h-5 w-5" />
-            Upcoming Shoots
+            Today Shoots
           </CardTitle>
-          <CardDescription>Your scheduled shoots for the next 7 days</CardDescription>
+          <CardDescription>Your scheduled shoots for today</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
@@ -70,22 +69,22 @@ export function UpcomingShootsWidget() {
             <div>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Camera className="h-5 w-5" />
-                Upcoming Shoots
+                Today Shoots
               </CardTitle>
-              <CardDescription>Next 7 days</CardDescription>
+              <CardDescription>Today's schedule</CardDescription>
             </div>
-            {upcomingShoots.length > 0 && (
+            {todayShoots.length > 0 && (
               <Badge variant="secondary" className="text-xs">
-                {upcomingShoots.length} scheduled
+                {todayShoots.length} scheduled
               </Badge>
             )}
           </div>
         </CardHeader>
         <CardContent>
-          {upcomingShoots.length === 0 ? (
+          {todayShoots.length === 0 ? (
             <div className="text-center py-6 text-muted-foreground">
               <Camera className="h-10 w-10 mx-auto mb-3 opacity-50" />
-              <p className="text-sm">No shoots scheduled</p>
+              <p className="text-sm">No shoots scheduled for today</p>
               <Button variant="link" asChild className="mt-1 text-xs">
                 <Link to="/shoots">View all shoots</Link>
               </Button>
@@ -93,7 +92,7 @@ export function UpcomingShootsWidget() {
           ) : (
             <ScrollArea className="max-h-[280px]">
               <div className="space-y-3">
-                {upcomingShoots.map((shoot) => (
+                {todayShoots.map((shoot) => (
                   <div
                     key={shoot.id}
                     className="group p-3 rounded-lg border bg-card hover:bg-muted/50 cursor-pointer transition-colors"
@@ -149,7 +148,7 @@ export function UpcomingShootsWidget() {
             </ScrollArea>
           )}
           
-          {upcomingShoots.length > 0 && (
+          {todayShoots.length > 0 && (
             <Button variant="ghost" asChild className="w-full mt-3 text-sm">
               <Link to="/shoots" className="flex items-center gap-1">
                 View all shoots

@@ -114,8 +114,8 @@ export default function AdminDashboard() {
           isLoading={isLoading}
         />
         <StatCard
-          label="Upcoming Shoots"
-          value={stats.upcomingShoots}
+          label="Today Shoots"
+          value={stats.todayShoots}
           icon={<Camera className="h-5 w-5 text-chart-4" />}
           bgColor="bg-chart-4/10"
           isLoading={isLoading}
