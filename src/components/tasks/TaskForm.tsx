@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Plus, Loader2, X, PlusCircle } from 'lucide-react';
+import { Plus, Loader2, Trash2, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -80,8 +79,8 @@ export function TaskForm({
 
   const getDialogDescription = () => {
     return taskType === 'tod' 
-      ? 'Add one or more planned tasks for today.'
-      : 'Add one or more unplanned or emergency tasks.';
+      ? 'Add your planned tasks for today. You can add multiple tasks at once.'
+      : 'Add unplanned or emergency tasks.';
   };
 
   const getButtonText = () => {
@@ -103,50 +102,56 @@ export function TaskForm({
           {getButtonText()}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>{getDialogTitle()}</DialogTitle>
             <DialogDescription>{getDialogDescription()}</DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-3 py-4 max-h-[60vh] overflow-y-auto">
-            <Label>Task Titles *</Label>
-            {titles.map((title, index) => (
-              <div key={index} className="flex gap-2">
-                <Input
-                  placeholder={`Task ${index + 1}`}
-                  value={title}
-                  onChange={(e) => handleTitleChange(index, e.target.value)}
-                  autoFocus={index === titles.length - 1}
-                />
-                {titles.length > 1 && (
+          <div className="py-6">
+            <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
+              {titles.map((title, index) => (
+                <div key={index} className="flex items-center gap-2 group">
+                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-medium shrink-0">
+                    {index + 1}
+                  </div>
+                  <Input
+                    placeholder="Enter task title..."
+                    value={title}
+                    onChange={(e) => handleTitleChange(index, e.target.value)}
+                    autoFocus={index === titles.length - 1}
+                    className="flex-1"
+                  />
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveTitle(index)}
-                    className="shrink-0"
+                    disabled={titles.length === 1}
+                    className={`shrink-0 h-8 w-8 text-muted-foreground hover:text-destructive transition-opacity ${
+                      titles.length === 1 ? 'opacity-0' : 'opacity-100'
+                    }`}
                   >
-                    <X className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
-                )}
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
             
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={handleAddTitle}
-              className="w-full"
+              className="w-full mt-4 border border-dashed border-border hover:border-primary hover:bg-primary/5 text-muted-foreground hover:text-primary transition-colors"
             >
               <PlusCircle className="h-4 w-4 mr-2" />
               Add Another Task
             </Button>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button 
               type="button" 
               variant="outline" 
@@ -162,7 +167,10 @@ export function TaskForm({
                   Adding...
                 </>
               ) : (
-                `Add ${validTitlesCount} Task${validTitlesCount !== 1 ? 's' : ''}`
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add {validTitlesCount} Task{validTitlesCount !== 1 ? 's' : ''}
+                </>
               )}
             </Button>
           </DialogFooter>
