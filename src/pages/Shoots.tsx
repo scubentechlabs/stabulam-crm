@@ -52,7 +52,7 @@ export default function Shoots() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div className="page-header mb-0">
-          <h1 className="page-title">Shoots</h1>
+          <h1 className="page-title">Shoots An Editing</h1>
           <p className="page-description">Manage photo and video shoots</p>
         </div>
         <Button onClick={() => setShowForm(true)}>
