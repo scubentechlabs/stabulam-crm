@@ -110,11 +110,11 @@ export default function Dashboard() {
         <Card className="stat-card">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Upcoming Shoots</p>
+              <p className="text-sm text-muted-foreground">Today Shoots</p>
               {isLoading ? (
                 <Loader2 className="h-5 w-5 animate-spin mt-2" />
               ) : (
-                <p className="text-2xl font-bold mt-1">{stats.upcomingShoots}</p>
+                <p className="text-2xl font-bold mt-1">{stats.todayShoots}</p>
               )}
             </div>
             <div className="h-10 w-10 rounded-lg bg-info/10 flex items-center justify-center">

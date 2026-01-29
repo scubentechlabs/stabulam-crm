@@ -7,7 +7,7 @@ interface AdminDashboardStats {
   totalEmployees: number;
   presentToday: number;
   pendingApprovals: number;
-  upcomingShoots: number;
+  todayShoots: number;
   lateArrivals: number;
   onLeave: number;
 }
@@ -25,7 +25,7 @@ export function useAdminDashboardStats() {
     totalEmployees: 0,
     presentToday: 0,
     pendingApprovals: 0,
-    upcomingShoots: 0,
+    todayShoots: 0,
     lateArrivals: 0,
     onLeave: 0,
   });
@@ -36,7 +36,6 @@ export function useAdminDashboardStats() {
     try {
       const today = new Date();
       const todayStr = format(today, 'yyyy-MM-dd');
-      const nextWeek = format(addDays(today, 7), 'yyyy-MM-dd');
 
       // Fetch all data in parallel
       const [
@@ -45,7 +44,7 @@ export function useAdminDashboardStats() {
         pendingLeavesResult,
         pendingExtraWorkResult,
         pendingRegularizationsResult,
-        upcomingShootsResult,
+        todayShootsResult,
         approvedLeavesTodayResult,
       ] = await Promise.all([
         // Total active employees
@@ -78,12 +77,11 @@ export function useAdminDashboardStats() {
           .select('id, user_id, request_date, reason')
           .eq('status', 'pending'),
 
-        // Upcoming shoots (next 7 days)
+        // Today's shoots
         supabase
           .from('shoots')
           .select('id')
-          .gte('shoot_date', todayStr)
-          .lte('shoot_date', nextWeek),
+          .eq('shoot_date', todayStr),
 
         // Approved leaves that cover today
         supabase
@@ -158,7 +156,7 @@ export function useAdminDashboardStats() {
         totalEmployees,
         presentToday,
         pendingApprovals: totalPending,
-        upcomingShoots: upcomingShootsResult.data?.length || 0,
+        todayShoots: todayShootsResult.data?.length || 0,
         lateArrivals,
         onLeave,
       });

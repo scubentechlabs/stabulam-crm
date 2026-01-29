@@ -8,7 +8,7 @@ interface DashboardStats {
   attendanceStreak: number;
   tasksCompleted: number;
   pendingLeaves: number;
-  upcomingShoots: number;
+  todayShoots: number;
 }
 
 interface TodayStatus {
@@ -27,7 +27,7 @@ export function useDashboardStats() {
     attendanceStreak: 0,
     tasksCompleted: 0,
     pendingLeaves: 0,
-    upcomingShoots: 0,
+    todayShoots: 0,
   });
   const [todayStatus, setTodayStatus] = useState<TodayStatus>({
     clockedIn: false,
@@ -90,13 +90,12 @@ export function useDashboardStats() {
           .eq('user_id', user.id)
           .eq('status', 'pending'),
 
-        // Upcoming shoots (next 7 days) - user assigned
+        // Today's shoots - user assigned
         supabase
           .from('shoot_assignments')
           .select('shoot_id, shoots!inner(shoot_date)')
           .eq('user_id', user.id)
-          .gte('shoots.shoot_date', todayStr)
-          .lte('shoots.shoot_date', format(addDays(today, 7), 'yyyy-MM-dd')),
+          .eq('shoots.shoot_date', todayStr),
       ]);
 
       // Calculate attendance streak
@@ -146,7 +145,7 @@ export function useDashboardStats() {
         attendanceStreak: streak,
         tasksCompleted: tasksResult.data?.length || 0,
         pendingLeaves: leavesResult.data?.length || 0,
-        upcomingShoots: shootsResult.data?.length || 0,
+        todayShoots: shootsResult.data?.length || 0,
       });
 
       // Set today's status
