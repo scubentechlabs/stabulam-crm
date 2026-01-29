@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { Clock, IndianRupee, Eye, MoreHorizontal, Briefcase } from 'lucide-react';
+import { Clock, Eye, MoreHorizontal, Briefcase } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -143,17 +143,7 @@ export function ExtraWorkTable({
                     className="justify-center"
                   />
                 </TableHead>
-                <TableHead>Task</TableHead>
-                <TableHead className="text-right">
-                  <SortableHeader
-                    label="Compensation"
-                    sortKey="compensation_amount"
-                    currentSortKey={sortConfig.key as string}
-                    currentDirection={sortConfig.direction}
-                    onSort={handleSort}
-                    className="justify-end"
-                  />
-                </TableHead>
+                <TableHead className="max-w-[300px]">Task</TableHead>
                 <TableHead className="text-center">
                   <SortableHeader
                     label="Status"
@@ -184,14 +174,8 @@ export function ExtraWorkTable({
                   <TableCell className="text-center">
                     <Badge variant="outline">{ew.hours} hr{ew.hours > 1 ? 's' : ''}</Badge>
                   </TableCell>
-                  <TableCell className="max-w-[200px] truncate">
+                  <TableCell className="max-w-[300px] truncate">
                     {ew.task_description}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <span className="text-green-600 font-semibold flex items-center justify-end gap-1">
-                      <IndianRupee className="h-3.5 w-3.5" />
-                      {ew.compensation_amount?.toLocaleString('en-IN') || 0}
-                    </span>
                   </TableCell>
                   <TableCell className="text-center">
                     {getStatusBadge(ew.status)}
@@ -242,10 +226,6 @@ export function ExtraWorkTable({
                 <div>
                   <p className="text-sm text-muted-foreground">Hours</p>
                   <p className="font-medium">{viewExtraWork.hours} hour{viewExtraWork.hours > 1 ? 's' : ''}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Compensation</p>
-                  <p className="font-medium text-green-600">₹{viewExtraWork.compensation_amount?.toLocaleString('en-IN') || 0}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
