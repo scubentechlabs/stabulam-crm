@@ -23,6 +23,7 @@ export default function Shoots() {
     isLoading,
     createShoot,
     updateShootStatus,
+    updateEditingStatus,
     addAssignment,
     removeAssignment,
     deleteShoot,
@@ -151,6 +152,7 @@ export default function Shoots() {
                     key={shoot.id}
                     shoot={shoot}
                     onStatusChange={updateShootStatus}
+                    onEditingStatusChange={updateEditingStatus}
                     onDelete={deleteShoot}
                     onClick={() => handleShootClick(shoot)}
                   />

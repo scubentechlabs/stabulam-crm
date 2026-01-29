@@ -1,5 +1,5 @@
 import { format, parseISO } from 'date-fns';
-import { Calendar, Clock, MapPin, Users, MoreVertical, CheckCircle, Play, Trash2 } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, MoreVertical, CheckCircle, Play, Trash2, CircleDashed, Pencil, Eye, Send, RotateCcw, PackageCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -10,16 +10,21 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ShootWithAssignments } from '@/hooks/useShoots';
 import type { Database } from '@/integrations/supabase/types';
 
 type ShootStatus = Database['public']['Enums']['shoot_status'];
+type EditingStatus = Database['public']['Enums']['editing_status'];
 
 interface ShootCardProps {
   shoot: ShootWithAssignments;
   onStatusChange?: (shootId: string, status: ShootStatus) => void;
+  onEditingStatusChange?: (shootId: string, editingStatus: EditingStatus) => void;
   onDelete?: (shootId: string) => void;
   onClick?: () => void;
 }
@@ -30,10 +35,21 @@ const statusConfig: Record<ShootStatus, { label: string; variant: 'default' | 's
   completed: { label: 'Completed', variant: 'outline' },
 };
 
-export function ShootCard({ shoot, onStatusChange, onDelete, onClick }: ShootCardProps) {
+const editingStatusConfig: Record<EditingStatus, { label: string; icon: React.ElementType }> = {
+  not_started: { label: 'Not Started', icon: CircleDashed },
+  editing: { label: 'Editing', icon: Pencil },
+  internal_review: { label: 'Internal Review', icon: Eye },
+  sent_to_client: { label: 'Sent to Client', icon: Send },
+  revisions_round: { label: 'Revisions Round', icon: RotateCcw },
+  final_delivered: { label: 'Final Delivered', icon: PackageCheck },
+};
+
+export function ShootCard({ shoot, onStatusChange, onEditingStatusChange, onDelete, onClick }: ShootCardProps) {
   const { isAdmin, user } = useAuth();
   const status = shoot.status || 'pending';
   const config = statusConfig[status];
+  const editingStatus = shoot.editing_status || 'not_started';
+  const editingConfig = editingStatusConfig[editingStatus];
   
   const isOwner = shoot.created_by === user?.id;
   const canModify = isAdmin || isOwner;
@@ -76,7 +92,7 @@ export function ShootCard({ shoot, onStatusChange, onDelete, onClick }: ShootCar
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-popover">
+              <DropdownMenuContent align="end" className="bg-popover w-48">
                 {status !== 'in_progress' && (
                   <DropdownMenuItem
                     onClick={(e) => {
@@ -99,6 +115,34 @@ export function ShootCard({ shoot, onStatusChange, onDelete, onClick }: ShootCar
                     Mark Complete
                   </DropdownMenuItem>
                 )}
+                <DropdownMenuSeparator />
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger onClick={(e) => e.stopPropagation()}>
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Editing Status
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="bg-popover">
+                    {(Object.keys(editingStatusConfig) as EditingStatus[]).map((statusKey) => {
+                      const statusItem = editingStatusConfig[statusKey];
+                      const Icon = statusItem.icon;
+                      const isActive = editingStatus === statusKey;
+                      return (
+                        <DropdownMenuItem
+                          key={statusKey}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditingStatusChange?.(shoot.id, statusKey);
+                          }}
+                          className={isActive ? 'bg-accent' : ''}
+                        >
+                          <Icon className="h-4 w-4 mr-2" />
+                          {statusItem.label}
+                          {isActive && <CheckCircle className="h-3 w-3 ml-auto text-primary" />}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
                 {isAdmin && (
                   <>
                     <DropdownMenuSeparator />
