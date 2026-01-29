@@ -118,17 +118,21 @@ export function DateRangePicker({
           <ChevronDown className="ml-2 h-4 w-4 text-muted-foreground" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 bg-background border shadow-lg z-50" align="end">
-        <div className="flex">
-          {/* Presets */}
-          <div className="border-r p-3 space-y-1 min-w-[140px]">
-            <p className="text-xs font-medium text-muted-foreground mb-2 px-2">Quick Select</p>
+      <PopoverContent 
+        className="w-auto p-0 bg-background border shadow-lg z-50" 
+        align="start"
+        sideOffset={8}
+      >
+        <div className="flex flex-col sm:flex-row">
+          {/* Presets Sidebar */}
+          <div className="border-b sm:border-b-0 sm:border-r p-4 space-y-1 min-w-[150px] bg-muted/30">
+            <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Quick Select</p>
             {presets.map((preset) => (
               <Button
                 key={preset.label}
                 variant="ghost"
                 size="sm"
-                className="w-full justify-start text-sm font-normal h-8 hover:bg-muted"
+                className="w-full justify-start text-sm font-normal h-9 hover:bg-accent hover:text-accent-foreground rounded-lg transition-colors"
                 onClick={() => handlePresetClick(preset)}
               >
                 {preset.label}
@@ -136,7 +140,7 @@ export function DateRangePicker({
             ))}
           </div>
           {/* Calendar */}
-          <div className="p-3">
+          <div className="p-4">
             <Calendar
               mode="range"
               selected={{ from: dateRange.from, to: dateRange.to }}
@@ -145,6 +149,28 @@ export function DateRangePicker({
               disabled={(date) => date > new Date()}
               className="pointer-events-auto"
               initialFocus
+              classNames={{
+                months: "flex flex-col sm:flex-row gap-4",
+                month: "space-y-4",
+                caption: "flex justify-center pt-1 relative items-center",
+                caption_label: "text-sm font-semibold",
+                nav: "flex items-center gap-1",
+                nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-muted rounded-md transition-colors",
+                table: "w-full border-collapse",
+                head_row: "flex",
+                head_cell: "text-muted-foreground rounded-md w-9 font-medium text-[0.8rem]",
+                row: "flex w-full mt-2",
+                cell: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
+                day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors",
+                day_range_start: "day-range-start rounded-l-md bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+                day_range_end: "day-range-end rounded-r-md bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+                day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                day_range_middle: "aria-selected:bg-primary/20 aria-selected:text-foreground",
+                day_today: "bg-accent text-accent-foreground font-semibold",
+                day_outside: "day-outside text-muted-foreground/50 aria-selected:bg-primary/10 aria-selected:text-muted-foreground",
+                day_disabled: "text-muted-foreground/30",
+                day_hidden: "invisible",
+              }}
             />
           </div>
         </div>
