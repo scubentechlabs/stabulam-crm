@@ -29,11 +29,11 @@ interface ShootCardProps {
   onClick?: () => void;
 }
 
-const statusConfig: Record<ShootStatus, { label: string; variant: 'default' | 'secondary' | 'outline'; icon: React.ElementType }> = {
-  pending: { label: 'Pending', variant: 'secondary', icon: CircleDashed },
-  in_progress: { label: 'In Progress', variant: 'default', icon: Play },
-  completed: { label: 'Completed', variant: 'outline', icon: CheckCircle },
-  given_by_editor: { label: 'Given By Editor', variant: 'outline', icon: PackageCheck },
+const statusConfig: Record<ShootStatus, { label: string; className: string; icon: React.ElementType }> = {
+  pending: { label: 'Pending', className: 'bg-amber-500/15 text-amber-600 border-amber-500/30', icon: CircleDashed },
+  in_progress: { label: 'In Progress', className: 'bg-blue-500/15 text-blue-600 border-blue-500/30', icon: Play },
+  completed: { label: 'Completed', className: 'bg-green-500/15 text-green-600 border-green-500/30', icon: CheckCircle },
+  given_by_editor: { label: 'Given By Editor', className: 'bg-purple-500/15 text-purple-600 border-purple-500/30', icon: PackageCheck },
 };
 
 const editingStatusConfig: Record<EditingStatus, { label: string; icon: React.ElementType }> = {
@@ -81,7 +81,7 @@ export function ShootCard({ shoot, onStatusChange, onEditingStatusChange, onDele
           <div className="space-y-1 flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="font-semibold text-lg truncate">{shoot.event_name}</h3>
-              <Badge variant={config.variant}>{config.label}</Badge>
+              <Badge variant="outline" className={config.className}>{config.label}</Badge>
             </div>
             <p className="text-sm text-muted-foreground truncate">{shoot.brand_name}</p>
           </div>
