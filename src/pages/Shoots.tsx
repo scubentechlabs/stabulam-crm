@@ -31,8 +31,8 @@ export default function Shoots() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedShoot, setSelectedShoot] = useState<ShootWithAssignments | null>(null);
   const [showDetail, setShowDetail] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [showDateShoots, setShowDateShoots] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [showDateShoots, setShowDateShoots] = useState(true);
 
   const shootsForSelectedDate = selectedDate
     ? shoots.filter(shoot => isSameDay(parseISO(shoot.shoot_date), selectedDate))
