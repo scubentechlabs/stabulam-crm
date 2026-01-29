@@ -71,10 +71,6 @@ export default function Shoots() {
             <List className="h-4 w-4" />
             List View
           </TabsTrigger>
-          <TabsTrigger value="my-shoots" className="gap-2">
-            <Camera className="h-4 w-4" />
-            My Shoots
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="calendar">
@@ -121,36 +117,6 @@ export default function Shoots() {
                     shoot={shoot}
                     onStatusChange={updateShootStatus}
                     onDelete={deleteShoot}
-                    onClick={() => handleShootClick(shoot)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="my-shoots">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Assigned to You ({myAssignedShoots.length})</h2>
-            </div>
-
-            {myAssignedShoots.length === 0 ? (
-              <Card>
-                <CardContent className="py-8">
-                  <div className="text-center text-muted-foreground">
-                    <Camera className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>You're not assigned to any shoots yet</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {myAssignedShoots.map(shoot => (
-                  <ShootCard
-                    key={shoot.id}
-                    shoot={shoot}
-                    onStatusChange={updateShootStatus}
                     onClick={() => handleShootClick(shoot)}
                   />
                 ))}
