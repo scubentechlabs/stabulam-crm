@@ -79,6 +79,7 @@ export function DashboardLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const [showSignOutDialog, setShowSignOutDialog] = useState(false);
 
   const navItems = isAdmin ? [...adminNavItems, ...employeeNavItems] : employeeNavItems;
@@ -88,7 +89,7 @@ export function DashboardLayout() {
     navigate('/auth');
   };
 
-  const NavLink = ({ item }: { item: NavItem }) => {
+  const NavLink = ({ item, collapsed }: { item: NavItem; collapsed?: boolean }) => {
     const isActive = location.pathname === item.href;
     
     return (
@@ -99,15 +100,24 @@ export function DashboardLayout() {
           'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
           isActive
             ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-            : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+            : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground',
+          collapsed && 'justify-center px-2'
         )}
+        title={collapsed ? item.title : undefined}
       >
-        <item.icon className="h-5 w-5" />
-        <span>{item.title}</span>
-        {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
+        <item.icon className="h-5 w-5 flex-shrink-0" />
+        {!collapsed && (
+          <>
+            <span className="truncate">{item.title}</span>
+            {isActive && <ChevronRight className="h-4 w-4 ml-auto flex-shrink-0" />}
+          </>
+        )}
       </Link>
     );
   };
+
+  // Determine if sidebar is collapsed (desktop only, not hovered)
+  const isCollapsed = !isSidebarExpanded;
 
   return (
     <div className="min-h-screen flex w-full">
@@ -122,19 +132,34 @@ export function DashboardLayout() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-sidebar transition-transform duration-300 lg:translate-x-0',
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          'fixed lg:sticky top-0 left-0 z-50 h-screen bg-sidebar transition-all duration-300 lg:translate-x-0',
+          // Mobile: full width when open, hidden when closed
+          isSidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64',
+          // Desktop: collapsed by default, expanded on hover
+          'lg:w-16 lg:hover:w-64'
         )}
+        onMouseEnter={() => setIsSidebarExpanded(true)}
+        onMouseLeave={() => setIsSidebarExpanded(false)}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full overflow-hidden">
           {/* Logo */}
-          <div className="flex items-center justify-between px-4 py-5 border-b border-sidebar-border">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between px-4 py-5 border-b border-sidebar-border min-h-[73px]">
+            <div className={cn(
+              "flex items-center gap-2 transition-opacity duration-200",
+              !isSidebarOpen && !isSidebarExpanded && "lg:opacity-0 lg:w-0"
+            )}>
               <img 
                 src={stabulamLogo} 
                 alt="Stabulam" 
                 className="h-8 w-auto brightness-0 invert"
               />
+            </div>
+            {/* Collapsed state icon */}
+            <div className={cn(
+              "hidden lg:flex items-center justify-center transition-opacity duration-200",
+              isSidebarExpanded ? "opacity-0 w-0" : "opacity-100"
+            )}>
+              <LayoutDashboard className="h-6 w-6 text-sidebar-foreground" />
             </div>
             <Button
               variant="ghost"
@@ -151,16 +176,19 @@ export function DashboardLayout() {
             <nav className="space-y-1">
               {isAdmin ? (
                 <>
-                  <p className="px-3 py-2 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
+                  <p className={cn(
+                    "px-3 py-2 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider transition-opacity duration-200",
+                    !isSidebarOpen && !isSidebarExpanded && "lg:opacity-0 lg:h-0 lg:py-0 lg:overflow-hidden"
+                  )}>
                     Admin
                   </p>
                   {adminNavItems.map((item) => (
-                    <NavLink key={item.href} item={item} />
+                    <NavLink key={item.href} item={item} collapsed={!isSidebarOpen && !isSidebarExpanded} />
                   ))}
                 </>
               ) : (
                 employeeNavItems.map((item) => (
-                  <NavLink key={item.href} item={item} />
+                  <NavLink key={item.href} item={item} collapsed={!isSidebarOpen && !isSidebarExpanded} />
                 ))
               )}
             </nav>
