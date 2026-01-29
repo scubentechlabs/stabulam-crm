@@ -56,52 +56,28 @@ export function useUsers() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingTeam, setIsLoadingTeam] = useState(true);
 
-  // Fetch team members for assignment (works for all authenticated users via shoot_assignments join)
+  // Fetch team members for assignment (works for all authenticated users)
   const fetchTeamMembers = useCallback(async () => {
     if (!user) return;
 
     try {
       setIsLoadingTeam(true);
       
-      // For admins, use the full profiles list
-      if (isAdmin) {
-        const { data: profiles, error } = await supabase
-          .from('profiles')
-          .select('user_id, full_name, is_active')
-          .eq('is_active', true)
-          .order('full_name', { ascending: true });
+      // All authenticated users can now view profiles for team assignment
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, is_active')
+        .eq('is_active', true)
+        .order('full_name', { ascending: true });
 
-        if (error) throw error;
-        setTeamMembers(profiles || []);
-      } else {
-        // For employees, fetch via shoot_assignments which has public SELECT
-        // First get unique user_ids from shoot_assignments
-        const { data: assignments, error: assignError } = await supabase
-          .from('shoot_assignments')
-          .select('user_id');
-
-        if (assignError) throw assignError;
-
-        // Get unique user IDs including current user
-        const userIds = [...new Set([...(assignments?.map(a => a.user_id) || []), user.id])];
-        
-        // Employees can only see their own profile, so we'll use what we can get
-        // The workaround is to make this data available through a different mechanism
-        // For now, just show current user for non-admins
-        const { data: ownProfile } = await supabase
-          .from('profiles')
-          .select('user_id, full_name')
-          .eq('user_id', user.id)
-          .single();
-
-        setTeamMembers(ownProfile ? [ownProfile] : []);
-      }
+      if (error) throw error;
+      setTeamMembers(profiles || []);
     } catch (error) {
       console.error('Error fetching team members:', error);
     } finally {
       setIsLoadingTeam(false);
     }
-  }, [user, isAdmin]);
+  }, [user]);
 
   const fetchUsers = useCallback(async () => {
     if (!user || !isAdmin) {

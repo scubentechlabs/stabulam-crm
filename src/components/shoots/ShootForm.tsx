@@ -62,7 +62,7 @@ interface ShootFormProps {
 }
 
 export function ShootForm({ open, onOpenChange, onSubmit, isSubmitting }: ShootFormProps) {
-  const { activeUsers, isLoading: loadingUsers } = useUsers();
+  const { teamMembers, isLoadingTeam } = useUsers();
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
 
   const form = useForm<ShootFormValues>({
@@ -261,23 +261,23 @@ export function ShootForm({ open, onOpenChange, onSubmit, isSubmitting }: ShootF
                 <FormLabel>Assign Team Members</FormLabel>
               </div>
               
-              {loadingUsers ? (
+              {isLoadingTeam ? (
                 <div className="text-sm text-muted-foreground">Loading team...</div>
               ) : (
                 <div className="grid grid-cols-2 gap-2 max-h-[150px] overflow-y-auto border rounded-md p-3">
-                  {activeUsers.map((user) => (
+                  {teamMembers.map((member) => (
                     <label
-                      key={user.user_id}
+                      key={member.user_id}
                       className="flex items-center gap-2 p-2 rounded-md hover:bg-muted cursor-pointer"
                     >
                       <Checkbox
-                        checked={selectedUsers.includes(user.user_id)}
-                        onCheckedChange={() => toggleUserSelection(user.user_id)}
+                        checked={selectedUsers.includes(member.user_id)}
+                        onCheckedChange={() => toggleUserSelection(member.user_id)}
                       />
-                      <span className="text-sm truncate">{user.full_name}</span>
+                      <span className="text-sm truncate">{member.full_name}</span>
                     </label>
                   ))}
-                  {activeUsers.length === 0 && (
+                  {teamMembers.length === 0 && (
                     <p className="text-sm text-muted-foreground col-span-2">
                       No team members available
                     </p>
