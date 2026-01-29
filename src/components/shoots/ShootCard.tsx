@@ -29,10 +29,11 @@ interface ShootCardProps {
   onClick?: () => void;
 }
 
-const statusConfig: Record<ShootStatus, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
-  pending: { label: 'Pending', variant: 'secondary' },
-  in_progress: { label: 'In Progress', variant: 'default' },
-  completed: { label: 'Completed', variant: 'outline' },
+const statusConfig: Record<ShootStatus, { label: string; variant: 'default' | 'secondary' | 'outline'; icon: React.ElementType }> = {
+  pending: { label: 'Pending', variant: 'secondary', icon: CircleDashed },
+  in_progress: { label: 'In Progress', variant: 'default', icon: Play },
+  completed: { label: 'Completed', variant: 'outline', icon: CheckCircle },
+  given_by_editor: { label: 'Given By Editor', variant: 'outline', icon: PackageCheck },
 };
 
 const editingStatusConfig: Record<EditingStatus, { label: string; icon: React.ElementType }> = {
@@ -93,28 +94,39 @@ export function ShootCard({ shoot, onStatusChange, onEditingStatusChange, onDele
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-popover w-48">
-                {status !== 'in_progress' && (
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onStatusChange?.(shoot.id, 'in_progress');
-                    }}
-                  >
-                    <Play className="h-4 w-4 mr-2" />
-                    Start Shoot
-                  </DropdownMenuItem>
-                )}
-                {status !== 'completed' && (
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onStatusChange?.(shoot.id, 'completed');
-                    }}
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Mark Complete
-                  </DropdownMenuItem>
-                )}
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onStatusChange?.(shoot.id, 'pending');
+                  }}
+                  className={status === 'pending' ? 'bg-accent' : ''}
+                >
+                  <CircleDashed className="h-4 w-4 mr-2" />
+                  Pending Shoot
+                  {status === 'pending' && <CheckCircle className="h-3 w-3 ml-auto text-primary" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onStatusChange?.(shoot.id, 'completed');
+                  }}
+                  className={status === 'completed' ? 'bg-accent' : ''}
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Completed Shoot
+                  {status === 'completed' && <CheckCircle className="h-3 w-3 ml-auto text-primary" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onStatusChange?.(shoot.id, 'given_by_editor');
+                  }}
+                  className={status === 'given_by_editor' ? 'bg-accent' : ''}
+                >
+                  <PackageCheck className="h-4 w-4 mr-2" />
+                  Given By Editor
+                  {status === 'given_by_editor' && <CheckCircle className="h-3 w-3 ml-auto text-primary" />}
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger onClick={(e) => e.stopPropagation()}>

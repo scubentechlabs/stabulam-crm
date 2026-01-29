@@ -51,6 +51,7 @@ const statusConfig: Record<ShootStatus, { label: string; variant: 'default' | 's
   pending: { label: 'Pending', variant: 'secondary' },
   in_progress: { label: 'In Progress', variant: 'default' },
   completed: { label: 'Completed', variant: 'outline' },
+  given_by_editor: { label: 'Given By Editor', variant: 'outline' },
 };
 
 export default function AdminShoots() {

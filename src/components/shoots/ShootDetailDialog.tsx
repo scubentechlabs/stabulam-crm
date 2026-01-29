@@ -48,6 +48,7 @@ const statusConfig: Record<ShootStatus, { label: string; variant: 'default' | 's
   pending: { label: 'Pending', variant: 'secondary' },
   in_progress: { label: 'In Progress', variant: 'default' },
   completed: { label: 'Completed', variant: 'outline' },
+  given_by_editor: { label: 'Given By Editor', variant: 'outline' },
 };
 
 export function ShootDetailDialog({
@@ -154,13 +155,13 @@ export function ShootDetailDialog({
                       value={status}
                       onValueChange={(value) => onStatusChange?.(shoot.id, value as ShootStatus)}
                     >
-                      <SelectTrigger className="w-[130px]">
+                      <SelectTrigger className="w-[150px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="given_by_editor">Given By Editor</SelectItem>
                       </SelectContent>
                     </Select>
                   ) : (
