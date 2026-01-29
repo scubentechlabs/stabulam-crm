@@ -602,6 +602,7 @@ export type Database = {
           brief: string | null
           created_at: string
           created_by: string | null
+          editing_status: Database["public"]["Enums"]["editing_status"] | null
           event_name: string
           id: string
           location: string
@@ -617,6 +618,7 @@ export type Database = {
           brief?: string | null
           created_at?: string
           created_by?: string | null
+          editing_status?: Database["public"]["Enums"]["editing_status"] | null
           event_name: string
           id?: string
           location: string
@@ -632,6 +634,7 @@ export type Database = {
           brief?: string | null
           created_at?: string
           created_by?: string | null
+          editing_status?: Database["public"]["Enums"]["editing_status"] | null
           event_name?: string
           id?: string
           location?: string
@@ -769,6 +772,13 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "employee"
+      editing_status:
+        | "not_started"
+        | "editing"
+        | "internal_review"
+        | "sent_to_client"
+        | "revisions_round"
+        | "final_delivered"
       extra_work_status: "pending" | "approved" | "rejected"
       leave_status: "pending" | "approved" | "rejected"
       leave_type: "half_day" | "full_day" | "multiple_days"
@@ -917,6 +927,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "employee"],
+      editing_status: [
+        "not_started",
+        "editing",
+        "internal_review",
+        "sent_to_client",
+        "revisions_round",
+        "final_delivered",
+      ],
       extra_work_status: ["pending", "approved", "rejected"],
       leave_status: ["pending", "approved", "rejected"],
       leave_type: ["half_day", "full_day", "multiple_days"],

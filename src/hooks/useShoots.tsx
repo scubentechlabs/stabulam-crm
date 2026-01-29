@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
 
 type ShootStatus = Database['public']['Enums']['shoot_status'];
+type EditingStatus = Database['public']['Enums']['editing_status'];
 
 export interface Shoot {
   id: string;
@@ -17,6 +18,7 @@ export interface Shoot {
   brief: string | null;
   notes: string | null;
   status: ShootStatus;
+  editing_status: EditingStatus;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -60,6 +62,7 @@ interface UpdateShootData {
   brief?: string;
   notes?: string;
   status?: ShootStatus;
+  editing_status?: EditingStatus;
 }
 
 export function useShoots() {
@@ -122,6 +125,7 @@ export function useShoots() {
         return {
           ...shoot,
           status: shoot.status || 'pending',
+          editing_status: shoot.editing_status || 'not_started',
           location_coordinates: shoot.location_coordinates as { lat: number; lng: number } | null,
           assignments: shootAssignments,
         };
@@ -234,6 +238,10 @@ export function useShoots() {
 
   const updateShootStatus = async (shootId: string, status: ShootStatus) => {
     return updateShoot(shootId, { status });
+  };
+
+  const updateEditingStatus = async (shootId: string, editingStatus: EditingStatus) => {
+    return updateShoot(shootId, { editing_status: editingStatus });
   };
 
   const addAssignment = async (shootId: string, userId: string) => {
@@ -349,6 +357,7 @@ export function useShoots() {
     createShoot,
     updateShoot,
     updateShootStatus,
+    updateEditingStatus,
     addAssignment,
     removeAssignment,
     deleteShoot,
