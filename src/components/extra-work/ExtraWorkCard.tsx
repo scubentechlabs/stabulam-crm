@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { Clock, FileText, MessageSquare } from 'lucide-react';
+import { Clock, IndianRupee, FileText, MessageSquare } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { ExtraWorkWithProfile } from '@/hooks/useExtraWork';
@@ -31,9 +31,15 @@ export function ExtraWorkCard({ extraWork, showEmployeeName }: ExtraWorkCardProp
                 {extraWork.profiles.full_name}
               </div>
             )}
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" />
-              <span className="font-medium">{extraWork.hours} Hour{extraWork.hours > 1 ? 's' : ''}</span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-primary" />
+                <span className="font-medium">{extraWork.hours} Hour{extraWork.hours > 1 ? 's' : ''}</span>
+              </div>
+              <div className="flex items-center gap-1 text-green-600">
+                <IndianRupee className="h-4 w-4" />
+                <span className="font-semibold">{extraWork.compensation_amount}</span>
+              </div>
             </div>
             <div className="text-sm text-muted-foreground">
               {format(new Date(extraWork.work_date), 'PPP')}

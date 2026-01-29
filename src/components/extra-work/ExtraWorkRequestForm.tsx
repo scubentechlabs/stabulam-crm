@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Clock } from 'lucide-react';
+import { Clock, IndianRupee } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -15,6 +15,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { EXTRA_WORK_TIERS } from '@/hooks/useExtraWork';
 
 const extraWorkFormSchema = z.object({
   hours: z.enum(['1', '2', '3', '4'] as const, {
@@ -47,6 +48,9 @@ export function ExtraWorkRequestForm({ onSubmit, onCancel, isSubmitting }: Extra
       notes: '',
     },
   });
+
+  const selectedHours = form.watch('hours');
+  const compensation = EXTRA_WORK_TIERS[Number(selectedHours) as keyof typeof EXTRA_WORK_TIERS];
 
   const handleSubmit = async (values: ExtraWorkFormValues) => {
     const result = await onSubmit({
@@ -85,10 +89,16 @@ export function ExtraWorkRequestForm({ onSubmit, onCancel, isSubmitting }: Extra
                       />
                       <Label
                         htmlFor={`hour-${hour}`}
-                        className="flex items-center justify-center gap-2 rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                        className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                       >
-                        <Clock className="h-4 w-4" />
-                        <span className="font-medium">{hour} Hour{hour > 1 ? 's' : ''}</span>
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          <span className="font-medium">{hour} Hour{hour > 1 ? 's' : ''}</span>
+                        </div>
+                        <div className="flex items-center gap-1 mt-2 text-green-600">
+                          <IndianRupee className="h-3.5 w-3.5" />
+                          <span className="font-semibold">{EXTRA_WORK_TIERS[hour]}</span>
+                        </div>
                       </Label>
                     </div>
                   ))}
@@ -98,6 +108,17 @@ export function ExtraWorkRequestForm({ onSubmit, onCancel, isSubmitting }: Extra
             </FormItem>
           )}
         />
+
+        {/* Compensation Display */}
+        <div className="rounded-lg bg-green-500/10 border border-green-500/20 p-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Compensation Amount</span>
+            <div className="flex items-center gap-1 text-green-600 font-bold text-lg">
+              <IndianRupee className="h-4 w-4" />
+              <span>{compensation}</span>
+            </div>
+          </div>
+        </div>
 
         {/* Task Description */}
         <FormField
