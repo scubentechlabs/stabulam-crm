@@ -119,21 +119,23 @@ export function DateRangePicker({
         </Button>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-auto p-0 bg-background border shadow-xl z-50 rounded-xl overflow-hidden" 
+        className="w-auto max-w-[95vw] p-0 bg-background border shadow-xl z-50 rounded-xl overflow-hidden" 
         align="start"
-        sideOffset={8}
-        collisionPadding={16}
+        side="bottom"
+        sideOffset={4}
+        collisionPadding={{ top: 8, right: 8, bottom: 8, left: 8 }}
+        avoidCollisions={true}
       >
-        <div className="flex flex-col sm:flex-row max-h-[85vh] overflow-auto">
+        <div className="flex flex-col sm:flex-row max-h-[75vh] overflow-auto">
           {/* Presets Sidebar */}
-          <div className="border-b sm:border-b-0 sm:border-r p-3 sm:p-4 space-y-0.5 min-w-[140px] bg-muted/20">
-            <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">Quick Select</p>
+          <div className="border-b sm:border-b-0 sm:border-r p-2 sm:p-3 space-y-0.5 min-w-[120px] bg-muted/20">
+            <p className="text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">Quick Select</p>
             {presets.map((preset) => (
               <Button
                 key={preset.label}
                 variant="ghost"
                 size="sm"
-                className="w-full justify-start text-sm font-normal h-8 hover:bg-primary/10 hover:text-primary rounded-lg transition-colors"
+                className="w-full justify-start text-xs font-normal h-7 hover:bg-primary/10 hover:text-primary rounded-md transition-colors"
                 onClick={() => handlePresetClick(preset)}
               >
                 {preset.label}
@@ -141,28 +143,28 @@ export function DateRangePicker({
             ))}
           </div>
           {/* Calendar */}
-          <div className="p-3 sm:p-4 overflow-auto">
+          <div className="p-2 sm:p-3 overflow-auto">
             <Calendar
               mode="range"
               selected={{ from: dateRange.from, to: dateRange.to }}
               onSelect={handleSelect}
-              numberOfMonths={2}
+              numberOfMonths={1}
               disabled={(date) => date > new Date()}
               className="pointer-events-auto"
               initialFocus
               classNames={{
-                months: "flex flex-col sm:flex-row gap-4",
-                month: "space-y-3",
+                months: "flex flex-col gap-3",
+                month: "space-y-2",
                 caption: "flex justify-center pt-1 relative items-center",
                 caption_label: "text-sm font-semibold",
                 nav: "flex items-center gap-1",
-                nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-muted rounded-md transition-colors",
+                nav_button: "h-6 w-6 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-muted rounded-md transition-colors",
                 table: "w-full border-collapse",
                 head_row: "flex",
-                head_cell: "text-muted-foreground rounded-md w-8 font-medium text-[0.75rem]",
-                row: "flex w-full mt-1",
-                cell: "h-8 w-8 text-center text-sm p-0 relative focus-within:relative focus-within:z-20",
-                day: "h-8 w-8 p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors text-sm",
+                head_cell: "text-muted-foreground rounded-md w-7 font-medium text-[0.7rem]",
+                row: "flex w-full mt-0.5",
+                cell: "h-7 w-7 text-center text-xs p-0 relative focus-within:relative focus-within:z-20",
+                day: "h-7 w-7 p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors text-xs",
                 day_range_start: "day-range-start rounded-l-md bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
                 day_range_end: "day-range-end rounded-r-md bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
                 day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
