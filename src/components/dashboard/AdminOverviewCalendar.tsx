@@ -9,6 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { DayDetailDialog } from './DayDetailDialog';
 
 interface DayData {
   attendance: {
@@ -22,14 +23,37 @@ interface DayData {
     avatar_url: string | null;
     leave_type: string;
     half_day_period?: string;
+    reason?: string;
   }[];
   shoots: {
     id: string;
     event_name: string;
     brand_name: string;
     shoot_time: string;
+    location: string;
+    status: string;
     assignee_count: number;
   }[];
+}
+
+interface DetailedAttendance {
+  user_id: string;
+  full_name: string;
+  avatar_url: string | null;
+  clock_in_time: string | null;
+  clock_out_time: string | null;
+  is_late: boolean;
+  late_minutes: number;
+}
+
+interface DetailedShoot {
+  id: string;
+  event_name: string;
+  brand_name: string;
+  shoot_time: string;
+  location: string;
+  status: string;
+  assignees: { user_id: string; full_name: string; avatar_url: string | null }[];
 }
 
 export function AdminOverviewCalendar() {
@@ -37,6 +61,13 @@ export function AdminOverviewCalendar() {
   const [isLoading, setIsLoading] = useState(true);
   const [calendarData, setCalendarData] = useState<Record<string, DayData>>({});
   const [totalEmployees, setTotalEmployees] = useState(0);
+  
+  // Dialog state
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [detailedAttendance, setDetailedAttendance] = useState<DetailedAttendance[]>([]);
+  const [detailedShoots, setDetailedShoots] = useState<DetailedShoot[]>([]);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
   const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
@@ -60,10 +91,10 @@ export function AdminOverviewCalendar() {
         supabase.from('attendance').select('date, user_id, is_late').gte('date', startStr).lte('date', endStr),
         supabase
           .from('leaves')
-          .select('user_id, start_date, end_date, leave_type, half_day_period, status')
+          .select('user_id, start_date, end_date, leave_type, half_day_period, status, reason')
           .eq('status', 'approved')
           .or(`start_date.lte.${endStr},end_date.gte.${startStr}`),
-        supabase.from('shoots').select('id, event_name, brand_name, shoot_date, shoot_time').gte('shoot_date', startStr).lte('shoot_date', endStr),
+        supabase.from('shoots').select('id, event_name, brand_name, shoot_date, shoot_time, location, status').gte('shoot_date', startStr).lte('shoot_date', endStr),
         supabase.from('shoot_assignments').select('shoot_id, user_id'),
         supabase.from('profiles').select('user_id, full_name, avatar_url').eq('is_active', true),
       ]);
@@ -119,6 +150,7 @@ export function AdminOverviewCalendar() {
                 avatar_url: profile.avatar_url,
                 leave_type: leave.leave_type,
                 half_day_period: leave.half_day_period || undefined,
+                reason: leave.reason || undefined,
               });
             }
           }
@@ -133,6 +165,8 @@ export function AdminOverviewCalendar() {
             event_name: shoot.event_name,
             brand_name: shoot.brand_name,
             shoot_time: shoot.shoot_time,
+            location: shoot.location,
+            status: shoot.status || 'pending',
             assignee_count: assignmentMap[shoot.id] || 0,
           });
         }
@@ -149,6 +183,81 @@ export function AdminOverviewCalendar() {
   useEffect(() => {
     fetchCalendarData();
   }, [currentMonth]);
+
+  // Fetch detailed data for a specific day when clicked
+  const handleDayClick = async (day: Date) => {
+    if (isWeekend(day)) return;
+    
+    setSelectedDate(day);
+    setDialogOpen(true);
+    setIsLoadingDetails(true);
+
+    try {
+      const dateStr = format(day, 'yyyy-MM-dd');
+
+      // Fetch detailed attendance with user info
+      const [attendanceRes, profilesRes, shootsRes, assignmentsRes] = await Promise.all([
+        supabase
+          .from('attendance')
+          .select('user_id, clock_in_time, clock_out_time, is_late, late_minutes')
+          .eq('date', dateStr),
+        supabase.from('profiles').select('user_id, full_name, avatar_url').eq('is_active', true),
+        supabase
+          .from('shoots')
+          .select('id, event_name, brand_name, shoot_time, location, status')
+          .eq('shoot_date', dateStr),
+        supabase.from('shoot_assignments').select('shoot_id, user_id'),
+      ]);
+
+      const profileMap = (profilesRes.data || []).reduce((acc, p) => {
+        acc[p.user_id] = { full_name: p.full_name, avatar_url: p.avatar_url };
+        return acc;
+      }, {} as Record<string, { full_name: string; avatar_url: string | null }>);
+
+      // Build detailed attendance
+      const attendance: DetailedAttendance[] = (attendanceRes.data || []).map(att => ({
+        user_id: att.user_id,
+        full_name: profileMap[att.user_id]?.full_name || 'Unknown',
+        avatar_url: profileMap[att.user_id]?.avatar_url || null,
+        clock_in_time: att.clock_in_time,
+        clock_out_time: att.clock_out_time,
+        is_late: att.is_late || false,
+        late_minutes: att.late_minutes || 0,
+      }));
+
+      // Build assignment map for shoots
+      const assignmentsByShoot = (assignmentsRes.data || []).reduce((acc, a) => {
+        if (!acc[a.shoot_id]) acc[a.shoot_id] = [];
+        const profile = profileMap[a.user_id];
+        if (profile) {
+          acc[a.shoot_id].push({
+            user_id: a.user_id,
+            full_name: profile.full_name,
+            avatar_url: profile.avatar_url,
+          });
+        }
+        return acc;
+      }, {} as Record<string, { user_id: string; full_name: string; avatar_url: string | null }[]>);
+
+      // Build detailed shoots
+      const shoots: DetailedShoot[] = (shootsRes.data || []).map(shoot => ({
+        id: shoot.id,
+        event_name: shoot.event_name,
+        brand_name: shoot.brand_name,
+        shoot_time: shoot.shoot_time,
+        location: shoot.location,
+        status: shoot.status || 'pending',
+        assignees: assignmentsByShoot[shoot.id] || [],
+      }));
+
+      setDetailedAttendance(attendance);
+      setDetailedShoots(shoots);
+    } catch (error) {
+      console.error('Error fetching day details:', error);
+    } finally {
+      setIsLoadingDetails(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -251,11 +360,12 @@ export function AdminOverviewCalendar() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div
+                      onClick={() => handleDayClick(day)}
                       className={cn(
-                        'min-h-[90px] p-2 rounded-lg border transition-colors cursor-pointer hover:bg-muted/50',
+                        'min-h-[90px] p-2 rounded-lg border transition-colors cursor-pointer hover:bg-muted/50 hover:border-primary/50',
                         !isCurrentMonth && 'opacity-50',
                         isTodayDate && 'ring-2 ring-primary bg-primary/5',
-                        isWeekendDay && 'bg-muted/30'
+                        isWeekendDay && 'bg-muted/30 cursor-default hover:border-transparent'
                       )}
                     >
                       <div className={cn(
@@ -410,6 +520,19 @@ export function AdminOverviewCalendar() {
           })}
         </div>
       </CardContent>
+
+      {/* Day Detail Dialog */}
+      {selectedDate && (
+        <DayDetailDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          date={selectedDate}
+          attendance={detailedAttendance}
+          leaves={calendarData[format(selectedDate, 'yyyy-MM-dd')]?.leaves || []}
+          shoots={detailedShoots}
+          isLoading={isLoadingDetails}
+        />
+      )}
     </Card>
   );
 }
