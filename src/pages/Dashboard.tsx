@@ -183,7 +183,7 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Today's Status & Upcoming Shoots */}
+      {/* Today's Status & Today Shoots */}
       <div className="grid lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
