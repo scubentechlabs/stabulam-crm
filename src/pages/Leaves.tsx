@@ -13,7 +13,7 @@ import { Calendar, Plus, Clock, CheckCircle, XCircle, Loader2 } from 'lucide-rea
 import { useLeaves } from '@/hooks/useLeaves';
 import { LeaveRequestForm } from '@/components/leaves/LeaveRequestForm';
 import { LeaveTable } from '@/components/leaves/LeaveTable';
-import { LeaveBalanceCard } from '@/components/leaves/LeaveBalanceCard';
+
 
 export default function Leaves() {
   const [showNewRequest, setShowNewRequest] = useState(false);
@@ -64,8 +64,7 @@ export default function Leaves() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <LeaveBalanceCard />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
