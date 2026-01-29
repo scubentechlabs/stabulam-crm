@@ -69,7 +69,7 @@ export default function Shoots() {
           </TabsTrigger>
           <TabsTrigger value="list" className="gap-2">
             <List className="h-4 w-4" />
-            List View
+            Shoot List View
           </TabsTrigger>
         </TabsList>
 
