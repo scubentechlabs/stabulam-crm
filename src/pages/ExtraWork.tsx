@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Briefcase, Plus, Clock, CheckCircle, XCircle, Loader2, AlertTriangle } from 'lucide-react';
+import { Briefcase, Plus, Clock, CheckCircle, XCircle, Loader2, IndianRupee, AlertTriangle } from 'lucide-react';
 import { useExtraWork } from '@/hooks/useExtraWork';
 import { useAttendance } from '@/hooks/useAttendance';
 import { ExtraWorkRequestForm } from '@/components/extra-work/ExtraWorkRequestForm';
@@ -61,7 +61,7 @@ export default function ExtraWork() {
       <div className="flex items-center justify-between">
         <div className="page-header mb-0">
           <h1 className="page-title">Extra Work</h1>
-          <p className="page-description">Log your overtime hours</p>
+          <p className="page-description">Log overtime hours and track compensation</p>
         </div>
         <Button 
           onClick={() => setShowNewRequest(true)}
@@ -86,7 +86,7 @@ export default function ExtraWork() {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
@@ -126,8 +126,42 @@ export default function ExtraWork() {
             </div>
           </CardContent>
         </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full p-2 bg-green-500/10">
+                <IndianRupee className="h-5 w-5 text-green-500" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">₹{currentMonthApproved.toLocaleString('en-IN')}</p>
+                <p className="text-sm text-muted-foreground">This Month</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
+      {/* Compensation Tiers Info */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Compensation Tiers</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { hours: 1, amount: 150 },
+              { hours: 2, amount: 250 },
+              { hours: 3, amount: 350 },
+              { hours: 4, amount: 450 },
+            ].map(tier => (
+              <div key={tier.hours} className="flex items-center justify-between p-3 rounded-lg bg-muted">
+                <span className="text-sm">{tier.hours} Hour{tier.hours > 1 ? 's' : ''}</span>
+                <span className="font-semibold text-green-600">₹{tier.amount}</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Extra Work Requests Tabs */}
       <Card>
