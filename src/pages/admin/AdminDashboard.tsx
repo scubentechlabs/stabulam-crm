@@ -19,6 +19,7 @@ import {
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useAdminDashboardStats } from '@/hooks/useAdminDashboardStats';
+import { AdminOverviewCalendar } from '@/components/dashboard/AdminOverviewCalendar';
 
 export default function AdminDashboard() {
   const today = new Date();
@@ -251,6 +252,9 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Overview Calendar */}
+      <AdminOverviewCalendar />
     </div>
   );
 }
