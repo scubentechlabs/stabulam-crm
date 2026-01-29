@@ -151,7 +151,7 @@ export function ShootForm({ open, onOpenChange, onSubmit, isSubmitting }: ShootF
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Shoot Date</FormLabel>
-                    <Popover>
+                    <Popover modal={false}>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
@@ -170,7 +170,12 @@ export function ShootForm({ open, onOpenChange, onSubmit, isSubmitting }: ShootF
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 z-[100]" align="start">
+                      <PopoverContent 
+                        className="w-auto p-0 pointer-events-auto" 
+                        align="start"
+                        style={{ zIndex: 9999 }}
+                        onOpenAutoFocus={(e) => e.preventDefault()}
+                      >
                         <Calendar
                           mode="single"
                           selected={field.value}
@@ -181,7 +186,7 @@ export function ShootForm({ open, onOpenChange, onSubmit, isSubmitting }: ShootF
                             return date < today;
                           }}
                           initialFocus
-                          className="p-3 pointer-events-auto"
+                          className="p-3 pointer-events-auto bg-popover"
                         />
                       </PopoverContent>
                     </Popover>
