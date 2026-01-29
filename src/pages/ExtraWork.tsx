@@ -148,15 +148,9 @@ export default function ExtraWork() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { hours: 1, amount: 150 },
-              { hours: 2, amount: 250 },
-              { hours: 3, amount: 350 },
-              { hours: 4, amount: 450 },
-            ].map(tier => (
-              <div key={tier.hours} className="flex items-center justify-between p-3 rounded-lg bg-muted">
-                <span className="text-sm">{tier.hours} Hour{tier.hours > 1 ? 's' : ''}</span>
-                <span className="font-semibold text-green-600">₹{tier.amount}</span>
+            {[1, 2, 3, 4].map(hours => (
+              <div key={hours} className="flex items-center justify-center p-3 rounded-lg bg-muted">
+                <span className="text-sm font-medium">{hours} Hour{hours > 1 ? 's' : ''}</span>
               </div>
             ))}
           </div>
