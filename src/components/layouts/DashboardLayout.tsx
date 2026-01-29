@@ -61,9 +61,6 @@ const employeeNavItems: NavItem[] = [
   { title: 'Leave Requests', href: '/leaves', icon: Calendar },
   { title: 'Extra Work', href: '/extra-work', icon: Briefcase },
   { title: 'Shoots and Editing', href: '/shoots', icon: Camera },
-  { title: 'Team Calendar', href: '/team-calendar', icon: UsersRound },
-  { title: 'Salary History', href: '/salary-history', icon: DollarSign },
-  { title: 'Performance', href: '/performance', icon: TrendingUp },
 ];
 
 const adminNavItems: NavItem[] = [
