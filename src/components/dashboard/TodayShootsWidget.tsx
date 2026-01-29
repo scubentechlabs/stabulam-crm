@@ -9,7 +9,7 @@ import { format, isToday, isTomorrow, addDays, startOfDay } from 'date-fns';
 import { useShoots } from '@/hooks/useShoots';
 import { ShootDetailDialog } from '@/components/shoots/ShootDetailDialog';
 
-export function UpcomingShootsWidget() {
+export function TodayShootsWidget() {
   const { shoots, isLoading } = useShoots();
   const [selectedShoot, setSelectedShoot] = useState<typeof shoots[0] | null>(null);
 

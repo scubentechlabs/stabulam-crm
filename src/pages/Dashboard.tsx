@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { UpcomingShootsWidget } from '@/components/dashboard/UpcomingShootsWidget';
+import { TodayShootsWidget } from '@/components/dashboard/TodayShootsWidget';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 
 export default function Dashboard() {
@@ -260,7 +260,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <UpcomingShootsWidget />
+        <TodayShootsWidget />
       </div>
     </div>
   );
