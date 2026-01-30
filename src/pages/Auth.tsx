@@ -82,16 +82,30 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-accent to-muted">
-      {/* Login Form */}
-      <div className="w-full max-w-md flex flex-col justify-between bg-card rounded-2xl shadow-2xl mx-4">
-        <div className="flex-1 flex flex-col justify-center px-8 sm:px-12 py-12">
-          {/* Logo */}
-          <div className="flex items-center justify-center mb-10">
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* Left Side - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary/10 via-primary/5 to-muted items-center justify-center p-12">
+        <div className="flex flex-col items-center justify-center">
+          <img 
+            src={stabulamLogo} 
+            alt="Stabulam" 
+            className="h-32 w-auto mb-6"
+          />
+          <p className="text-muted-foreground text-lg text-center max-w-sm">
+            Operations Management Platform
+          </p>
+        </div>
+      </div>
+
+      {/* Right Side - Login Form */}
+      <div className="flex-1 flex items-center justify-center bg-card p-6 sm:p-12">
+        <div className="w-full max-w-md">
+          {/* Mobile Logo - Only visible on smaller screens */}
+          <div className="lg:hidden flex items-center justify-center mb-10">
             <img 
               src={stabulamLogo} 
               alt="Stabulam" 
-              className="h-20 w-auto"
+              className="h-16 w-auto"
             />
           </div>
 
