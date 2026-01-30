@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Link } from 'react-router-dom';
-import { format, isToday, isTomorrow, addDays, startOfDay } from 'date-fns';
+import { format, isToday, isTomorrow } from 'date-fns';
 import { useShoots } from '@/hooks/useShoots';
 import { ShootDetailDialog } from '@/components/shoots/ShootDetailDialog';
 import { formatTimeOnlyIST } from '@/lib/utils';
@@ -14,16 +14,12 @@ export function TodayShootsWidget() {
   const { shoots, isLoading } = useShoots();
   const [selectedShoot, setSelectedShoot] = useState<typeof shoots[0] | null>(null);
 
-  // Filter shoots for today only
-  const today = startOfDay(new Date());
-  const todayEnd = addDays(today, 1);
+  // Filter shoots for today only - use string comparison to avoid timezone issues
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
 
   const todayShoots = shoots
-    .filter(shoot => {
-      const shootDate = new Date(shoot.shoot_date);
-      return shootDate >= today && shootDate < todayEnd;
-    })
-    .sort((a, b) => new Date(a.shoot_date).getTime() - new Date(b.shoot_date).getTime());
+    .filter(shoot => shoot.shoot_date === todayStr)
+    .sort((a, b) => a.shoot_time.localeCompare(b.shoot_time));
 
   const getDateLabel = (dateStr: string) => {
     const date = new Date(dateStr);
