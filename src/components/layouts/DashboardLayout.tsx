@@ -97,15 +97,21 @@ export function DashboardLayout() {
         to={item.href}
         onClick={() => setIsSidebarOpen(false)}
         className={cn(
-          'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+          'flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200',
+          // Expanded state
+          !collapsed && 'px-3 py-2.5',
+          // Collapsed state - centered icon with proper size
+          collapsed && 'w-12 h-12 justify-center items-center mx-auto',
           isActive
             ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-            : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground',
-          collapsed && 'justify-center px-0'
+            : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
         )}
         title={collapsed ? item.title : undefined}
       >
-        <item.icon className={cn("h-5 w-5 flex-shrink-0", collapsed && "mx-auto")} />
+        <item.icon className={cn(
+          "flex-shrink-0 transition-all",
+          collapsed ? "h-6 w-6" : "h-5 w-5"
+        )} />
         {!collapsed && (
           <>
             <span className="truncate">{item.title}</span>
@@ -172,13 +178,16 @@ export function DashboardLayout() {
           </div>
 
           {/* Navigation */}
-          <ScrollArea className="flex-1 px-2 py-4">
-            <nav className="space-y-1">
+          <ScrollArea className="flex-1 py-4">
+            <nav className={cn(
+              "space-y-2",
+              !isSidebarOpen && !isSidebarExpanded && "lg:flex lg:flex-col lg:items-center lg:space-y-1"
+            )}>
               {isAdmin ? (
                 <>
                   <p className={cn(
                     "px-3 py-2 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider transition-opacity duration-200",
-                    !isSidebarOpen && !isSidebarExpanded && "lg:opacity-0 lg:h-0 lg:py-0 lg:overflow-hidden"
+                    !isSidebarOpen && !isSidebarExpanded && "lg:hidden"
                   )}>
                     Admin
                   </p>
@@ -187,11 +196,11 @@ export function DashboardLayout() {
                   ))}
                   <div className={cn(
                     "pt-4 transition-opacity duration-200",
-                    !isSidebarOpen && !isSidebarExpanded && "lg:pt-2"
+                    !isSidebarOpen && !isSidebarExpanded && "lg:pt-2 lg:border-t lg:border-sidebar-border lg:mt-2"
                   )}>
                     <p className={cn(
                       "px-3 py-2 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider transition-opacity duration-200",
-                      !isSidebarOpen && !isSidebarExpanded && "lg:opacity-0 lg:h-0 lg:py-0 lg:overflow-hidden"
+                      !isSidebarOpen && !isSidebarExpanded && "lg:hidden"
                     )}>
                       Employee View
                     </p>
