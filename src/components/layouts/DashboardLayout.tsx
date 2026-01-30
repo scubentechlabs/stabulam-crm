@@ -185,29 +185,9 @@ export function DashboardLayout() {
             )}>
               {isAdmin ? (
                 <>
-                  <p className={cn(
-                    "px-3 py-2 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider transition-opacity duration-200",
-                    !isSidebarOpen && !isSidebarExpanded && "lg:hidden"
-                  )}>
-                    Admin
-                  </p>
                   {adminNavItems.map((item) => (
                     <NavLink key={item.href} item={item} collapsed={!isSidebarOpen && !isSidebarExpanded} />
                   ))}
-                  <div className={cn(
-                    "pt-4 transition-opacity duration-200",
-                    !isSidebarOpen && !isSidebarExpanded && "lg:pt-2 lg:border-t lg:border-sidebar-border lg:mt-2"
-                  )}>
-                    <p className={cn(
-                      "px-3 py-2 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider transition-opacity duration-200",
-                      !isSidebarOpen && !isSidebarExpanded && "lg:hidden"
-                    )}>
-                      Employee View
-                    </p>
-                    {employeeNavItems.map((item) => (
-                      <NavLink key={item.href} item={item} collapsed={!isSidebarOpen && !isSidebarExpanded} />
-                    ))}
-                  </div>
                 </>
               ) : (
                 employeeNavItems.map((item) => (
