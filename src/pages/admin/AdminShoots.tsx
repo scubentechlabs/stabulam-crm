@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { format, parseISO, isSameDay } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,13 @@ export default function AdminShoots() {
   const [selectedShoot, setSelectedShoot] = useState<ShootWithAssignments | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+  // Keep selectedShoot in sync with the latest shoots state (e.g., after member remove/add)
+  useEffect(() => {
+    if (!selectedShoot) return;
+    const updated = shoots.find((s) => s.id === selectedShoot.id);
+    if (updated) setSelectedShoot(updated);
+  }, [shoots, selectedShoot?.id]);
 
   // Filter shoots for selected date
   const shootsForSelectedDate = shoots.filter(shoot => 
