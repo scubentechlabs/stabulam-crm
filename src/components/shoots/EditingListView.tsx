@@ -112,7 +112,7 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
     return 'not_started';
   };
 
-  const [activeStatus, setActiveStatus] = useState<EditingStatus>(getDefaultStatus);
+  const [activeStatus, setActiveStatus] = useState<EditingStatus>(() => getDefaultStatus());
 
   const getShootsByStatus = (status: EditingStatus) => {
     return editorAssignedShoots.filter(shoot => (shoot.editing_status || 'not_started') === status);
