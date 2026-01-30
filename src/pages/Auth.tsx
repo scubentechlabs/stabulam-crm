@@ -233,7 +233,7 @@ export default function Auth() {
               )}
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="remember"
@@ -244,12 +244,6 @@ export default function Auth() {
                   Remember me
                 </Label>
               </div>
-              <button
-                type="button"
-                className="text-sm font-medium text-primary hover:underline"
-              >
-                Forgot password?
-              </button>
             </div>
 
             <Button 
