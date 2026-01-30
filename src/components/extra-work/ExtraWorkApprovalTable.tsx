@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
-import { Clock, IndianRupee, Check, X, Eye, MoreHorizontal, Briefcase } from 'lucide-react';
+import { Clock, Check, X, Eye, MoreHorizontal, Briefcase } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -157,7 +157,6 @@ export function ExtraWorkApprovalTable({
               <TableHead>Date</TableHead>
               <TableHead className="text-center">Hours</TableHead>
               <TableHead>Task</TableHead>
-              <TableHead className="text-right">Compensation</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -185,12 +184,6 @@ export function ExtraWorkApprovalTable({
                 </TableCell>
                 <TableCell className="max-w-[200px] truncate">
                   {ew.task_description}
-                </TableCell>
-                <TableCell className="text-right">
-                  <span className="text-green-600 font-semibold flex items-center justify-end gap-1">
-                    <IndianRupee className="h-3.5 w-3.5" />
-                    {ew.compensation_amount?.toLocaleString('en-IN') || 0}
-                  </span>
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
@@ -256,15 +249,9 @@ export function ExtraWorkApprovalTable({
           </DialogHeader>
           {selectedExtraWork && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Hours</p>
-                  <p className="font-medium">{selectedExtraWork.hours} hour{selectedExtraWork.hours > 1 ? 's' : ''}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Compensation</p>
-                  <p className="font-medium text-green-600">₹{selectedExtraWork.compensation_amount?.toLocaleString('en-IN') || 0}</p>
-                </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Hours</p>
+                <p className="font-medium">{selectedExtraWork.hours} hour{selectedExtraWork.hours > 1 ? 's' : ''}</p>
               </div>
               
               <div className="rounded-lg bg-muted p-3">
@@ -298,19 +285,6 @@ export function ExtraWorkApprovalTable({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="compensation">Compensation Amount (₹)</Label>
-              <Input
-                id="compensation"
-                type="number"
-                value={adjustedCompensation}
-                onChange={(e) => setAdjustedCompensation(Number(e.target.value))}
-                min={0}
-              />
-              <p className="text-xs text-muted-foreground">
-                Default: ₹{selectedExtraWork?.compensation_amount} for {selectedExtraWork?.hours} hour{selectedExtraWork?.hours && selectedExtraWork.hours > 1 ? 's' : ''}
-              </p>
-            </div>
             <div className="space-y-2">
               <Label htmlFor="approve-comments">Comments (Optional)</Label>
               <Textarea
