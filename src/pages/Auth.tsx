@@ -262,17 +262,6 @@ export default function Auth() {
             </Button>
           </form>
         </div>
-
-        {/* Footer */}
-        <div className="px-8 sm:px-12 lg:px-16 py-6 border-t">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>© {new Date().getFullYear()} Stabulam</span>
-            <div className="flex gap-4">
-              <button className="hover:text-foreground transition-colors">Privacy Policy</button>
-              <button className="hover:text-foreground transition-colors">Terms of Service</button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
