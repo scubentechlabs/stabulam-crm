@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Camera, MapPin, Clock, Users, ChevronRight, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,8 +11,18 @@ import { ShootDetailDialog } from '@/components/shoots/ShootDetailDialog';
 import { formatTimeOnlyIST } from '@/lib/utils';
 
 export function TodayShootsWidget() {
-  const { shoots, isLoading } = useShoots();
+  const { shoots, isLoading, updateShootStatus, addAssignment, removeAssignment, updateShoot } = useShoots();
   const [selectedShoot, setSelectedShoot] = useState<typeof shoots[0] | null>(null);
+
+  // Keep selectedShoot in sync with shoots data
+  useEffect(() => {
+    if (selectedShoot) {
+      const updated = shoots.find(s => s.id === selectedShoot.id);
+      if (updated) {
+        setSelectedShoot(updated);
+      }
+    }
+  }, [shoots, selectedShoot?.id]);
 
   // Filter shoots for today only - use string comparison to avoid timezone issues
   const todayStr = format(new Date(), 'yyyy-MM-dd');
@@ -161,6 +171,10 @@ export function TodayShootsWidget() {
           shoot={selectedShoot}
           open={!!selectedShoot}
           onOpenChange={(open) => !open && setSelectedShoot(null)}
+          onStatusChange={updateShootStatus}
+          onAddAssignment={addAssignment}
+          onRemoveAssignment={removeAssignment}
+          onUpdateShoot={updateShoot}
         />
       )}
     </>
