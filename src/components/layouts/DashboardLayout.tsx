@@ -101,11 +101,11 @@ export function DashboardLayout() {
           isActive
             ? 'bg-sidebar-primary text-sidebar-primary-foreground'
             : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground',
-          collapsed && 'justify-center px-2'
+          collapsed && 'justify-center px-0'
         )}
         title={collapsed ? item.title : undefined}
       >
-        <item.icon className="h-5 w-5 flex-shrink-0" />
+        <item.icon className={cn("h-5 w-5 flex-shrink-0", collapsed && "mx-auto")} />
         {!collapsed && (
           <>
             <span className="truncate">{item.title}</span>
@@ -132,11 +132,11 @@ export function DashboardLayout() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed lg:sticky top-0 left-0 z-50 h-screen bg-sidebar transition-all duration-300 lg:translate-x-0',
+          'fixed lg:sticky top-0 left-0 z-50 h-screen bg-sidebar transition-all duration-300 lg:translate-x-0 overflow-hidden',
           // Mobile: full width when open, hidden when closed
           isSidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64',
           // Desktop: collapsed by default, expanded on hover
-          'lg:w-16 lg:hover:w-64'
+          'lg:w-[72px] lg:hover:w-64'
         )}
         onMouseEnter={() => setIsSidebarExpanded(true)}
         onMouseLeave={() => setIsSidebarExpanded(false)}
@@ -172,7 +172,7 @@ export function DashboardLayout() {
           </div>
 
           {/* Navigation */}
-          <ScrollArea className="flex-1 px-3 py-4">
+          <ScrollArea className="flex-1 px-2 py-4">
             <nav className="space-y-1">
               {isAdmin ? (
                 <>
