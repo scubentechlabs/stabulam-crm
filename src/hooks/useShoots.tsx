@@ -31,11 +31,6 @@ export interface Shoot {
 
 export interface ShootWithAssignments extends Shoot {
   assignments: ShootAssignment[];
-  assigned_editor?: {
-    full_name: string;
-    email: string;
-    avatar_url: string | null;
-  } | null;
 }
 
 export interface ShootAssignment {
@@ -104,18 +99,13 @@ export function useShoots() {
 
       // Fetch profiles for assigned users
       const userIds = [...new Set(assignmentsData?.map(a => a.user_id) || [])];
-      
-      // Also include editor ids for profile lookup
-      const editorIds = [...new Set((shootsData || []).filter(s => s.assigned_editor_id).map(s => s.assigned_editor_id!))];
-      const allUserIds = [...new Set([...userIds, ...editorIds])];
-      
       let profilesMap: Map<string, { full_name: string; email: string; avatar_url: string | null }> = new Map();
 
-      if (allUserIds.length > 0) {
+      if (userIds.length > 0) {
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('user_id, full_name, email, avatar_url')
-          .in('user_id', allUserIds);
+          .in('user_id', userIds);
 
         if (!profilesError && profilesData) {
           profilesData.forEach(p => {
@@ -143,7 +133,6 @@ export function useShoots() {
           editing_status: shoot.editing_status || 'not_started',
           location_coordinates: shoot.location_coordinates as { lat: number; lng: number } | null,
           assignments: shootAssignments,
-          assigned_editor: shoot.assigned_editor_id ? profilesMap.get(shoot.assigned_editor_id) || null : null,
         };
       });
 
@@ -247,13 +236,6 @@ export function useShoots() {
     if (!user) return { error: new Error('Not authenticated') };
 
     try {
-      // Optimistically update local state first
-      setShoots(prev => prev.map(shoot => 
-        shoot.id === shootId 
-          ? { ...shoot, ...data, updated_at: new Date().toISOString() }
-          : shoot
-      ));
-
       const { error } = await supabase
         .from('shoots')
         .update({
@@ -262,18 +244,14 @@ export function useShoots() {
         })
         .eq('id', shootId);
 
-      if (error) {
-        // Revert on error by refetching
-        await fetchShoots();
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: 'Success',
         description: 'Shoot updated successfully',
       });
 
-      // No need to refetch - realtime subscription will handle sync
+      await fetchShoots();
       return { error: null };
     } catch (error) {
       console.error('Error updating shoot:', error);
@@ -303,38 +281,26 @@ export function useShoots() {
     if (!user) return { error: new Error('Not authenticated') };
 
     try {
-      const updateData = {
-        status: 'given_by_editor' as ShootStatus,
-        editor_drive_link: data.editor_drive_link,
-        editor_description: data.editor_description,
-        assigned_editor_id: data.assigned_editor_id,
-        editor_deadline: data.editor_deadline,
-        updated_at: new Date().toISOString(),
-      };
-
-      // Optimistically update local state first
-      setShoots(prev => prev.map(shoot => 
-        shoot.id === shootId 
-          ? { ...shoot, ...updateData }
-          : shoot
-      ));
-
       const { error } = await supabase
         .from('shoots')
-        .update(updateData)
+        .update({
+          status: 'given_by_editor' as ShootStatus,
+          editor_drive_link: data.editor_drive_link,
+          editor_description: data.editor_description,
+          assigned_editor_id: data.assigned_editor_id,
+          editor_deadline: data.editor_deadline,
+          updated_at: new Date().toISOString(),
+        })
         .eq('id', shootId);
 
-      if (error) {
-        await fetchShoots();
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: 'Success',
         description: 'Shoot assigned to editor successfully',
       });
 
-      // No need to refetch - realtime subscription handles sync
+      await fetchShoots();
       return { error: null };
     } catch (error) {
       console.error('Error assigning to editor:', error);
@@ -362,7 +328,7 @@ export function useShoots() {
         description: 'Team member assigned',
       });
 
-      // Realtime subscription will handle the update
+      await fetchShoots();
       return { error: null };
     } catch (error) {
       console.error('Error adding assignment:', error);
@@ -391,7 +357,7 @@ export function useShoots() {
         description: 'Team member removed',
       });
 
-      // Realtime subscription will handle the update
+      await fetchShoots();
       return { error: null };
     } catch (error) {
       console.error('Error removing assignment:', error);
@@ -408,25 +374,19 @@ export function useShoots() {
     if (!user || !isAdmin) return { error: new Error('Not authorized') };
 
     try {
-      // Optimistically remove from state
-      setShoots(prev => prev.filter(shoot => shoot.id !== shootId));
-
       const { error } = await supabase
         .from('shoots')
         .delete()
         .eq('id', shootId);
 
-      if (error) {
-        await fetchShoots();
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: 'Success',
         description: 'Shoot deleted',
       });
 
-      // Realtime subscription will confirm the deletion
+      await fetchShoots();
       return { error: null };
     } catch (error) {
       console.error('Error deleting shoot:', error);
