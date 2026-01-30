@@ -146,6 +146,29 @@ export function useShoots() {
 
   useEffect(() => {
     fetchShoots();
+
+    // Subscribe to realtime changes for shoots
+    const shootsChannel = supabase
+      .channel('shoots-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'shoots' },
+        () => {
+          fetchShoots();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'shoot_assignments' },
+        () => {
+          fetchShoots();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(shootsChannel);
+    };
   }, [fetchShoots]);
 
   const createShoot = async (data: CreateShootData) => {
