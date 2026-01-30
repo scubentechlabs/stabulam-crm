@@ -89,8 +89,11 @@ const statusOrder: EditingStatus[] = ['not_started', 'editing', 'internal_review
 export function EditingListView({ shoots, onShootClick, onEditingStatusChange }: EditingListViewProps) {
   const [activeStatus, setActiveStatus] = useState<EditingStatus>('not_started');
 
+  // Only show shoots that have been "Given by Editor" (status === 'given_by_editor')
+  const editorAssignedShoots = shoots.filter(shoot => shoot.status === 'given_by_editor');
+
   const getShootsByStatus = (status: EditingStatus) => {
-    return shoots.filter(shoot => (shoot.editing_status || 'not_started') === status);
+    return editorAssignedShoots.filter(shoot => (shoot.editing_status || 'not_started') === status);
   };
 
   const getStatusCount = (status: EditingStatus) => {
