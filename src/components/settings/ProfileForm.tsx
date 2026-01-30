@@ -12,7 +12,10 @@ import { useSettings } from '@/hooks/useSettings';
 
 const profileSchema = z.object({
   full_name: z.string().min(2, 'Name must be at least 2 characters').max(100),
-  mobile: z.string().max(20).optional().or(z.literal('')),
+  mobile: z.string()
+    .regex(/^(\+?\d{1,4}[\s-]?)?\d{10}$/, 'Enter a valid 10-digit mobile number')
+    .optional()
+    .or(z.literal('')),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
