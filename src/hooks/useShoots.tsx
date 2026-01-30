@@ -31,6 +31,11 @@ export interface Shoot {
 
 export interface ShootWithAssignments extends Shoot {
   assignments: ShootAssignment[];
+  assigned_editor?: {
+    full_name: string;
+    email: string;
+    avatar_url: string | null;
+  } | null;
 }
 
 export interface ShootAssignment {
@@ -99,13 +104,18 @@ export function useShoots() {
 
       // Fetch profiles for assigned users
       const userIds = [...new Set(assignmentsData?.map(a => a.user_id) || [])];
+      
+      // Also include editor ids for profile lookup
+      const editorIds = [...new Set((shootsData || []).filter(s => s.assigned_editor_id).map(s => s.assigned_editor_id!))];
+      const allUserIds = [...new Set([...userIds, ...editorIds])];
+      
       let profilesMap: Map<string, { full_name: string; email: string; avatar_url: string | null }> = new Map();
 
-      if (userIds.length > 0) {
+      if (allUserIds.length > 0) {
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('user_id, full_name, email, avatar_url')
-          .in('user_id', userIds);
+          .in('user_id', allUserIds);
 
         if (!profilesError && profilesData) {
           profilesData.forEach(p => {
@@ -133,6 +143,7 @@ export function useShoots() {
           editing_status: shoot.editing_status || 'not_started',
           location_coordinates: shoot.location_coordinates as { lat: number; lng: number } | null,
           assignments: shootAssignments,
+          assigned_editor: shoot.assigned_editor_id ? profilesMap.get(shoot.assigned_editor_id) || null : null,
         };
       });
 
