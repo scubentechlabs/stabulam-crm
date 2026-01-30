@@ -180,6 +180,7 @@ export default function Shoots() {
           <EditingListView
             shoots={shoots}
             onShootClick={handleShootClick}
+            onEditingStatusChange={updateEditingStatus}
           />
         </TabsContent>
       </Tabs>
