@@ -598,11 +598,15 @@ export type Database = {
       }
       shoots: {
         Row: {
+          assigned_editor_id: string | null
           brand_name: string
           brief: string | null
           created_at: string
           created_by: string | null
           editing_status: Database["public"]["Enums"]["editing_status"] | null
+          editor_deadline: string | null
+          editor_description: string | null
+          editor_drive_link: string | null
           event_name: string
           id: string
           location: string
@@ -614,11 +618,15 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_editor_id?: string | null
           brand_name: string
           brief?: string | null
           created_at?: string
           created_by?: string | null
           editing_status?: Database["public"]["Enums"]["editing_status"] | null
+          editor_deadline?: string | null
+          editor_description?: string | null
+          editor_drive_link?: string | null
           event_name: string
           id?: string
           location: string
@@ -630,11 +638,15 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_editor_id?: string | null
           brand_name?: string
           brief?: string | null
           created_at?: string
           created_by?: string | null
           editing_status?: Database["public"]["Enums"]["editing_status"] | null
+          editor_deadline?: string | null
+          editor_description?: string | null
+          editor_drive_link?: string | null
           event_name?: string
           id?: string
           location?: string

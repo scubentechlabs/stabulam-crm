@@ -20,6 +20,7 @@ export default function AdminShoots() {
     createShoot,
     updateShootStatus,
     updateEditingStatus,
+    assignToEditor,
     addAssignment,
     removeAssignment,
     deleteShoot,
@@ -149,6 +150,7 @@ export default function AdminShoots() {
                     shoot={shoot}
                     onStatusChange={updateShootStatus}
                     onEditingStatusChange={updateEditingStatus}
+                    onEditorAssignment={assignToEditor}
                     onDelete={deleteShoot}
                     onClick={() => handleShootClick(shoot)}
                   />
