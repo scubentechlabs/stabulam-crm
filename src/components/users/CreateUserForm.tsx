@@ -24,7 +24,10 @@ const createUserSchema = z.object({
   full_name: z.string().min(2, 'Name must be at least 2 characters').max(100),
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  mobile: z.string().optional(),
+  mobile: z.string()
+    .regex(/^(\+?\d{1,4}[\s-]?)?\d{10}$/, 'Enter a valid 10-digit mobile number')
+    .optional()
+    .or(z.literal('')),
   department: z.string().optional(),
   monthly_salary: z.coerce.number().min(0, 'Salary must be positive').optional(),
   work_start_time: z.string().optional(),
