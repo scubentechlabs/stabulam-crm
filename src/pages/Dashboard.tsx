@@ -16,6 +16,7 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { TodayShootsWidget } from '@/components/dashboard/TodayShootsWidget';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { formatTimeIST } from '@/lib/utils';
 
 export default function Dashboard() {
   const { profile } = useAuth();
@@ -30,10 +31,7 @@ export default function Dashboard() {
     return 'Good evening';
   }
 
-  const formatTime = (timeStr: string | null) => {
-    if (!timeStr) return null;
-    return format(new Date(timeStr), 'h:mm a');
-  };
+  const formatTime = (timeStr: string | null) => formatTimeIST(timeStr);
 
   return (
     <div className="space-y-6 animate-fade-in">

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAttendanceHistory, type AttendanceDay } from '@/hooks/useAttendanceHistory';
-import { cn } from '@/lib/utils';
+import { cn, formatTimeIST } from '@/lib/utils';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -47,10 +47,10 @@ function DayCell({ date, attendance, isCurrentMonth }: DayCellProps) {
     if (!attendance) return 'Absent';
     
     const inTime = attendance.clockInTime 
-      ? format(new Date(attendance.clockInTime), 'h:mm a')
+      ? formatTimeIST(attendance.clockInTime)
       : '-';
     const outTime = attendance.clockOutTime 
-      ? format(new Date(attendance.clockOutTime), 'h:mm a')
+      ? formatTimeIST(attendance.clockOutTime)
       : 'Still working';
     
     let status = attendance.clockOutTime ? 'Completed' : 'In Progress';

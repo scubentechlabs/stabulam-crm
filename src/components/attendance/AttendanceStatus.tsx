@@ -1,8 +1,7 @@
 import { Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { cn, formatTimeIST } from '@/lib/utils';
 
 interface AttendanceStatusProps {
   clockInTime?: string | null;
@@ -46,8 +45,8 @@ export function AttendanceStatus({
               <p className="font-medium">{status.label}</p>
               {clockInTime && (
                 <p className="text-sm text-muted-foreground">
-                  Clocked in at {format(new Date(clockInTime), 'hh:mm a')}
-                  {clockOutTime && ` • Out at ${format(new Date(clockOutTime), 'hh:mm a')}`}
+                  Clocked in at {formatTimeIST(clockInTime)}
+                  {clockOutTime && ` • Out at ${formatTimeIST(clockOutTime)}`}
                 </p>
               )}
             </div>

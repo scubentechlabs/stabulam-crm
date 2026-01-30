@@ -15,6 +15,7 @@ import {
   DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
+import { formatTimeOnlyIST } from '@/lib/utils';
 import type { ShootWithAssignments } from '@/hooks/useShoots';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -55,12 +56,7 @@ export function ShootCard({ shoot, onStatusChange, onEditingStatusChange, onDele
   const isOwner = shoot.created_by === user?.id;
   const canModify = isAdmin || isOwner;
   
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(':');
-    const date = new Date();
-    date.setHours(parseInt(hours), parseInt(minutes));
-    return format(date, 'h:mm a');
-  };
+  const formatTime = (time: string) => formatTimeOnlyIST(time);
 
   const getInitials = (name: string) => {
     return name
