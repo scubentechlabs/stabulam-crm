@@ -90,12 +90,11 @@ export function useDashboardStats() {
           .eq('user_id', user.id)
           .eq('status', 'pending'),
 
-        // Today's shoots - user assigned
+        // Today's shoots - all shoots for today
         supabase
-          .from('shoot_assignments')
-          .select('shoot_id, shoots!inner(shoot_date)')
-          .eq('user_id', user.id)
-          .eq('shoots.shoot_date', todayStr),
+          .from('shoots')
+          .select('id')
+          .eq('shoot_date', todayStr),
       ]);
 
       // Calculate attendance streak
