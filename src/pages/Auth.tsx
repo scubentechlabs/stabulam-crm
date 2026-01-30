@@ -159,9 +159,9 @@ export default function Auth() {
             <img 
               src={stabulamLogo} 
               alt="Stabulam" 
-              className="h-10 w-auto mx-auto"
+              className="h-16 w-auto mx-auto"
             />
-            <p className="text-muted-foreground mt-3">Operations Management Platform</p>
+            <p className="text-muted-foreground mt-4 text-lg">Operations Management Platform</p>
           </div>
         </div>
       </div>
