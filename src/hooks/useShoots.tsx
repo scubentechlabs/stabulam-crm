@@ -351,11 +351,9 @@ export function useShoots() {
     if (!user) return { error: new Error('Not authenticated') };
 
     try {
-      const { data: insertedData, error } = await supabase
+      const { error } = await supabase
         .from('shoot_assignments')
-        .insert({ shoot_id: shootId, user_id: userId })
-        .select()
-        .single();
+        .insert({ shoot_id: shootId, user_id: userId });
 
       if (error) throw error;
 
