@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { BulkActionsBar } from '@/components/ui/bulk-actions-bar';
 import { useBulkSelection } from '@/hooks/useBulkSelection';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { formatTimeOnlyIST } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -69,12 +70,7 @@ export function RegularizationApprovalTable({
 
   useKeyboardShortcuts(shortcuts, dialogType === null);
 
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(':');
-    const date = new Date();
-    date.setHours(parseInt(hours), parseInt(minutes));
-    return format(date, 'hh:mm a');
-  };
+  const formatTime = (time: string) => formatTimeOnlyIST(time);
 
   const openDialog = (regularization: RegularizationWithProfile, type: 'view' | 'approve' | 'reject') => {
     setSelectedRegularization(regularization);

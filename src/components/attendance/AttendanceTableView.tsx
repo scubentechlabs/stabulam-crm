@@ -24,7 +24,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
+import { cn, formatTimeIST } from '@/lib/utils';
 import type { AttendanceTableRow } from '@/hooks/useAttendanceTable';
 
 interface AttendanceTableViewProps {
@@ -153,7 +153,7 @@ export function AttendanceTableView({ data, isLoading }: AttendanceTableViewProp
                       <div className="flex items-center gap-1.5">
                         <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                         <span className="text-sm font-medium">
-                          {format(new Date(row.clock_in_time), 'h:mm a')}
+                          {formatTimeIST(row.clock_in_time)}
                         </span>
                         {row.is_late && row.late_minutes && (
                           <Badge variant="outline" className="ml-1 text-[10px] px-1.5 py-0 h-5 text-amber-600 border-amber-500/30">
@@ -170,7 +170,7 @@ export function AttendanceTableView({ data, isLoading }: AttendanceTableViewProp
                       <div className="flex items-center gap-1.5">
                         <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                         <span className="text-sm font-medium">
-                          {format(new Date(row.clock_out_time), 'h:mm a')}
+                          {formatTimeIST(row.clock_out_time)}
                         </span>
                       </div>
                     ) : (

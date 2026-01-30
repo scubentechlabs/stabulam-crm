@@ -5,6 +5,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// IST offset: UTC+5:30
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+
+function toIST(dateStr: string | null): Date | null {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  return new Date(d.getTime() + IST_OFFSET_MS);
+}
+
 interface AttendanceRecord {
   date: string;
   clock_in_time: string | null;
@@ -46,8 +56,13 @@ serve(async (req: Request) => {
 
     const formatTime = (timeStr: string | null) => {
       if (!timeStr) return '-';
-      const date = new Date(timeStr);
-      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      const istDate = toIST(timeStr);
+      if (!istDate) return '-';
+      const hours = istDate.getUTCHours();
+      const minutes = istDate.getUTCMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const h = hours % 12 || 12;
+      return `${h}:${minutes.toString().padStart(2, '0')} ${ampm}`;
     };
 
     const formatDate = (dateStr: string) => {

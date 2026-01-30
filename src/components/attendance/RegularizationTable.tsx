@@ -19,6 +19,7 @@ import {
 import { useState } from 'react';
 import { TableFilters, SortableHeader, TablePagination } from '@/components/ui/table-filters';
 import { useTableFilters } from '@/hooks/useTableFilters';
+import { formatTimeOnlyIST } from '@/lib/utils';
 import type { Regularization } from '@/hooks/useAttendanceRegularization';
 
 interface RegularizationTableProps {
@@ -69,12 +70,7 @@ export function RegularizationTable({
     enableDateFilter: true,
   });
 
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(':');
-    const date = new Date();
-    date.setHours(parseInt(hours), parseInt(minutes));
-    return format(date, 'hh:mm a');
-  };
+  const formatTime = (time: string) => formatTimeOnlyIST(time);
 
   const getStatusBadge = (status: string) => {
     switch (status) {

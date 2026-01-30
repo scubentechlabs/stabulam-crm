@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { format, isToday, isTomorrow, addDays, startOfDay } from 'date-fns';
 import { useShoots } from '@/hooks/useShoots';
 import { ShootDetailDialog } from '@/components/shoots/ShootDetailDialog';
+import { formatTimeOnlyIST } from '@/lib/utils';
 
 export function TodayShootsWidget() {
   const { shoots, isLoading } = useShoots();
@@ -125,7 +126,7 @@ export function TodayShootsWidget() {
                         <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            {shoot.shoot_time?.slice(0, 5)}
+                            {formatTimeOnlyIST(shoot.shoot_time)}
                           </span>
                           <span className="flex items-center gap-1 truncate">
                             <MapPin className="h-3 w-3 flex-shrink-0" />

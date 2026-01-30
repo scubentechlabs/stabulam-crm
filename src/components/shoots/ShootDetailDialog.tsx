@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUsers } from '@/hooks/useUsers';
+import { formatTimeOnlyIST } from '@/lib/utils';
 import { ShootEditForm } from './ShootEditForm';
 import type { ShootWithAssignments } from '@/hooks/useShoots';
 import type { Database } from '@/integrations/supabase/types';
@@ -72,12 +73,7 @@ export function ShootDetailDialog({
   const isOwner = shoot.created_by === user?.id;
   const canModify = isAdmin || isOwner;
 
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(':');
-    const date = new Date();
-    date.setHours(parseInt(hours), parseInt(minutes));
-    return format(date, 'h:mm a');
-  };
+  const formatTime = (time: string) => formatTimeOnlyIST(time);
 
   const getInitials = (name: string) => {
     return name

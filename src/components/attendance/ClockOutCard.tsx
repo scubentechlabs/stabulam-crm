@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAttendance } from '@/hooks/useAttendance';
-import { format } from 'date-fns';
+import { formatTimeIST } from '@/lib/utils';
 
 interface ClockOutCardProps {
   eodCompleted: boolean;
@@ -23,7 +23,7 @@ export function ClockOutCard({ eodCompleted, onRequestEod, onClockOutComplete }:
   };
 
   const clockInTime = todayAttendance?.clock_in_time 
-    ? format(new Date(todayAttendance.clock_in_time), 'hh:mm a')
+    ? formatTimeIST(todayAttendance.clock_in_time)
     : '--:--';
 
   const workDuration = todayAttendance?.clock_in_time

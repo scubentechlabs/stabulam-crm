@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { formatTimeIST, formatTimeOnlyIST } from '@/lib/utils';
 
 interface AttendanceRecord {
   user_id: string;
@@ -60,10 +61,7 @@ export function DayDetailDialog({
   const presentCount = attendance.length;
   const lateCount = attendance.filter(a => a.is_late).length;
 
-  const formatTime = (timeStr: string | null) => {
-    if (!timeStr) return '-';
-    return format(new Date(timeStr), 'h:mm a');
-  };
+  const formatTime = (timeStr: string | null) => formatTimeIST(timeStr);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -250,7 +248,7 @@ export function DayDetailDialog({
                       <div className="flex items-center gap-4 text-xs text-muted-foreground mb-2">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {shoot.shoot_time.slice(0, 5)}
+                          {formatTimeOnlyIST(shoot.shoot_time)}
                         </span>
                         <span className="flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
