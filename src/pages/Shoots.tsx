@@ -12,15 +12,11 @@ import { ShootCard } from '@/components/shoots/ShootCard';
 import { ShootCalendar } from '@/components/shoots/ShootCalendar';
 import { ShootDetailDialog } from '@/components/shoots/ShootDetailDialog';
 import { EditingListView } from '@/components/shoots/EditingListView';
-import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
 export default function Shoots() {
-  const { isAdmin } = useAuth();
   const {
     shoots,
-    myAssignedShoots,
-    upcomingShoots,
     isLoading,
     createShoot,
     updateShootStatus,
