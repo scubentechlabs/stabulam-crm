@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { format, parseISO, isSameDay } from 'date-fns';
-import { Camera, Plus, Calendar as CalendarIcon, List, Loader2 } from 'lucide-react';
+import { Camera, Plus, Calendar as CalendarIcon, List, Loader2, Film } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { ShootForm } from '@/components/shoots/ShootForm';
 import { ShootCard } from '@/components/shoots/ShootCard';
 import { ShootCalendar } from '@/components/shoots/ShootCalendar';
 import { ShootDetailDialog } from '@/components/shoots/ShootDetailDialog';
+import { EditingListView } from '@/components/shoots/EditingListView';
 import { cn } from '@/lib/utils';
 
 /**
@@ -91,6 +92,10 @@ export function ShootsAndEditingView() {
             <List className="h-4 w-4" />
             Shoot List View
           </TabsTrigger>
+          <TabsTrigger value="editing" className="gap-2">
+            <Film className="h-4 w-4" />
+            Editing List View
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="calendar">
@@ -167,6 +172,14 @@ export function ShootsAndEditingView() {
               </div>
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="editing">
+          <EditingListView
+            shoots={shoots}
+            onEditingStatusChange={updateEditingStatus}
+            onShootClick={handleShootClick}
+          />
         </TabsContent>
       </Tabs>
 
