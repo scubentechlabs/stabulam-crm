@@ -176,6 +176,7 @@ export default function AdminShoots() {
           <EditingListView
             shoots={shoots}
             onShootClick={handleShootClick}
+            onEditingStatusChange={updateEditingStatus}
           />
         </TabsContent>
       </Tabs>

@@ -6,6 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
 import { 
   PlayCircle, 
   Clock, 
@@ -16,18 +24,21 @@ import {
   Video,
   MapPin,
   Calendar,
-  User,
-  ExternalLink
+  ExternalLink,
+  MoreVertical,
+  Check
 } from 'lucide-react';
 import type { ShootWithAssignments } from '@/hooks/useShoots';
+import type { Database } from '@/integrations/supabase/types';
 import { cn } from '@/lib/utils';
+
+type EditingStatus = Database['public']['Enums']['editing_status'];
 
 interface EditingListViewProps {
   shoots: ShootWithAssignments[];
   onShootClick: (shoot: ShootWithAssignments) => void;
+  onEditingStatusChange?: (shootId: string, editingStatus: EditingStatus) => void;
 }
-
-type EditingStatus = 'not_started' | 'editing' | 'internal_review' | 'sent_to_client' | 'revisions_round' | 'final_delivered';
 
 const editingStatusConfig: Record<EditingStatus, { label: string; icon: React.ElementType; color: string }> = {
   not_started: { label: 'Not Started', icon: Clock, color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' },
@@ -40,10 +51,9 @@ const editingStatusConfig: Record<EditingStatus, { label: string; icon: React.El
 
 const statusOrder: EditingStatus[] = ['not_started', 'editing', 'internal_review', 'sent_to_client', 'revisions_round', 'final_delivered'];
 
-export function EditingListView({ shoots, onShootClick }: EditingListViewProps) {
+export function EditingListView({ shoots, onShootClick, onEditingStatusChange }: EditingListViewProps) {
   const [activeStatus, setActiveStatus] = useState<EditingStatus>('not_started');
 
-  // Filter shoots by editing status
   const getShootsByStatus = (status: EditingStatus) => {
     return shoots.filter(shoot => (shoot.editing_status || 'not_started') === status);
   };
@@ -52,7 +62,6 @@ export function EditingListView({ shoots, onShootClick }: EditingListViewProps) 
     return getShootsByStatus(status).length;
   };
 
-  const filteredShoots = getShootsByStatus(activeStatus);
   const StatusIcon = editingStatusConfig[activeStatus].icon;
 
   return (
@@ -117,88 +126,125 @@ export function EditingListView({ shoots, onShootClick }: EditingListViewProps) 
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {getShootsByStatus(status).map((shoot) => (
-                          <TableRow 
-                            key={shoot.id} 
-                            className="cursor-pointer hover:bg-muted/50"
-                            onClick={() => onShootClick(shoot)}
-                          >
-                            <TableCell>
-                              <div>
-                                <p className="font-medium">{shoot.event_name}</p>
-                                <p className="text-sm text-muted-foreground">{shoot.brand_name}</p>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1.5">
-                                <Calendar className="h-4 w-4 text-muted-foreground" />
-                                <span>{format(parseISO(shoot.shoot_date), 'MMM d, yyyy')}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1.5">
-                                <MapPin className="h-4 w-4 text-muted-foreground" />
-                                <span className="truncate max-w-[150px]">{shoot.location}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {shoot.assigned_editor ? (
-                                <div className="flex items-center gap-2">
-                                  <Avatar className="h-6 w-6">
-                                    <AvatarImage src={shoot.assigned_editor.avatar_url || undefined} />
-                                    <AvatarFallback className="text-xs">
-                                      {shoot.assigned_editor.full_name?.charAt(0) || 'E'}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <span className="text-sm truncate max-w-[100px]">
-                                    {shoot.assigned_editor.full_name}
-                                  </span>
+                        {getShootsByStatus(status).map((shoot) => {
+                          const currentEditingStatus = shoot.editing_status || 'not_started';
+                          
+                          return (
+                            <TableRow 
+                              key={shoot.id} 
+                              className="cursor-pointer hover:bg-muted/50"
+                              onClick={() => onShootClick(shoot)}
+                            >
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium">{shoot.event_name}</p>
+                                  <p className="text-sm text-muted-foreground">{shoot.brand_name}</p>
                                 </div>
-                              ) : (
-                                <span className="text-muted-foreground text-sm">Not assigned</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {shoot.editor_deadline ? (
-                                <span className="text-sm">
-                                  {format(parseISO(shoot.editor_deadline), 'MMM d, yyyy')}
-                                </span>
-                              ) : (
-                                <span className="text-muted-foreground text-sm">—</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {shoot.editor_drive_link ? (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 px-2"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    window.open(shoot.editor_drive_link!, '_blank');
-                                  }}
-                                >
-                                  <ExternalLink className="h-4 w-4 mr-1" />
-                                  Open
-                                </Button>
-                              ) : (
-                                <span className="text-muted-foreground text-sm">—</span>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onShootClick(shoot);
-                                }}
-                              >
-                                View Details
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1.5">
+                                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                                  <span>{format(parseISO(shoot.shoot_date), 'MMM d, yyyy')}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1.5">
+                                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                                  <span className="truncate max-w-[150px]">{shoot.location}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {shoot.assigned_editor ? (
+                                  <div className="flex items-center gap-2">
+                                    <Avatar className="h-6 w-6">
+                                      <AvatarImage src={shoot.assigned_editor.avatar_url || undefined} />
+                                      <AvatarFallback className="text-xs">
+                                        {shoot.assigned_editor.full_name?.charAt(0) || 'E'}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span className="text-sm truncate max-w-[100px]">
+                                      {shoot.assigned_editor.full_name}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">Not assigned</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {shoot.editor_deadline ? (
+                                  <span className="text-sm">
+                                    {format(parseISO(shoot.editor_deadline), 'MMM d, yyyy')}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">—</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {shoot.editor_drive_link ? (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 px-2"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      window.open(shoot.editor_drive_link!, '_blank');
+                                    }}
+                                  >
+                                    <ExternalLink className="h-4 w-4 mr-1" />
+                                    Open
+                                  </Button>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">—</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                                        <MoreVertical className="h-4 w-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-48">
+                                      <DropdownMenuLabel>Change Editing Status</DropdownMenuLabel>
+                                      <DropdownMenuSeparator />
+                                      {statusOrder.map((statusKey) => {
+                                        const statusItem = editingStatusConfig[statusKey];
+                                        const Icon = statusItem.icon;
+                                        const isActive = currentEditingStatus === statusKey;
+                                        
+                                        return (
+                                          <DropdownMenuItem
+                                            key={statusKey}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              onEditingStatusChange?.(shoot.id, statusKey);
+                                            }}
+                                            className={isActive ? 'bg-accent' : ''}
+                                          >
+                                            <Icon className="h-4 w-4 mr-2" />
+                                            {statusItem.label}
+                                            {isActive && <Check className="h-3 w-3 ml-auto text-primary" />}
+                                          </DropdownMenuItem>
+                                        );
+                                      })}
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          onShootClick(shoot);
+                                        }}
+                                      >
+                                        <Eye className="h-4 w-4 mr-2" />
+                                        View Details
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
