@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -75,12 +75,15 @@ export function useShoots() {
   const { toast } = useToast();
   const [shoots, setShoots] = useState<ShootWithAssignments[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const hasLoadedOnceRef = useRef(false);
 
   const fetchShoots = useCallback(async () => {
     if (!user) return;
 
     try {
-      setIsLoading(true);
+      // Only show a blocking loading state on the very first load.
+      // Subsequent refreshes (e.g., after status updates) should not blank the page.
+      if (!hasLoadedOnceRef.current) setIsLoading(true);
 
       // Fetch all shoots (RLS allows all authenticated users to view)
       const { data: shootsData, error: shootsError } = await supabase
@@ -137,6 +140,7 @@ export function useShoots() {
       });
 
       setShoots(shootsWithAssignments);
+      hasLoadedOnceRef.current = true;
     } catch (error) {
       console.error('Error fetching shoots:', error);
       toast({
