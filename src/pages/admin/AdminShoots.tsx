@@ -161,7 +161,6 @@ export default function AdminShoots() {
                     key={shoot.id}
                     shoot={shoot}
                     onStatusChange={updateShootStatus}
-                    onEditingStatusChange={updateEditingStatus}
                     onEditorAssignment={assignToEditor}
                     onDelete={deleteShoot}
                     onClick={() => handleShootClick(shoot)}
