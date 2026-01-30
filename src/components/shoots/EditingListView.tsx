@@ -99,10 +99,20 @@ const editingStatusConfig: Record<EditingStatus, { label: string; icon: React.El
 const statusOrder: EditingStatus[] = ['not_started', 'editing', 'internal_review', 'sent_to_client', 'revisions_round', 'final_delivered'];
 
 export function EditingListView({ shoots, onShootClick, onEditingStatusChange }: EditingListViewProps) {
-  const [activeStatus, setActiveStatus] = useState<EditingStatus>('not_started');
-
   // Only show shoots that have been "Given by Editor" (status === 'given_by_editor')
   const editorAssignedShoots = shoots.filter(shoot => shoot.status === 'given_by_editor');
+
+  // Find the first status with at least one shoot, or default to 'not_started'
+  const getDefaultStatus = (): EditingStatus => {
+    for (const status of statusOrder) {
+      if (editorAssignedShoots.some(shoot => (shoot.editing_status || 'not_started') === status)) {
+        return status;
+      }
+    }
+    return 'not_started';
+  };
+
+  const [activeStatus, setActiveStatus] = useState<EditingStatus>(getDefaultStatus);
 
   const getShootsByStatus = (status: EditingStatus) => {
     return editorAssignedShoots.filter(shoot => (shoot.editing_status || 'not_started') === status);
