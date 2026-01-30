@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Briefcase, Plus, Clock, CheckCircle, XCircle, Loader2, IndianRupee, AlertTriangle } from 'lucide-react';
+import { Briefcase, Plus, Clock, CheckCircle, XCircle, Loader2, AlertTriangle } from 'lucide-react';
 import { useExtraWork } from '@/hooks/useExtraWork';
 import { useAttendance } from '@/hooks/useAttendance';
 import { ExtraWorkRequestForm } from '@/components/extra-work/ExtraWorkRequestForm';
@@ -86,7 +86,7 @@ export default function ExtraWork() {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
@@ -122,19 +122,6 @@ export default function ExtraWork() {
               <div>
                 <p className="text-2xl font-bold">{rejectedRequests.length}</p>
                 <p className="text-sm text-muted-foreground">Rejected</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-full p-2 bg-green-500/10">
-                <IndianRupee className="h-5 w-5 text-green-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">₹{currentMonthApproved.toLocaleString('en-IN')}</p>
-                <p className="text-sm text-muted-foreground">This Month</p>
               </div>
             </div>
           </CardContent>
