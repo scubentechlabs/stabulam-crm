@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { Calendar, Clock, MapPin, Users, MoreVertical, CheckCircle, Play, Trash2, CircleDashed, PackageCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -33,11 +34,35 @@ interface ShootCardProps {
   onClick?: () => void;
 }
 
-const statusConfig: Record<ShootStatus, { label: string; className: string; icon: React.ElementType }> = {
-  pending: { label: 'Pending', className: 'bg-amber-500/15 text-amber-600 border-amber-500/30', icon: CircleDashed },
-  in_progress: { label: 'In Progress', className: 'bg-blue-500/15 text-blue-600 border-blue-500/30', icon: Play },
-  completed: { label: 'Completed', className: 'bg-green-500/15 text-green-600 border-green-500/30', icon: CheckCircle },
-  given_by_editor: { label: 'Given By Editor', className: 'bg-purple-500/15 text-purple-600 border-purple-500/30', icon: PackageCheck },
+const statusConfig: Record<ShootStatus, { label: string; className: string; icon: React.ElementType; menuBg: string; menuText: string }> = {
+  pending: { 
+    label: 'Pending', 
+    className: 'bg-red-500/15 text-red-600 border-red-500/30', 
+    icon: CircleDashed,
+    menuBg: 'bg-red-600 hover:bg-red-700',
+    menuText: 'text-white'
+  },
+  in_progress: { 
+    label: 'In Progress', 
+    className: 'bg-blue-500/15 text-blue-600 border-blue-500/30', 
+    icon: Play,
+    menuBg: 'bg-blue-600 hover:bg-blue-700',
+    menuText: 'text-white'
+  },
+  completed: { 
+    label: 'Completed', 
+    className: 'bg-yellow-500/15 text-yellow-600 border-yellow-500/30', 
+    icon: CheckCircle,
+    menuBg: 'bg-yellow-500 hover:bg-yellow-600',
+    menuText: 'text-black'
+  },
+  given_by_editor: { 
+    label: 'Given By Editor', 
+    className: 'bg-green-500/15 text-green-600 border-green-500/30', 
+    icon: PackageCheck,
+    menuBg: 'bg-green-600 hover:bg-green-700',
+    menuText: 'text-white'
+  },
 };
 
 
@@ -107,36 +132,51 @@ export function ShootCard({ shoot, onStatusChange, onEditorAssignment, onDelete,
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-popover w-48">
+                <DropdownMenuContent align="end" className="bg-popover w-48 p-1">
                   <DropdownMenuItem
                     onClick={(e) => {
                       e.stopPropagation();
                       onStatusChange?.(shoot.id, 'pending');
                     }}
-                    className={status === 'pending' ? 'bg-accent' : ''}
+                    className="p-1 focus:bg-transparent"
                   >
-                    <CircleDashed className="h-4 w-4 mr-2" />
-                    Pending Shoot
-                    {status === 'pending' && <CheckCircle className="h-3 w-3 ml-auto text-primary" />}
+                    <span className={cn(
+                      "w-full px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center justify-between",
+                      statusConfig.pending.menuBg,
+                      statusConfig.pending.menuText
+                    )}>
+                      Pending Shoot
+                      {status === 'pending' && <CheckCircle className="h-3.5 w-3.5 ml-2" />}
+                    </span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={(e) => {
                       e.stopPropagation();
                       onStatusChange?.(shoot.id, 'completed');
                     }}
-                    className={status === 'completed' ? 'bg-accent' : ''}
+                    className="p-1 focus:bg-transparent"
                   >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Completed Shoot
-                    {status === 'completed' && <CheckCircle className="h-3 w-3 ml-auto text-primary" />}
+                    <span className={cn(
+                      "w-full px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center justify-between",
+                      statusConfig.completed.menuBg,
+                      statusConfig.completed.menuText
+                    )}>
+                      Completed Shoot
+                      {status === 'completed' && <CheckCircle className="h-3.5 w-3.5 ml-2" />}
+                    </span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={handleGivenByEditorClick}
-                    className={status === 'given_by_editor' ? 'bg-accent' : ''}
+                    className="p-1 focus:bg-transparent"
                   >
-                    <PackageCheck className="h-4 w-4 mr-2" />
-                    Given By Editor
-                    {status === 'given_by_editor' && <CheckCircle className="h-3 w-3 ml-auto text-primary" />}
+                    <span className={cn(
+                      "w-full px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center justify-between",
+                      statusConfig.given_by_editor.menuBg,
+                      statusConfig.given_by_editor.menuText
+                    )}>
+                      Given By Editor
+                      {status === 'given_by_editor' && <CheckCircle className="h-3.5 w-3.5 ml-2" />}
+                    </span>
                   </DropdownMenuItem>
                   {isAdmin && (
                     <>
