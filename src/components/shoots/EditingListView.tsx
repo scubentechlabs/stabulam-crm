@@ -39,48 +39,60 @@ interface EditingListViewProps {
   onEditingStatusChange?: (shootId: string, editingStatus: EditingStatus) => void;
 }
 
-const editingStatusConfig: Record<EditingStatus, { label: string; icon: React.ElementType; color: string; bgColor: string; borderColor: string }> = {
+const editingStatusConfig: Record<EditingStatus, { label: string; icon: React.ElementType; color: string; bgColor: string; borderColor: string; pillBg: string; pillText: string }> = {
   not_started: { 
     label: 'Not Started', 
     icon: Clock, 
     color: 'text-gray-600 dark:text-gray-400',
     bgColor: 'bg-gray-50 dark:bg-gray-900/50',
-    borderColor: 'border-gray-200 dark:border-gray-700'
+    borderColor: 'border-gray-200 dark:border-gray-700',
+    pillBg: 'bg-red-700 hover:bg-red-800',
+    pillText: 'text-white'
   },
   editing: { 
     label: 'Editing', 
     icon: PlayCircle, 
     color: 'text-blue-600 dark:text-blue-400',
     bgColor: 'bg-blue-50 dark:bg-blue-900/30',
-    borderColor: 'border-blue-200 dark:border-blue-700'
+    borderColor: 'border-blue-200 dark:border-blue-700',
+    pillBg: 'bg-emerald-600 hover:bg-emerald-700',
+    pillText: 'text-white'
   },
   internal_review: { 
     label: 'Internal Review', 
     icon: Eye, 
     color: 'text-purple-600 dark:text-purple-400',
     bgColor: 'bg-purple-50 dark:bg-purple-900/30',
-    borderColor: 'border-purple-200 dark:border-purple-700'
+    borderColor: 'border-purple-200 dark:border-purple-700',
+    pillBg: 'bg-blue-600 hover:bg-blue-700',
+    pillText: 'text-white'
   },
   sent_to_client: { 
     label: 'Sent to Client', 
     icon: Send, 
     color: 'text-amber-600 dark:text-amber-400',
     bgColor: 'bg-amber-50 dark:bg-amber-900/30',
-    borderColor: 'border-amber-200 dark:border-amber-700'
+    borderColor: 'border-amber-200 dark:border-amber-700',
+    pillBg: 'bg-purple-600 hover:bg-purple-700',
+    pillText: 'text-white'
   },
   revisions_round: { 
     label: 'Revisions Round', 
     icon: RotateCcw, 
     color: 'text-orange-600 dark:text-orange-400',
     bgColor: 'bg-orange-50 dark:bg-orange-900/30',
-    borderColor: 'border-orange-200 dark:border-orange-700'
+    borderColor: 'border-orange-200 dark:border-orange-700',
+    pillBg: 'bg-red-700 hover:bg-red-800',
+    pillText: 'text-white'
   },
   final_delivered: { 
     label: 'Final Delivered', 
     icon: CheckCircle2, 
     color: 'text-green-600 dark:text-green-400',
     bgColor: 'bg-green-50 dark:bg-green-900/30',
-    borderColor: 'border-green-200 dark:border-green-700'
+    borderColor: 'border-green-200 dark:border-green-700',
+    pillBg: 'bg-emerald-600 hover:bg-emerald-700',
+    pillText: 'text-white'
   },
 };
 
@@ -276,7 +288,6 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
                                 <DropdownMenuSeparator />
                                 {statusOrder.map((statusKey) => {
                                   const statusItem = editingStatusConfig[statusKey];
-                                  const Icon = statusItem.icon;
                                   const isActive = currentEditingStatus === statusKey;
                                   
                                   return (
@@ -286,11 +297,16 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
                                         e.stopPropagation();
                                         onEditingStatusChange?.(shoot.id, statusKey);
                                       }}
-                                      className={isActive ? 'bg-accent' : ''}
+                                      className="p-1 focus:bg-transparent"
                                     >
-                                      <Icon className="h-4 w-4 mr-2" />
-                                      {statusItem.label}
-                                      {isActive && <Check className="h-3 w-3 ml-auto text-primary" />}
+                                      <span className={cn(
+                                        "w-full px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center justify-between",
+                                        statusItem.pillBg,
+                                        statusItem.pillText
+                                      )}>
+                                        {statusItem.label}
+                                        {isActive && <Check className="h-3.5 w-3.5 ml-2" />}
+                                      </span>
                                     </DropdownMenuItem>
                                   );
                                 })}
