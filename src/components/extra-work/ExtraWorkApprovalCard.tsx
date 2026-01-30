@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Clock, IndianRupee, User, FileText, Check, X } from 'lucide-react';
+import { Clock, User, FileText, Check, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -72,9 +72,8 @@ export function ExtraWorkApprovalCard({
                 </div>
               </div>
             </div>
-            <Badge variant="outline" className="flex items-center gap-1 text-green-600 border-green-500/30">
-              <IndianRupee className="h-3.5 w-3.5" />
-              {extraWork.compensation_amount}
+            <Badge variant="outline">
+              {extraWork.hours} hr{extraWork.hours > 1 ? 's' : ''}
             </Badge>
           </div>
         </CardHeader>
@@ -129,19 +128,6 @@ export function ExtraWorkApprovalCard({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="compensation">Compensation Amount (₹)</Label>
-              <Input
-                id="compensation"
-                type="number"
-                value={adjustedCompensation}
-                onChange={(e) => setAdjustedCompensation(Number(e.target.value))}
-                min={0}
-              />
-              <p className="text-xs text-muted-foreground">
-                Default: ₹{extraWork.compensation_amount} for {extraWork.hours} hour{extraWork.hours > 1 ? 's' : ''}
-              </p>
-            </div>
             <div className="space-y-2">
               <Label htmlFor="approve-comments">Comments (Optional)</Label>
               <Textarea
