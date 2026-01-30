@@ -247,6 +247,13 @@ export function useShoots() {
     if (!user) return { error: new Error('Not authenticated') };
 
     try {
+      // Optimistically update local state first
+      setShoots(prev => prev.map(shoot => 
+        shoot.id === shootId 
+          ? { ...shoot, ...data, updated_at: new Date().toISOString() }
+          : shoot
+      ));
+
       const { error } = await supabase
         .from('shoots')
         .update({
@@ -255,14 +262,18 @@ export function useShoots() {
         })
         .eq('id', shootId);
 
-      if (error) throw error;
+      if (error) {
+        // Revert on error by refetching
+        await fetchShoots();
+        throw error;
+      }
 
       toast({
         title: 'Success',
         description: 'Shoot updated successfully',
       });
 
-      await fetchShoots();
+      // No need to refetch - realtime subscription will handle sync
       return { error: null };
     } catch (error) {
       console.error('Error updating shoot:', error);
@@ -292,26 +303,38 @@ export function useShoots() {
     if (!user) return { error: new Error('Not authenticated') };
 
     try {
+      const updateData = {
+        status: 'given_by_editor' as ShootStatus,
+        editor_drive_link: data.editor_drive_link,
+        editor_description: data.editor_description,
+        assigned_editor_id: data.assigned_editor_id,
+        editor_deadline: data.editor_deadline,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Optimistically update local state first
+      setShoots(prev => prev.map(shoot => 
+        shoot.id === shootId 
+          ? { ...shoot, ...updateData }
+          : shoot
+      ));
+
       const { error } = await supabase
         .from('shoots')
-        .update({
-          status: 'given_by_editor' as ShootStatus,
-          editor_drive_link: data.editor_drive_link,
-          editor_description: data.editor_description,
-          assigned_editor_id: data.assigned_editor_id,
-          editor_deadline: data.editor_deadline,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', shootId);
 
-      if (error) throw error;
+      if (error) {
+        await fetchShoots();
+        throw error;
+      }
 
       toast({
         title: 'Success',
         description: 'Shoot assigned to editor successfully',
       });
 
-      await fetchShoots();
+      // No need to refetch - realtime subscription handles sync
       return { error: null };
     } catch (error) {
       console.error('Error assigning to editor:', error);
@@ -328,9 +351,11 @@ export function useShoots() {
     if (!user) return { error: new Error('Not authenticated') };
 
     try {
-      const { error } = await supabase
+      const { data: insertedData, error } = await supabase
         .from('shoot_assignments')
-        .insert({ shoot_id: shootId, user_id: userId });
+        .insert({ shoot_id: shootId, user_id: userId })
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -339,7 +364,7 @@ export function useShoots() {
         description: 'Team member assigned',
       });
 
-      await fetchShoots();
+      // Realtime subscription will handle the update
       return { error: null };
     } catch (error) {
       console.error('Error adding assignment:', error);
@@ -368,7 +393,7 @@ export function useShoots() {
         description: 'Team member removed',
       });
 
-      await fetchShoots();
+      // Realtime subscription will handle the update
       return { error: null };
     } catch (error) {
       console.error('Error removing assignment:', error);
@@ -385,19 +410,25 @@ export function useShoots() {
     if (!user || !isAdmin) return { error: new Error('Not authorized') };
 
     try {
+      // Optimistically remove from state
+      setShoots(prev => prev.filter(shoot => shoot.id !== shootId));
+
       const { error } = await supabase
         .from('shoots')
         .delete()
         .eq('id', shootId);
 
-      if (error) throw error;
+      if (error) {
+        await fetchShoots();
+        throw error;
+      }
 
       toast({
         title: 'Success',
         description: 'Shoot deleted',
       });
 
-      await fetchShoots();
+      // Realtime subscription will confirm the deletion
       return { error: null };
     } catch (error) {
       console.error('Error deleting shoot:', error);
