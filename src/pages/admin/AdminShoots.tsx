@@ -192,6 +192,7 @@ export default function AdminShoots() {
         open={showDetail}
         onOpenChange={setShowDetail}
         onStatusChange={updateShootStatus}
+        onEditorAssignment={assignToEditor}
         onAddAssignment={addAssignment}
         onRemoveAssignment={removeAssignment}
       />
