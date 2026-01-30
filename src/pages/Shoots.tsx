@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Camera, Plus, Calendar as CalendarIcon, List, Loader2 } from 'lucide-react';
+import { Camera, Plus, Calendar as CalendarIcon, List, Loader2, Video } from 'lucide-react';
 import { useShoots, type ShootWithAssignments } from '@/hooks/useShoots';
 import { ShootForm } from '@/components/shoots/ShootForm';
 import { ShootCard } from '@/components/shoots/ShootCard';
 import { ShootCalendar } from '@/components/shoots/ShootCalendar';
 import { ShootDetailDialog } from '@/components/shoots/ShootDetailDialog';
+import { EditingListView } from '@/components/shoots/EditingListView';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
@@ -89,6 +90,10 @@ export default function Shoots() {
           <TabsTrigger value="list" className="gap-2">
             <List className="h-4 w-4" />
             Shoot List View
+          </TabsTrigger>
+          <TabsTrigger value="editing" className="gap-2">
+            <Video className="h-4 w-4" />
+            Editing List View
           </TabsTrigger>
         </TabsList>
 
@@ -169,6 +174,13 @@ export default function Shoots() {
               </div>
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="editing">
+          <EditingListView
+            shoots={shoots}
+            onShootClick={handleShootClick}
+          />
         </TabsContent>
       </Tabs>
 
