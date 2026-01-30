@@ -62,7 +62,6 @@ export function ShootCard({ shoot, onStatusChange, onEditingStatusChange, onEdit
   const status = shoot.status || 'pending';
   const config = statusConfig[status];
   const editingStatus = shoot.editing_status || 'not_started';
-  const editingConfig = editingStatusConfig[editingStatus];
   
   const isOwner = shoot.created_by === user?.id;
   const canModify = isAdmin || isOwner;
