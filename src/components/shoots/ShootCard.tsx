@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { Calendar, Clock, MapPin, Users, MoreVertical, CheckCircle, Play, Trash2, CircleDashed, Pencil, Eye, Send, RotateCcw, PackageCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -16,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatTimeOnlyIST } from '@/lib/utils';
+import { EditorAssignmentDialog } from './EditorAssignmentDialog';
 import type { ShootWithAssignments } from '@/hooks/useShoots';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -26,6 +28,12 @@ interface ShootCardProps {
   shoot: ShootWithAssignments;
   onStatusChange?: (shootId: string, status: ShootStatus) => void;
   onEditingStatusChange?: (shootId: string, editingStatus: EditingStatus) => void;
+  onEditorAssignment?: (shootId: string, data: {
+    editor_drive_link: string;
+    editor_description: string;
+    assigned_editor_id: string;
+    editor_deadline: string;
+  }) => Promise<{ error: unknown | null }>;
   onDelete?: (shootId: string) => void;
   onClick?: () => void;
 }
@@ -46,8 +54,11 @@ const editingStatusConfig: Record<EditingStatus, { label: string; icon: React.El
   final_delivered: { label: 'Final Delivered', icon: PackageCheck },
 };
 
-export function ShootCard({ shoot, onStatusChange, onEditingStatusChange, onDelete, onClick }: ShootCardProps) {
+export function ShootCard({ shoot, onStatusChange, onEditingStatusChange, onEditorAssignment, onDelete, onClick }: ShootCardProps) {
   const { isAdmin, user } = useAuth();
+  const [showEditorDialog, setShowEditorDialog] = useState(false);
+  const [isSubmittingEditor, setIsSubmittingEditor] = useState(false);
+  
   const status = shoot.status || 'pending';
   const config = statusConfig[status];
   const editingStatus = shoot.editing_status || 'not_started';
@@ -65,6 +76,27 @@ export function ShootCard({ shoot, onStatusChange, onEditingStatusChange, onDele
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const handleGivenByEditorClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowEditorDialog(true);
+  };
+
+  const handleEditorAssignmentSubmit = async (data: {
+    editor_drive_link: string;
+    editor_description: string;
+    assigned_editor_id: string;
+    editor_deadline: string;
+  }): Promise<{ error: unknown | null }> => {
+    if (!onEditorAssignment) return { error: null };
+    setIsSubmittingEditor(true);
+    const result = await onEditorAssignment(shoot.id, data);
+    setIsSubmittingEditor(false);
+    if (!result.error) {
+      setShowEditorDialog(false);
+    }
+    return result;
   };
 
   return (
@@ -113,10 +145,7 @@ export function ShootCard({ shoot, onStatusChange, onEditingStatusChange, onDele
                   {status === 'completed' && <CheckCircle className="h-3 w-3 ml-auto text-primary" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onStatusChange?.(shoot.id, 'given_by_editor');
-                  }}
+                  onClick={handleGivenByEditorClick}
                   className={status === 'given_by_editor' ? 'bg-accent' : ''}
                 >
                   <PackageCheck className="h-4 w-4 mr-2" />
@@ -220,6 +249,16 @@ export function ShootCard({ shoot, onStatusChange, onEditingStatusChange, onDele
           </div>
         )}
       </CardContent>
+
+      {/* Editor Assignment Dialog */}
+      <EditorAssignmentDialog
+        open={showEditorDialog}
+        onOpenChange={setShowEditorDialog}
+        shootId={shoot.id}
+        shootName={shoot.event_name}
+        onSubmit={handleEditorAssignmentSubmit}
+        isSubmitting={isSubmittingEditor}
+      />
     </Card>
   );
 }

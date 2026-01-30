@@ -22,6 +22,11 @@ export interface Shoot {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  // Editor assignment fields
+  editor_drive_link: string | null;
+  editor_description: string | null;
+  assigned_editor_id: string | null;
+  editor_deadline: string | null;
 }
 
 export interface ShootWithAssignments extends Shoot {
@@ -267,6 +272,47 @@ export function useShoots() {
     return updateShoot(shootId, { editing_status: editingStatus });
   };
 
+  const assignToEditor = async (shootId: string, data: {
+    editor_drive_link: string;
+    editor_description: string;
+    assigned_editor_id: string;
+    editor_deadline: string;
+  }) => {
+    if (!user) return { error: new Error('Not authenticated') };
+
+    try {
+      const { error } = await supabase
+        .from('shoots')
+        .update({
+          status: 'given_by_editor' as ShootStatus,
+          editor_drive_link: data.editor_drive_link,
+          editor_description: data.editor_description,
+          assigned_editor_id: data.assigned_editor_id,
+          editor_deadline: data.editor_deadline,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', shootId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Success',
+        description: 'Shoot assigned to editor successfully',
+      });
+
+      await fetchShoots();
+      return { error: null };
+    } catch (error) {
+      console.error('Error assigning to editor:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to assign to editor',
+        variant: 'destructive',
+      });
+      return { error };
+    }
+  };
+
   const addAssignment = async (shootId: string, userId: string) => {
     if (!user) return { error: new Error('Not authenticated') };
 
@@ -381,6 +427,7 @@ export function useShoots() {
     updateShoot,
     updateShootStatus,
     updateEditingStatus,
+    assignToEditor,
     addAssignment,
     removeAssignment,
     deleteShoot,
