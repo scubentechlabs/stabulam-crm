@@ -45,11 +45,11 @@ interface ShootDetailDialogProps {
   }) => Promise<{ error: unknown | null }>;
 }
 
-const statusConfig: Record<ShootStatus, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
-  pending: { label: 'Pending', variant: 'secondary' },
-  in_progress: { label: 'In Progress', variant: 'default' },
-  completed: { label: 'Completed', variant: 'outline' },
-  given_by_editor: { label: 'Given By Editor', variant: 'outline' },
+const statusConfig: Record<ShootStatus, { label: string; variant: 'default' | 'secondary' | 'outline'; bgClass: string; textClass: string }> = {
+  pending: { label: 'Pending', variant: 'secondary', bgClass: 'bg-red-500 hover:bg-red-600', textClass: 'text-white' },
+  in_progress: { label: 'In Progress', variant: 'default', bgClass: 'bg-blue-500 hover:bg-blue-600', textClass: 'text-white' },
+  completed: { label: 'Completed', variant: 'outline', bgClass: 'bg-yellow-500 hover:bg-yellow-600', textClass: 'text-black' },
+  given_by_editor: { label: 'Given By Editor', variant: 'outline', bgClass: 'bg-green-500 hover:bg-green-600', textClass: 'text-white' },
 };
 
 export function ShootDetailDialog({
@@ -152,7 +152,7 @@ export function ShootDetailDialog({
                       value={status}
                       onValueChange={(value) => onStatusChange?.(shoot.id, value as ShootStatus)}
                     >
-                      <SelectTrigger className="w-[150px]">
+                      <SelectTrigger className={`w-[160px] ${config.bgClass} ${config.textClass} border-0`}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
