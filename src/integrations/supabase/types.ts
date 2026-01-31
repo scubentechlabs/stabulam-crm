@@ -468,67 +468,115 @@ export type Database = {
       salary_records: {
         Row: {
           base_salary: number
+          bonus_amount: number | null
+          bonus_note: string | null
           breakdown: Json | null
           created_at: string
+          custom_deduction_amount: number | null
+          custom_deduction_note: string | null
           eod_penalties: number | null
           extra_work_additions: number | null
           generated_at: string | null
           generated_by: string | null
           id: string
+          included_bonus: boolean | null
+          included_custom_deduction: boolean | null
+          included_late: boolean | null
+          included_overtime: boolean | null
           is_finalized: boolean | null
+          late_arrivals_count: number | null
           late_deductions: number | null
+          late_rule_type: string | null
+          late_rule_value: number | null
           leave_deductions: number | null
           leave_penalties: number | null
+          month_year: string | null
           net_salary: number
           other_additions: number | null
           other_deductions: number | null
+          overtime_amount: number | null
+          overtime_hours: number | null
+          overtime_rate: number | null
           period_end: string
           period_start: string
           tod_penalties: number | null
+          total_late_minutes: number | null
           updated_at: string
           user_id: string
         }
         Insert: {
           base_salary: number
+          bonus_amount?: number | null
+          bonus_note?: string | null
           breakdown?: Json | null
           created_at?: string
+          custom_deduction_amount?: number | null
+          custom_deduction_note?: string | null
           eod_penalties?: number | null
           extra_work_additions?: number | null
           generated_at?: string | null
           generated_by?: string | null
           id?: string
+          included_bonus?: boolean | null
+          included_custom_deduction?: boolean | null
+          included_late?: boolean | null
+          included_overtime?: boolean | null
           is_finalized?: boolean | null
+          late_arrivals_count?: number | null
           late_deductions?: number | null
+          late_rule_type?: string | null
+          late_rule_value?: number | null
           leave_deductions?: number | null
           leave_penalties?: number | null
+          month_year?: string | null
           net_salary: number
           other_additions?: number | null
           other_deductions?: number | null
+          overtime_amount?: number | null
+          overtime_hours?: number | null
+          overtime_rate?: number | null
           period_end: string
           period_start: string
           tod_penalties?: number | null
+          total_late_minutes?: number | null
           updated_at?: string
           user_id: string
         }
         Update: {
           base_salary?: number
+          bonus_amount?: number | null
+          bonus_note?: string | null
           breakdown?: Json | null
           created_at?: string
+          custom_deduction_amount?: number | null
+          custom_deduction_note?: string | null
           eod_penalties?: number | null
           extra_work_additions?: number | null
           generated_at?: string | null
           generated_by?: string | null
           id?: string
+          included_bonus?: boolean | null
+          included_custom_deduction?: boolean | null
+          included_late?: boolean | null
+          included_overtime?: boolean | null
           is_finalized?: boolean | null
+          late_arrivals_count?: number | null
           late_deductions?: number | null
+          late_rule_type?: string | null
+          late_rule_value?: number | null
           leave_deductions?: number | null
           leave_penalties?: number | null
+          month_year?: string | null
           net_salary?: number
           other_additions?: number | null
           other_deductions?: number | null
+          overtime_amount?: number | null
+          overtime_hours?: number | null
+          overtime_rate?: number | null
           period_end?: string
           period_start?: string
           tod_penalties?: number | null
+          total_late_minutes?: number | null
           updated_at?: string
           user_id?: string
         }

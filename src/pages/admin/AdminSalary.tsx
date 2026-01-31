@@ -7,8 +7,8 @@ export default function AdminSalary() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="page-header">
-        <h1 className="page-title">Salary Generator</h1>
-        <p className="page-description">Calculate and generate employee salaries with penalty rules</p>
+        <h1 className="page-title">Salary Calculator</h1>
+        <p className="page-description">Generate individual employee salaries with customizable adjustments</p>
       </div>
 
       <Tabs defaultValue="calculate" className="space-y-4">
