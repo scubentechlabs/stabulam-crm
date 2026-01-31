@@ -75,7 +75,8 @@ export function ShootCard({ shoot, onStatusChange, onEditorAssignment, onDelete,
   const config = statusConfig[status];
   
   const isOwner = shoot.created_by === user?.id;
-  const canModify = isAdmin || isOwner;
+  const isAssigned = shoot.assignments.some(a => a.user_id === user?.id);
+  const canModify = isAdmin || isOwner || isAssigned;
   
   const formatTime = (time: string) => formatTimeOnlyIST(time);
 
