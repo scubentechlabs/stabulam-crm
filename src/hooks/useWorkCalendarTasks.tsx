@@ -42,14 +42,14 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
         query = query.eq('user_id', user.id);
       }
 
-      // Filter by month if provided
+      // Filter by month if provided - use submitted_at for task date filtering
       if (selectedMonth) {
         const startOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
         const endOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0);
         
         query = query
-          .gte('created_at', startOfMonth.toISOString())
-          .lte('created_at', endOfMonth.toISOString());
+          .gte('submitted_at', startOfMonth.toISOString())
+          .lte('submitted_at', endOfMonth.toISOString());
       }
 
       const { data, error } = await query;
