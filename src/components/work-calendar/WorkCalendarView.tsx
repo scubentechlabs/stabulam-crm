@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,6 @@ import { cn, formatDateIST } from '@/lib/utils';
 import type { WorkCalendarTask } from '@/hooks/useWorkCalendarTasks';
 
 interface WorkCalendarViewProps {
-  tasks: WorkCalendarTask[];
   tasksByDate: Record<string, WorkCalendarTask[]>;
   selectedDate: Date | null;
   onSelectDate: (date: Date) => void;

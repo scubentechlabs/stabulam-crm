@@ -166,7 +166,6 @@ export default function EmployeeWorkCalendar() {
         {/* Calendar View */}
         <div className="lg:col-span-2">
           <WorkCalendarView
-            tasks={tasks}
             tasksByDate={tasksByDate}
             selectedDate={selectedDate}
             onSelectDate={setSelectedDate}
