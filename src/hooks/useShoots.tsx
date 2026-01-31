@@ -251,9 +251,12 @@ export function useShoots() {
         // Use Map to ensure no duplicates
         const shootsMap = new Map(prev.map(s => [s.id, s]));
         shootsMap.set(newShoot.id, newShoot);
-        return Array.from(shootsMap.values()).sort((a, b) => 
-          a.shoot_date.localeCompare(b.shoot_date)
-        );
+        return Array.from(shootsMap.values()).sort((a, b) => {
+          // Sort by shoot_date ASC, then created_at DESC (newest first within same date)
+          const dateCompare = a.shoot_date.localeCompare(b.shoot_date);
+          if (dateCompare !== 0) return dateCompare;
+          return b.created_at.localeCompare(a.created_at);
+        });
       });
 
       return { error: null, shoot: shootData };
