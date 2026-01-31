@@ -286,15 +286,20 @@ export function SalaryCalculator() {
     mutationFn: async (salary: GeneratedSalary) => {
       const { data: { user } } = await supabase.auth.getUser();
       
-      const { error } = await supabase
-        .from('salary_records')
-        .insert({
-          user_id: salary.userId,
-          period_start: salary.periodStart,
-          period_end: salary.periodEnd,
-          base_salary: salary.baseSalary,
-          late_deductions: salary.lateDeduction,
-          net_salary: salary.netSalary,
+      // Using type assertion since new columns may not be in generated types yet
+      const insertData = {
+        user_id: salary.userId,
+        period_start: salary.periodStart,
+        period_end: salary.periodEnd,
+        base_salary: salary.baseSalary,
+        late_deductions: salary.lateDeduction,
+        net_salary: salary.netSalary,
+        other_additions: salary.overtimeAmount + salary.bonusAmount,
+        other_deductions: salary.customDeductionAmount,
+        generated_by: user?.id,
+        is_finalized: false,
+        // Store detailed breakdown in the existing breakdown JSONB column
+        breakdown: {
           month_year: salary.monthYear,
           included_late: salary.includedLate,
           late_rule_type: salary.lateRuleType,
@@ -311,11 +316,12 @@ export function SalaryCalculator() {
           included_custom_deduction: salary.includedCustomDeduction,
           custom_deduction_amount: salary.customDeductionAmount,
           custom_deduction_note: salary.customDeductionNote,
-          other_additions: salary.overtimeAmount + salary.bonusAmount,
-          other_deductions: salary.customDeductionAmount,
-          generated_by: user?.id,
-          is_finalized: false,
-        });
+        },
+      };
+
+      const { error } = await supabase
+        .from('salary_records')
+        .insert(insertData);
 
       if (error) throw error;
     },
