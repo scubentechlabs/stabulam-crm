@@ -27,7 +27,6 @@ export default function EmployeeWorkCalendar() {
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<WorkCalendarTask | null>(null);
 
@@ -38,13 +37,11 @@ export default function EmployeeWorkCalendar() {
     isSubmitting,
     createTask,
     updateTask,
-    refetch,
   } = useWorkCalendarTasks(selectedUserId || undefined, currentMonth);
 
   // Fetch users list
   useEffect(() => {
     const fetchUsers = async () => {
-      setIsLoadingUsers(true);
       try {
         const { data, error } = await supabase
           .from('profiles')
@@ -61,8 +58,6 @@ export default function EmployeeWorkCalendar() {
         }
       } catch (error) {
         console.error('Error fetching users:', error);
-      } finally {
-        setIsLoadingUsers(false);
       }
     };
 
@@ -70,7 +65,7 @@ export default function EmployeeWorkCalendar() {
   }, [user, isAdmin]);
 
   const handleUserChange = (userId: string) => {
-    setSelectedUserId(userId);
+    setSelectedUserId(userId === 'all' ? '' : userId);
   };
 
   const handleCreateTask = () => {
@@ -109,8 +104,6 @@ export default function EmployeeWorkCalendar() {
     }
   };
 
-  const selectedUserName = users.find(u => u.user_id === selectedUserId)?.full_name || 'All Users';
-
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Page Header */}
@@ -140,7 +133,7 @@ export default function EmployeeWorkCalendar() {
         <div className="flex items-center gap-2 flex-1 max-w-xs">
           <Users className="h-4 w-4 text-muted-foreground" />
           <Select 
-            value={selectedUserId} 
+            value={selectedUserId || 'all'} 
             onValueChange={handleUserChange}
             disabled={!isAdmin && !!user}
           >
@@ -149,7 +142,7 @@ export default function EmployeeWorkCalendar() {
             </SelectTrigger>
             <SelectContent>
               {isAdmin && (
-                <SelectItem value="">All Employees</SelectItem>
+                <SelectItem value="all">All Employees</SelectItem>
               )}
               {users.map(u => (
                 <SelectItem key={u.user_id} value={u.user_id}>
