@@ -81,11 +81,11 @@ export function useShoots() {
   const [shoots, setShoots] = useState<ShootWithAssignments[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchShoots = useCallback(async () => {
+  const fetchShoots = useCallback(async (showLoading = true) => {
     if (!user) return;
 
     try {
-      setIsLoading(true);
+      if (showLoading) setIsLoading(true);
 
       // Fetch all shoots (RLS allows all authenticated users to view)
       const { data: shootsData, error: shootsError } = await supabase
@@ -156,28 +156,30 @@ export function useShoots() {
         variant: 'destructive',
       });
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   }, [user, toast]);
 
   useEffect(() => {
-    fetchShoots();
+    fetchShoots(true);
 
-    // Subscribe to realtime changes for shoots
+    // Subscribe to realtime changes for shoots - background refresh without loading state
     const shootsChannel = supabase
       .channel('shoots-changes')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'shoots' },
         () => {
-          fetchShoots();
+          // Background sync - don't show loading state
+          fetchShoots(false);
         }
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'shoot_assignments' },
         () => {
-          fetchShoots();
+          // Background sync - don't show loading state
+          fetchShoots(false);
         }
       )
       .subscribe();
@@ -471,6 +473,6 @@ export function useShoots() {
     addAssignment,
     removeAssignment,
     deleteShoot,
-    refreshShoots: fetchShoots,
+    refreshShoots: () => fetchShoots(true),
   };
 }
