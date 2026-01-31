@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   FileText, 
-  Check, 
   Clock,
   User,
   Download,
@@ -267,7 +266,8 @@ export function SalaryRecordsList() {
                 <div>
                   <p className="font-medium">{getProfileName(record.user_id)}</p>
                   <p className="text-sm text-muted-foreground">
-                    {record.month_year || `${format(new Date(record.period_start), 'MMM d')} - ${format(new Date(record.period_end), 'MMM d, yyyy')}`}
+                    {(record.breakdown as Record<string, unknown>)?.month_year as string || 
+                      `${format(new Date(record.period_start), 'MMM d')} - ${format(new Date(record.period_end), 'MMM d, yyyy')}`}
                   </p>
                 </div>
               </div>
@@ -329,26 +329,36 @@ export function SalaryRecordsList() {
 
             {/* Quick summary badges */}
             <div className="mt-3 pt-3 border-t flex flex-wrap gap-2 text-xs">
-              {record.included_overtime && record.overtime_amount && record.overtime_amount > 0 && (
-                <Badge variant="secondary" className="bg-green-100 text-green-700">
-                  Overtime: +{formatCurrency(record.overtime_amount)}
-                </Badge>
-              )}
-              {record.included_bonus && record.bonus_amount && record.bonus_amount > 0 && (
-                <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                  Bonus: +{formatCurrency(record.bonus_amount)}
-                </Badge>
-              )}
-              {record.included_late && record.late_deductions && record.late_deductions > 0 && (
-                <Badge variant="secondary" className="bg-red-100 text-red-700">
-                  Late: -{formatCurrency(record.late_deductions)}
-                </Badge>
-              )}
-              {record.included_custom_deduction && record.custom_deduction_amount && record.custom_deduction_amount > 0 && (
-                <Badge variant="secondary" className="bg-orange-100 text-orange-700">
-                  Deduction: -{formatCurrency(record.custom_deduction_amount)}
-                </Badge>
-              )}
+              {(() => {
+                // Access breakdown data which contains the detailed salary info
+                const breakdown = record.breakdown as Record<string, unknown> | null;
+                if (!breakdown) return null;
+                
+                return (
+                  <>
+                    {breakdown.included_overtime && Number(breakdown.overtime_amount) > 0 && (
+                      <Badge variant="secondary" className="bg-green-100 text-green-700">
+                        Overtime: +{formatCurrency(Number(breakdown.overtime_amount))}
+                      </Badge>
+                    )}
+                    {breakdown.included_bonus && Number(breakdown.bonus_amount) > 0 && (
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                        Bonus: +{formatCurrency(Number(breakdown.bonus_amount))}
+                      </Badge>
+                    )}
+                    {breakdown.included_late && record.late_deductions && record.late_deductions > 0 && (
+                      <Badge variant="secondary" className="bg-red-100 text-red-700">
+                        Late: -{formatCurrency(record.late_deductions)}
+                      </Badge>
+                    )}
+                    {breakdown.included_custom_deduction && Number(breakdown.custom_deduction_amount) > 0 && (
+                      <Badge variant="secondary" className="bg-orange-100 text-orange-700">
+                        Deduction: -{formatCurrency(Number(breakdown.custom_deduction_amount))}
+                      </Badge>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
         ))}
