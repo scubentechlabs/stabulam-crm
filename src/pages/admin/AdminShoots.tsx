@@ -48,13 +48,8 @@ export default function AdminShoots() {
 
   const handleCreateShoot = async (data: Parameters<typeof createShoot>[0]) => {
     setIsSubmitting(true);
-    const result = await createShoot(data);
+    await createShoot(data);
     setIsSubmitting(false);
-    
-    // Auto-navigate to the created shoot's date so it appears in the list view
-    if (!result.error && data.shoot_date) {
-      setSelectedDate(parseISO(data.shoot_date));
-    }
   };
 
   const handleShootClick = (shoot: ShootWithAssignments) => {

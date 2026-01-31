@@ -32,7 +32,6 @@ export default function Shoots() {
   const [selectedShoot, setSelectedShoot] = useState<ShootWithAssignments | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [activeTab, setActiveTab] = useState('calendar');
 
   // Keep selectedShoot in sync with the latest shoots state (e.g., after member remove/add)
   useEffect(() => {
@@ -48,13 +47,8 @@ export default function Shoots() {
 
   const handleCreateShoot = async (data: Parameters<typeof createShoot>[0]) => {
     setIsSubmitting(true);
-    const result = await createShoot(data);
+    await createShoot(data);
     setIsSubmitting(false);
-    
-    // Auto-navigate to the created shoot's date so it appears in the list view
-    if (!result.error && data.shoot_date) {
-      setSelectedDate(parseISO(data.shoot_date));
-    }
   };
 
   const handleShootClick = (shoot: ShootWithAssignments) => {
@@ -83,7 +77,7 @@ export default function Shoots() {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs defaultValue="calendar" className="space-y-4">
         <TabsList>
           <TabsTrigger value="calendar" className="gap-2">
             <CalendarIcon className="h-4 w-4" />
