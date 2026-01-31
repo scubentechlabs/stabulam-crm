@@ -27,6 +27,7 @@ export default function Shoots() {
     deleteShoot,
   } = useShoots();
 
+  const [activeTab, setActiveTab] = useState('calendar');
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedShoot, setSelectedShoot] = useState<ShootWithAssignments | null>(null);
@@ -77,7 +78,7 @@ export default function Shoots() {
         </Button>
       </div>
 
-      <Tabs defaultValue="calendar" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="calendar" className="gap-2">
             <CalendarIcon className="h-4 w-4" />
