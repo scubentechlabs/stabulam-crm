@@ -50,6 +50,9 @@ export default function AdminShoots() {
     setIsSubmitting(true);
     await createShoot(data);
     setIsSubmitting(false);
+    // Update selectedDate to the new shoot's date and switch to list view
+    setSelectedDate(parseISO(data.shoot_date));
+    setActiveTab('list');
   };
 
   const handleShootClick = (shoot: ShootWithAssignments) => {
