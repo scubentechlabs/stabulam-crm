@@ -129,7 +129,7 @@ export function ShootCard({ shoot, onStatusChange, onEditorAssignment, onDelete,
             {user && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100">
+                  <Button variant="outline" size="icon" className="h-8 w-8 bg-muted hover:bg-muted/80">
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
