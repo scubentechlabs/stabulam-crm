@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { cn } from '@/lib/utils';
+import { cn, formatDateIST, formatTimeIST } from '@/lib/utils';
 import type { WorkCalendarTask } from '@/hooks/useWorkCalendarTasks';
 
 interface TaskDayDetailProps {
@@ -43,11 +43,11 @@ export function TaskDayDetail({
     );
   }
 
-  const dateKey = format(selectedDate, 'yyyy-MM-dd');
+  const dateKey = formatDateIST(selectedDate, 'yyyy-MM-dd');
   const dayTasks = tasks.filter(task => {
-    const taskDate = task.submitted_at 
-      ? format(new Date(task.submitted_at), 'yyyy-MM-dd')
-      : format(new Date(task.created_at), 'yyyy-MM-dd');
+    const taskDate = task.submitted_at
+      ? formatDateIST(task.submitted_at, 'yyyy-MM-dd')
+      : formatDateIST(task.created_at, 'yyyy-MM-dd');
     return taskDate === dateKey;
   });
 
@@ -178,12 +178,12 @@ function TaskItem({ task, isAdmin, onEdit, onDelete }: TaskItemProps) {
               <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                 {task.submitted_at && (
                   <span>
-                    Created: {format(new Date(task.submitted_at), 'hh:mm a')}
+                    Created: {formatTimeIST(task.submitted_at)}
                   </span>
                 )}
                 {task.completed_at && (
                   <span className="text-green-600">
-                    Completed: {format(new Date(task.completed_at), 'hh:mm a')}
+                    Completed: {formatTimeIST(task.completed_at)}
                   </span>
                 )}
               </div>

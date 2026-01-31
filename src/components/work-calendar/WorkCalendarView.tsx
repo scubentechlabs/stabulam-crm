@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn, formatDateIST } from '@/lib/utils';
 import type { WorkCalendarTask } from '@/hooks/useWorkCalendarTasks';
 
 interface WorkCalendarViewProps {
@@ -57,7 +57,7 @@ export function WorkCalendarView({
   };
 
   const getTasksForDate = (date: Date) => {
-    const dateKey = format(date, 'yyyy-MM-dd');
+    const dateKey = formatDateIST(date, 'yyyy-MM-dd');
     return tasksByDate[dateKey] || [];
   };
 
