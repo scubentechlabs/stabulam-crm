@@ -74,6 +74,7 @@ const adminNavItems: NavItem[] = [
   { title: 'Salary Generator', href: '/admin/salary', icon: DollarSign, adminOnly: true },
   { title: 'Reports', href: '/admin/reports', icon: BarChart3, adminOnly: true },
   { title: 'Rules Config', href: '/admin/rules', icon: Settings, adminOnly: true },
+  { title: 'Work Calendar', href: '/employee-work-calendar', icon: CalendarDays, adminOnly: true },
 ];
 
 export function DashboardLayout() {
@@ -185,12 +186,15 @@ export function DashboardLayout() {
               "space-y-2",
               !isSidebarOpen && !isSidebarExpanded && "lg:flex lg:flex-col lg:items-center lg:space-y-1"
             )}>
-              {isAdmin && adminNavItems.map((item) => (
-                <NavLink key={item.href} item={item} collapsed={!isSidebarOpen && !isSidebarExpanded} />
-              ))}
-              {employeeNavItems.map((item) => (
-                <NavLink key={item.href} item={item} collapsed={!isSidebarOpen && !isSidebarExpanded} />
-              ))}
+              {isAdmin ? (
+                adminNavItems.map((item) => (
+                  <NavLink key={item.href} item={item} collapsed={!isSidebarOpen && !isSidebarExpanded} />
+                ))
+              ) : (
+                employeeNavItems.map((item) => (
+                  <NavLink key={item.href} item={item} collapsed={!isSidebarOpen && !isSidebarExpanded} />
+                ))
+              )}
             </nav>
           </ScrollArea>
 
