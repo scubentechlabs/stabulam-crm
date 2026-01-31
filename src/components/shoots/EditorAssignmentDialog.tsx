@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/select';
 import { useUsers } from '@/hooks/useUsers';
 import { cn } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
 
 interface EditorAssignmentDialogProps {
   open: boolean;
@@ -50,7 +51,8 @@ export function EditorAssignmentDialog({
   onSubmit,
   isSubmitting = false,
 }: EditorAssignmentDialogProps) {
-  const { activeUsers } = useUsers();
+  // Use teamMembers (available to all authenticated users) instead of activeUsers (admin-only)
+  const { teamMembers, isLoadingTeam } = useUsers();
   const [driveLink, setDriveLink] = useState('');
   const [description, setDescription] = useState('');
   const [selectedEditor, setSelectedEditor] = useState('');
@@ -169,18 +171,28 @@ export function EditorAssignmentDialog({
               <User className="h-4 w-4" />
               Assign Video Editor <span className="text-destructive">*</span>
             </Label>
-            <Select value={selectedEditor} onValueChange={setSelectedEditor}>
-              <SelectTrigger className={errors.selectedEditor ? 'border-destructive' : ''}>
-                <SelectValue placeholder="Select an editor" />
-              </SelectTrigger>
-              <SelectContent>
-                {activeUsers.map((user) => (
-                  <SelectItem key={user.user_id} value={user.user_id}>
-                    {user.full_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {isLoadingTeam ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground p-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading editors...
+              </div>
+            ) : (
+              <Select value={selectedEditor} onValueChange={setSelectedEditor}>
+                <SelectTrigger className={errors.selectedEditor ? 'border-destructive' : ''}>
+                  <SelectValue placeholder="Select an editor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {teamMembers.map((member) => (
+                    <SelectItem key={member.user_id} value={member.user_id}>
+                      {member.full_name}
+                    </SelectItem>
+                  ))}
+                  {teamMembers.length === 0 && (
+                    <div className="p-2 text-sm text-muted-foreground">No editors available</div>
+                  )}
+                </SelectContent>
+              </Select>
+            )}
             {errors.selectedEditor && (
               <p className="text-xs text-destructive">{errors.selectedEditor}</p>
             )}
