@@ -331,6 +331,23 @@ export function useShoots() {
     if (!user) return { error: new Error('Not authenticated') };
 
     try {
+      // Fetch the editor's profile for optimistic update
+      let editorProfile: { full_name: string; email: string; avatar_url: string | null } | null = null;
+      
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('full_name, email, avatar_url')
+        .eq('user_id', data.assigned_editor_id)
+        .maybeSingle();
+      
+      if (profileData) {
+        editorProfile = {
+          full_name: profileData.full_name,
+          email: profileData.email,
+          avatar_url: profileData.avatar_url,
+        };
+      }
+
       const updateData = {
         status: 'given_by_editor' as ShootStatus,
         editor_drive_link: data.editor_drive_link,
@@ -340,10 +357,10 @@ export function useShoots() {
         updated_at: new Date().toISOString(),
       };
 
-      // Optimistically update local state first
+      // Optimistically update local state with editor profile included
       setShoots(prev => prev.map(shoot => 
         shoot.id === shootId 
-          ? { ...shoot, ...updateData }
+          ? { ...shoot, ...updateData, assigned_editor: editorProfile }
           : shoot
       ));
 
