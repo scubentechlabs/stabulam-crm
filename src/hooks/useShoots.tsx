@@ -130,8 +130,9 @@ export function useShoots() {
         }
       }
 
-      // Combine shoots with their assignments
-      const shootsWithAssignments: ShootWithAssignments[] = (shootsData || []).map(shoot => {
+      // Combine shoots with their assignments - use Map to prevent duplicates
+      const shootsMap = new Map<string, ShootWithAssignments>();
+      (shootsData || []).forEach(shoot => {
         const shootAssignments = (assignmentsData || [])
           .filter(a => a.shoot_id === shoot.id)
           .map(a => ({
@@ -139,17 +140,17 @@ export function useShoots() {
             profile: profilesMap.get(a.user_id),
           }));
 
-        return {
+        shootsMap.set(shoot.id, {
           ...shoot,
           status: shoot.status || 'pending',
           editing_status: shoot.editing_status || 'not_started',
           location_coordinates: shoot.location_coordinates as { lat: number; lng: number } | null,
           assignments: shootAssignments,
           assigned_editor: shoot.assigned_editor_id ? profilesMap.get(shoot.assigned_editor_id) || null : null,
-        };
+        });
       });
 
-      setShoots(shootsWithAssignments);
+      setShoots(Array.from(shootsMap.values()));
     } catch (error) {
       console.error('Error fetching shoots:', error);
       toast({
@@ -235,8 +236,25 @@ export function useShoots() {
         description: 'Shoot created successfully',
       });
 
-      // Fetch without loading to prevent view reset
-      await fetchShoots(false);
+      // Add new shoot to state directly (realtime will also trigger but Map prevents duplicates)
+      const newShoot: ShootWithAssignments = {
+        ...shootData,
+        status: shootData.status || 'pending',
+        editing_status: shootData.editing_status || 'not_started',
+        location_coordinates: shootData.location_coordinates as { lat: number; lng: number } | null,
+        assignments: [],
+        assigned_editor: null,
+      };
+      
+      setShoots(prev => {
+        // Use Map to ensure no duplicates
+        const shootsMap = new Map(prev.map(s => [s.id, s]));
+        shootsMap.set(newShoot.id, newShoot);
+        return Array.from(shootsMap.values()).sort((a, b) => 
+          a.shoot_date.localeCompare(b.shoot_date)
+        );
+      });
+
       return { error: null, shoot: shootData };
     } catch (error) {
       console.error('Error creating shoot:', error);
