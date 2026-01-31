@@ -93,7 +93,8 @@ export function useShoots() {
       const { data: shootsData, error: shootsError } = await supabase
         .from('shoots')
         .select('*')
-        .order('shoot_date', { ascending: true });
+        .order('shoot_date', { ascending: true })
+        .order('created_at', { ascending: false });
 
       if (shootsError) throw shootsError;
 
