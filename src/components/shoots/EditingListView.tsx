@@ -1,309 +1,346 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
-  CircleDashed,
-  Pencil,
-  Eye,
-  Send,
-  RotateCcw,
-  PackageCheck,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
+import { 
+  PlayCircle, 
+  Clock, 
+  Eye, 
+  Send, 
+  RotateCcw, 
+  CheckCircle2, 
+  Video,
+  MapPin,
   Calendar,
   ExternalLink,
+  MoreVertical,
+  Check
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import type { ShootWithAssignments } from '@/hooks/useShoots';
 import type { Database } from '@/integrations/supabase/types';
+import { cn } from '@/lib/utils';
 
 type EditingStatus = Database['public']['Enums']['editing_status'];
 
 interface EditingListViewProps {
   shoots: ShootWithAssignments[];
-  onEditingStatusChange: (shootId: string, status: EditingStatus) => void;
   onShootClick: (shoot: ShootWithAssignments) => void;
+  onEditingStatusChange?: (shootId: string, editingStatus: EditingStatus) => void;
 }
 
-const editingStatusConfig: Record<
-  EditingStatus,
-  { label: string; icon: React.ElementType; color: string; bgColor: string }
-> = {
-  not_started: {
-    label: 'Not Started',
-    icon: CircleDashed,
-    color: 'text-slate-600',
-    bgColor: 'bg-slate-100 dark:bg-slate-800',
+const editingStatusConfig: Record<EditingStatus, { label: string; icon: React.ElementType; color: string; bgColor: string; borderColor: string; pillBg: string; pillText: string }> = {
+  not_started: { 
+    label: 'Not Started', 
+    icon: Clock, 
+    color: 'text-gray-600 dark:text-gray-400',
+    bgColor: 'bg-gray-50 dark:bg-gray-900/50',
+    borderColor: 'border-gray-200 dark:border-gray-700',
+    pillBg: 'bg-red-700 hover:bg-red-800',
+    pillText: 'text-white'
   },
-  editing: {
-    label: 'Editing',
-    icon: Pencil,
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+  editing: { 
+    label: 'Editing', 
+    icon: PlayCircle, 
+    color: 'text-blue-600 dark:text-blue-400',
+    bgColor: 'bg-blue-50 dark:bg-blue-900/30',
+    borderColor: 'border-blue-200 dark:border-blue-700',
+    pillBg: 'bg-emerald-600 hover:bg-emerald-700',
+    pillText: 'text-white'
   },
-  internal_review: {
-    label: 'Internal Review',
-    icon: Eye,
-    color: 'text-amber-600',
-    bgColor: 'bg-amber-100 dark:bg-amber-900/30',
+  internal_review: { 
+    label: 'Internal Review', 
+    icon: Eye, 
+    color: 'text-purple-600 dark:text-purple-400',
+    bgColor: 'bg-purple-50 dark:bg-purple-900/30',
+    borderColor: 'border-purple-200 dark:border-purple-700',
+    pillBg: 'bg-blue-600 hover:bg-blue-700',
+    pillText: 'text-white'
   },
-  sent_to_client: {
-    label: 'Sent to Client',
-    icon: Send,
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-100 dark:bg-purple-900/30',
+  sent_to_client: { 
+    label: 'Sent to Client', 
+    icon: Send, 
+    color: 'text-amber-600 dark:text-amber-400',
+    bgColor: 'bg-amber-50 dark:bg-amber-900/30',
+    borderColor: 'border-amber-200 dark:border-amber-700',
+    pillBg: 'bg-purple-600 hover:bg-purple-700',
+    pillText: 'text-white'
   },
-  revisions_round: {
-    label: 'Revisions Round',
-    icon: RotateCcw,
-    color: 'text-orange-600',
-    bgColor: 'bg-orange-100 dark:bg-orange-900/30',
+  revisions_round: { 
+    label: 'Revisions Round', 
+    icon: RotateCcw, 
+    color: 'text-orange-600 dark:text-orange-400',
+    bgColor: 'bg-orange-50 dark:bg-orange-900/30',
+    borderColor: 'border-orange-200 dark:border-orange-700',
+    pillBg: 'bg-red-700 hover:bg-red-800',
+    pillText: 'text-white'
   },
-  final_delivered: {
-    label: 'Final Delivered',
-    icon: PackageCheck,
-    color: 'text-green-600',
-    bgColor: 'bg-green-100 dark:bg-green-900/30',
+  final_delivered: { 
+    label: 'Final Delivered', 
+    icon: CheckCircle2, 
+    color: 'text-green-600 dark:text-green-400',
+    bgColor: 'bg-green-50 dark:bg-green-900/30',
+    borderColor: 'border-green-200 dark:border-green-700',
+    pillBg: 'bg-emerald-600 hover:bg-emerald-700',
+    pillText: 'text-white'
   },
 };
 
-const allStatuses: EditingStatus[] = [
-  'not_started',
-  'editing',
-  'internal_review',
-  'sent_to_client',
-  'revisions_round',
-  'final_delivered',
-];
+const statusOrder: EditingStatus[] = ['not_started', 'editing', 'internal_review', 'sent_to_client', 'revisions_round', 'final_delivered'];
 
-export function EditingListView({
-  shoots,
-  onEditingStatusChange,
-  onShootClick,
-}: EditingListViewProps) {
-  const [selectedStatus, setSelectedStatus] = useState<EditingStatus | 'all'>('all');
+export function EditingListView({ shoots, onShootClick, onEditingStatusChange }: EditingListViewProps) {
+  // Only show shoots that have been "Given by Editor" (status === 'given_by_editor')
+  const editorAssignedShoots = shoots.filter(shoot => shoot.status === 'given_by_editor');
 
-  // Count shoots by editing status
-  const statusCounts = useMemo(() => {
-    const counts: Record<EditingStatus, number> = {
-      not_started: 0,
-      editing: 0,
-      internal_review: 0,
-      sent_to_client: 0,
-      revisions_round: 0,
-      final_delivered: 0,
-    };
-    shoots.forEach((shoot) => {
-      const status = shoot.editing_status || 'not_started';
-      counts[status]++;
-    });
-    return counts;
-  }, [shoots]);
+  // Find the first status with at least one shoot, or default to 'not_started'
+  const getDefaultStatus = (): EditingStatus => {
+    for (const status of statusOrder) {
+      if (editorAssignedShoots.some(shoot => (shoot.editing_status || 'not_started') === status)) {
+        return status;
+      }
+    }
+    return 'not_started';
+  };
 
-  // Filter shoots by selected status
-  const filteredShoots = useMemo(() => {
-    if (selectedStatus === 'all') return shoots;
-    return shoots.filter((s) => (s.editing_status || 'not_started') === selectedStatus);
-  }, [shoots, selectedStatus]);
+  const [activeStatus, setActiveStatus] = useState<EditingStatus>(() => getDefaultStatus());
 
-  const getInitials = (name: string) =>
-    name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+  const getShootsByStatus = (status: EditingStatus) => {
+    return editorAssignedShoots.filter(shoot => (shoot.editing_status || 'not_started') === status);
+  };
+
+  const getStatusCount = (status: EditingStatus) => {
+    return getShootsByStatus(status).length;
+  };
+
+  const ActiveStatusIcon = editingStatusConfig[activeStatus].icon;
 
   return (
     <div className="space-y-6">
-      {/* Status Cards Dashboard */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {allStatuses.map((status) => {
+      {/* Status Cards Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {statusOrder.map((status) => {
           const config = editingStatusConfig[status];
           const Icon = config.icon;
-          const isActive = selectedStatus === status;
-          const count = statusCounts[status];
-
+          const count = getStatusCount(status);
+          const isActive = activeStatus === status;
+          
           return (
-            <Card
+            <button
               key={status}
+              onClick={() => setActiveStatus(status)}
               className={cn(
-                'cursor-pointer transition-all hover:shadow-md border-2',
-                isActive ? 'border-primary ring-2 ring-primary/20' : 'border-transparent hover:border-muted-foreground/20'
+                "relative p-4 rounded-xl border-2 transition-all duration-200 text-left group",
+                "hover:shadow-md hover:scale-[1.02]",
+                isActive 
+                  ? `${config.bgColor} ${config.borderColor} shadow-sm` 
+                  : "bg-card border-border hover:border-muted-foreground/30"
               )}
-              onClick={() => setSelectedStatus(isActive ? 'all' : status)}
             >
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className={cn('p-2 rounded-lg', config.bgColor)}>
-                    <Icon className={cn('h-5 w-5', config.color)} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-2xl font-bold">{count}</p>
-                    <p className="text-xs text-muted-foreground truncate">{config.label}</p>
-                  </div>
+              <div className="flex flex-col gap-2">
+                <div className={cn(
+                  "p-2 rounded-lg w-fit transition-colors",
+                  isActive ? config.bgColor : "bg-muted/50 group-hover:bg-muted"
+                )}>
+                  <Icon className={cn(
+                    "h-5 w-5 transition-colors",
+                    isActive ? config.color : "text-muted-foreground group-hover:text-foreground"
+                  )} />
                 </div>
-              </CardContent>
-            </Card>
+                <div>
+                  <p className={cn(
+                    "text-2xl font-bold transition-colors",
+                    isActive ? config.color : "text-foreground"
+                  )}>
+                    {count}
+                  </p>
+                  <p className={cn(
+                    "text-xs font-medium truncate transition-colors",
+                    isActive ? config.color : "text-muted-foreground"
+                  )}>
+                    {config.label}
+                  </p>
+                </div>
+              </div>
+              {isActive && (
+                <div className={cn(
+                  "absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-1 rounded-t-full",
+                  config.color.replace('text-', 'bg-')
+                )} />
+              )}
+            </button>
           );
         })}
       </div>
 
-      {/* Active Filter Indicator */}
-      {selectedStatus !== 'all' && (
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="gap-1">
-            Filtering: {editingStatusConfig[selectedStatus].label}
-          </Badge>
-          <Button variant="ghost" size="sm" onClick={() => setSelectedStatus('all')}>
-            Clear filter
-          </Button>
-        </div>
-      )}
-
-      {/* Editing Table */}
+      {/* Active Status Table */}
       <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Shoot</TableHead>
-                <TableHead>Brand</TableHead>
-                <TableHead>Shoot Date</TableHead>
-                <TableHead>Assigned Editor</TableHead>
-                <TableHead>Deadline</TableHead>
-                <TableHead>Drive Link</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredShoots.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                    No shoots found for this filter
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredShoots.map((shoot) => {
-                  const currentStatus = shoot.editing_status || 'not_started';
-                  const config = editingStatusConfig[currentStatus];
-
-                  // Find assigned editor from assignments (use first one or dedicated editor)
-                  const editorAssignment = shoot.assignments.find(
-                    (a) => a.user_id === shoot.assigned_editor_id
-                  ) || shoot.assignments[0];
-
-                  return (
-                    <TableRow
-                      key={shoot.id}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => onShootClick(shoot)}
-                    >
-                      <TableCell className="font-medium">{shoot.event_name}</TableCell>
-                      <TableCell>{shoot.brand_name}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5 text-sm">
-                          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                          {format(parseISO(shoot.shoot_date), 'MMM d, yyyy')}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {editorAssignment?.profile ? (
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-7 w-7">
-                              <AvatarImage src={editorAssignment.profile.avatar_url || undefined} />
-                              <AvatarFallback className="text-xs">
-                                {getInitials(editorAssignment.profile.full_name)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium truncate">
-                                {editorAssignment.profile.full_name}
-                              </p>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {editorAssignment.profile.email}
-                              </p>
-                            </div>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <ActiveStatusIcon className={cn("h-5 w-5", editingStatusConfig[activeStatus].color)} />
+            {editingStatusConfig[activeStatus].label}
+            <Badge variant="secondary" className="ml-2">
+              {getStatusCount(activeStatus)} shoots
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {getShootsByStatus(activeStatus).length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Video className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p>No shoots in "{editingStatusConfig[activeStatus].label}" status</p>
+            </div>
+          ) : (
+            <div className="rounded-md border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Event / Brand</TableHead>
+                    <TableHead>Shoot Date</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Editor</TableHead>
+                    <TableHead>Deadline</TableHead>
+                    <TableHead>Drive Link</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {getShootsByStatus(activeStatus).map((shoot) => {
+                    const currentEditingStatus = shoot.editing_status || 'not_started';
+                    
+                    return (
+                      <TableRow 
+                        key={shoot.id} 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => onShootClick(shoot)}
+                      >
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{shoot.event_name}</p>
+                            <p className="text-sm text-muted-foreground">{shoot.brand_name}</p>
                           </div>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">Not assigned</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {shoot.editor_deadline ? (
-                          <span className="text-sm">
-                            {format(parseISO(shoot.editor_deadline), 'MMM d, yyyy')}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {shoot.editor_drive_link ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2 text-xs"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              window.open(shoot.editor_drive_link!, '_blank');
-                            }}
-                          >
-                            <ExternalLink className="h-3.5 w-3.5 mr-1" />
-                            Open
-                          </Button>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <Select
-                          value={currentStatus}
-                          onValueChange={(value) =>
-                            onEditingStatusChange(shoot.id, value as EditingStatus)
-                          }
-                        >
-                          <SelectTrigger className="w-[160px] h-8">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {allStatuses.map((status) => {
-                              const statusConfig = editingStatusConfig[status];
-                              const StatusIcon = statusConfig.icon;
-                              return (
-                                <SelectItem key={status} value={status}>
-                                  <div className="flex items-center gap-2">
-                                    <StatusIcon className={cn('h-4 w-4', statusConfig.color)} />
-                                    <span>{statusConfig.label}</span>
-                                  </div>
-                                </SelectItem>
-                              );
-                            })}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <span>{format(parseISO(shoot.shoot_date), 'MMM d, yyyy')}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <span className="truncate max-w-[150px]">{shoot.location}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {shoot.assigned_editor ? (
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage src={shoot.assigned_editor.avatar_url || undefined} />
+                                <AvatarFallback className="text-xs">
+                                  {shoot.assigned_editor.full_name?.charAt(0) || 'E'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="text-sm truncate max-w-[100px]">
+                                {shoot.assigned_editor.full_name}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">Not assigned</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {shoot.editor_deadline ? (
+                            <span className="text-sm">
+                              {format(parseISO(shoot.editor_deadline), 'MMM d, yyyy')}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {shoot.editor_drive_link ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(shoot.editor_drive_link!, '_blank');
+                              }}
+                            >
+                              <ExternalLink className="h-4 w-4 mr-1" />
+                              Open
+                            </Button>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuLabel>Change Editing Status</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                {statusOrder.map((statusKey) => {
+                                  const statusItem = editingStatusConfig[statusKey];
+                                  const isActive = currentEditingStatus === statusKey;
+                                  
+                                  return (
+                                    <DropdownMenuItem
+                                      key={statusKey}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onEditingStatusChange?.(shoot.id, statusKey);
+                                      }}
+                                      className="p-1 focus:bg-transparent"
+                                    >
+                                      <span className={cn(
+                                        "w-full px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center justify-between",
+                                        statusItem.pillBg,
+                                        statusItem.pillText
+                                      )}>
+                                        {statusItem.label}
+                                        {isActive && <Check className="h-3.5 w-3.5 ml-2" />}
+                                      </span>
+                                    </DropdownMenuItem>
+                                  );
+                                })}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onShootClick(shoot);
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View Details
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
