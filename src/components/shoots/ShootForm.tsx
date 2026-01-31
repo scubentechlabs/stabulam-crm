@@ -64,6 +64,7 @@ interface ShootFormProps {
 export function ShootForm({ open, onOpenChange, onSubmit, isSubmitting }: ShootFormProps) {
   const { teamMembers, isLoadingTeam } = useUsers();
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [localSubmitting, setLocalSubmitting] = useState(false);
 
   const form = useForm<ShootFormValues>({
     resolver: zodResolver(shootFormSchema),
@@ -78,20 +79,31 @@ export function ShootForm({ open, onOpenChange, onSubmit, isSubmitting }: ShootF
     },
   });
 
+  // Combined submitting state to prevent double submissions
+  const isCurrentlySubmitting = isSubmitting || localSubmitting;
+
   const handleSubmit = async (values: ShootFormValues) => {
-    await onSubmit({
-      event_name: values.event_name,
-      brand_name: values.brand_name,
-      shoot_date: format(values.shoot_date, 'yyyy-MM-dd'),
-      shoot_time: values.shoot_time,
-      location: values.location,
-      brief: values.brief,
-      notes: values.notes,
-      assigned_user_ids: selectedUsers,
-    });
-    form.reset();
-    setSelectedUsers([]);
-    onOpenChange(false);
+    // Prevent double submission
+    if (isCurrentlySubmitting) return;
+    
+    setLocalSubmitting(true);
+    try {
+      await onSubmit({
+        event_name: values.event_name,
+        brand_name: values.brand_name,
+        shoot_date: format(values.shoot_date, 'yyyy-MM-dd'),
+        shoot_time: values.shoot_time,
+        location: values.location,
+        brief: values.brief,
+        notes: values.notes,
+        assigned_user_ids: selectedUsers,
+      });
+      form.reset();
+      setSelectedUsers([]);
+      onOpenChange(false);
+    } finally {
+      setLocalSubmitting(false);
+    }
   };
 
   const toggleUserSelection = (userId: string) => {
@@ -307,8 +319,8 @@ export function ShootForm({ open, onOpenChange, onSubmit, isSubmitting }: ShootF
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" disabled={isCurrentlySubmitting}>
+                {isCurrentlySubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Shoot
               </Button>
             </div>
