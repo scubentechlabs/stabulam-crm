@@ -6,7 +6,9 @@ import type { Database } from '@/integrations/supabase/types';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
 type TaskInsert = Database['public']['Tables']['tasks']['Insert'];
+// Extended task types - includes new enum values added via migration
 type TaskType = 'tod' | 'eod' | 'utod' | 'urgent_tod';
+type DbTaskType = Database['public']['Enums']['task_type'];
 
 export interface WorkCalendarTask extends Task {
   profile?: {
@@ -92,9 +94,8 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
         user_id: assignedUserId,
         title,
         description,
-        task_type: taskType,
+        task_type: taskType as DbTaskType,
         submitted_at: taskDate.toISOString(),
-        created_at: taskDate.toISOString(),
       };
 
       const { data, error } = await supabase
@@ -144,12 +145,16 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
 
     setIsSubmitting(true);
     try {
+      const updateData: Record<string, unknown> = {
+        is_edited: true,
+      };
+      if (updates.title) updateData.title = updates.title;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.task_type) updateData.task_type = updates.task_type;
+
       const { data, error } = await supabase
         .from('tasks')
-        .update({
-          ...updates,
-          is_edited: true,
-        })
+        .update(updateData)
         .eq('id', taskId)
         .select()
         .single();
