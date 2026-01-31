@@ -32,7 +32,7 @@ export default function AdminShoots() {
   const creatingRef = useRef(false);
   const [selectedShoot, setSelectedShoot] = useState<ShootWithAssignments | null>(null);
   const [showDetail, setShowDetail] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState('calendar');
 
   // Keep selectedShoot in sync with the latest shoots state (e.g., after member remove/add)
@@ -42,10 +42,10 @@ export default function AdminShoots() {
     if (updated) setSelectedShoot(updated);
   }, [shoots, selectedShoot?.id]);
 
-  // Filter shoots for selected date
-  const shootsForSelectedDate = shoots.filter(shoot => 
-    isSameDay(parseISO(shoot.shoot_date), selectedDate)
-  );
+  // Filter shoots: show all if no date selected, otherwise filter by date
+  const displayedShoots = selectedDate 
+    ? shoots.filter(shoot => isSameDay(parseISO(shoot.shoot_date), selectedDate))
+    : shoots;
 
   const handleCreateShoot = async (data: Parameters<typeof createShoot>[0]) => {
     if (creatingRef.current) return;
@@ -53,8 +53,8 @@ export default function AdminShoots() {
     setIsSubmitting(true);
     try {
       await createShoot(data);
-      // Update selectedDate to the new shoot's date and switch to list view
-      setSelectedDate(parseISO(data.shoot_date));
+      // Clear date filter to show all shoots including the new one, and switch to list view
+      setSelectedDate(null);
       setActiveTab('list');
     } finally {
       setIsSubmitting(false);
@@ -126,39 +126,52 @@ export default function AdminShoots() {
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <h2 className="text-lg font-semibold">
-                Shoots for {format(selectedDate, 'MMMM d, yyyy')} ({shootsForSelectedDate.length})
+                {selectedDate 
+                  ? `Shoots for ${format(selectedDate, 'MMMM d, yyyy')} (${displayedShoots.length})`
+                  : `All Shoots (${displayedShoots.length})`
+                }
               </h2>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[240px] justify-start text-left font-normal",
-                      !selectedDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(selectedDate, "PPP")}
+              <div className="flex items-center gap-2">
+                {selectedDate && (
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedDate(null)}>
+                    Clear Filter
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => date && setSelectedDate(date)}
-                    initialFocus
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
+                )}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-[240px] justify-start text-left font-normal",
+                        !selectedDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {selectedDate ? format(selectedDate, "PPP") : "Filter by date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate ?? undefined}
+                      onSelect={(date) => setSelectedDate(date ?? null)}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
 
-            {shootsForSelectedDate.length === 0 ? (
+            {displayedShoots.length === 0 ? (
               <Card>
                 <CardContent className="py-8">
                   <div className="text-center text-muted-foreground">
                     <Camera className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No shoots scheduled for {format(selectedDate, 'MMMM d, yyyy')}</p>
+                    <p>{selectedDate 
+                      ? `No shoots scheduled for ${format(selectedDate, 'MMMM d, yyyy')}`
+                      : 'No shoots found'
+                    }</p>
                     <Button variant="link" onClick={() => setShowForm(true)}>
                       Create a new shoot
                     </Button>
@@ -167,7 +180,7 @@ export default function AdminShoots() {
               </Card>
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {shootsForSelectedDate.map(shoot => (
+                {displayedShoots.map(shoot => (
                   <ShootCard
                     key={shoot.id}
                     shoot={shoot}
