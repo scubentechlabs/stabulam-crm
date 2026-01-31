@@ -122,6 +122,14 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
     return getShootsByStatus(status).length;
   };
 
+  // Handle status change and switch to the new status tab
+  const handleStatusChange = (shootId: string, newStatus: EditingStatus) => {
+    // Call the parent handler first (optimistic update)
+    onEditingStatusChange?.(shootId, newStatus);
+    // Switch to the new status tab so user sees the shoot in its new location
+    setActiveStatus(newStatus);
+  };
+
   const ActiveStatusIcon = editingStatusConfig[activeStatus].icon;
 
   return (
@@ -305,7 +313,7 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
                                       key={statusKey}
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        onEditingStatusChange?.(shoot.id, statusKey);
+                                        handleStatusChange(shoot.id, statusKey);
                                       }}
                                       className="p-1 focus:bg-transparent"
                                     >
