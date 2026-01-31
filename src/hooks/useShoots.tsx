@@ -80,12 +80,14 @@ export function useShoots() {
   const { toast } = useToast();
   const [shoots, setShoots] = useState<ShootWithAssignments[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
 
   const fetchShoots = useCallback(async (showLoading = true) => {
     if (!user) return;
 
     try {
-      if (showLoading) setIsLoading(true);
+      // Only show loading on first fetch, never on background refreshes
+      if (showLoading && !hasFetchedOnce) setIsLoading(true);
 
       // Fetch all shoots (RLS allows all authenticated users to view)
       const { data: shootsData, error: shootsError } = await supabase
@@ -156,9 +158,10 @@ export function useShoots() {
         variant: 'destructive',
       });
     } finally {
-      if (showLoading) setIsLoading(false);
+      setIsLoading(false);
+      setHasFetchedOnce(true);
     }
-  }, [user, toast]);
+  }, [user, toast, hasFetchedOnce]);
 
   useEffect(() => {
     fetchShoots(true);
@@ -232,7 +235,8 @@ export function useShoots() {
         description: 'Shoot created successfully',
       });
 
-      await fetchShoots();
+      // Fetch without loading to prevent view reset
+      await fetchShoots(false);
       return { error: null, shoot: shootData };
     } catch (error) {
       console.error('Error creating shoot:', error);
@@ -265,8 +269,8 @@ export function useShoots() {
         .eq('id', shootId);
 
       if (error) {
-        // Revert on error by refetching
-        await fetchShoots();
+        // Revert on error by refetching (without loading state)
+        await fetchShoots(false);
         throw error;
       }
 
@@ -327,7 +331,7 @@ export function useShoots() {
         .eq('id', shootId);
 
       if (error) {
-        await fetchShoots();
+        await fetchShoots(false);
         throw error;
       }
 
@@ -407,11 +411,28 @@ export function useShoots() {
   };
 
   const deleteShoot = async (shootId: string) => {
-    if (!user || !isAdmin) return { error: new Error('Not authorized') };
+    if (!user) return { error: new Error('Not authenticated') };
+
+    // Check if user can delete: creator, assigned, or admin
+    const shoot = shoots.find(s => s.id === shootId);
+    if (!shoot) return { error: new Error('Shoot not found') };
+    
+    const isCreator = shoot.created_by === user.id;
+    const isAssigned = shoot.assignments.some(a => a.user_id === user.id);
+    const canDelete = isAdmin || isCreator || isAssigned;
+    
+    if (!canDelete) {
+      toast({
+        title: 'Not Authorized',
+        description: 'You can only delete shoots you created or are assigned to',
+        variant: 'destructive',
+      });
+      return { error: new Error('Not authorized') };
+    }
 
     try {
       // Optimistically remove from state
-      setShoots(prev => prev.filter(shoot => shoot.id !== shootId));
+      setShoots(prev => prev.filter(s => s.id !== shootId));
 
       const { error } = await supabase
         .from('shoots')
@@ -419,7 +440,7 @@ export function useShoots() {
         .eq('id', shootId);
 
       if (error) {
-        await fetchShoots();
+        await fetchShoots(false);
         throw error;
       }
 
@@ -428,7 +449,6 @@ export function useShoots() {
         description: 'Shoot deleted',
       });
 
-      // Realtime subscription will confirm the deletion
       return { error: null };
     } catch (error) {
       console.error('Error deleting shoot:', error);
