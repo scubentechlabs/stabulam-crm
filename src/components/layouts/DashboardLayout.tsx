@@ -185,17 +185,12 @@ export function DashboardLayout() {
               "space-y-2",
               !isSidebarOpen && !isSidebarExpanded && "lg:flex lg:flex-col lg:items-center lg:space-y-1"
             )}>
-              {isAdmin ? (
-                <>
-                  {adminNavItems.map((item) => (
-                    <NavLink key={item.href} item={item} collapsed={!isSidebarOpen && !isSidebarExpanded} />
-                  ))}
-                </>
-              ) : (
-                employeeNavItems.map((item) => (
-                  <NavLink key={item.href} item={item} collapsed={!isSidebarOpen && !isSidebarExpanded} />
-                ))
-              )}
+              {isAdmin && adminNavItems.map((item) => (
+                <NavLink key={item.href} item={item} collapsed={!isSidebarOpen && !isSidebarExpanded} />
+              ))}
+              {employeeNavItems.map((item) => (
+                <NavLink key={item.href} item={item} collapsed={!isSidebarOpen && !isSidebarExpanded} />
+              ))}
             </nav>
           </ScrollArea>
 
