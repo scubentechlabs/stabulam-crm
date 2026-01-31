@@ -13,21 +13,64 @@ import {
   Loader2,
   Mail,
   Send,
+  Lock,
 } from 'lucide-react';
-import { useSalaryCalculator } from '@/hooks/useSalaryCalculator';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export function SalaryRecordsList() {
-  const { salaryRecords, isLoadingSalaryRecords, profiles, finalizeSalary } = useSalaryCalculator();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [emailingId, setEmailingId] = useState<string | null>(null);
   const [isSendingAll, setIsSendingAll] = useState(false);
 
+  // Fetch salary records
+  const { data: salaryRecords, isLoading } = useQuery({
+    queryKey: ['salary-records'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('salary_records')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch profiles for names
+  const { data: profiles } = useQuery({
+    queryKey: ['all-profiles-salary'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, email');
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const finalizeMutation = useMutation({
+    mutationFn: async (recordId: string) => {
+      const { error } = await supabase
+        .from('salary_records')
+        .update({ is_finalized: true })
+        .eq('id', recordId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['salary-records'] });
+      toast({
+        title: 'Salary Finalized',
+        description: 'The salary record has been locked.',
+      });
+    },
+  });
+
   const getProfileName = (userId: string) => {
-    const profile = profiles?.find(p => p.user_id === userId);
-    return profile?.full_name || 'Unknown';
+    return profiles?.find(p => p.user_id === userId)?.full_name || 'Unknown';
   };
 
   const formatCurrency = (amount: number) => `₹${amount.toLocaleString()}`;
@@ -36,17 +79,6 @@ export function SalaryRecordsList() {
     try {
       setDownloadingId(recordId);
       
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast({
-          title: 'Error',
-          description: 'You must be logged in to download salary slips',
-          variant: 'destructive',
-        });
-        return;
-      }
-
       const response = await supabase.functions.invoke('generate-salary-pdf', {
         body: { salaryRecordId: recordId },
       });
@@ -55,17 +87,14 @@ export function SalaryRecordsList() {
         throw new Error(response.error.message || 'Failed to generate PDF');
       }
 
-      // The response is HTML - open in new window for printing/saving
       const htmlContent = response.data;
       const blob = new Blob([htmlContent], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       
-      // Open in new window
       const printWindow = window.open(url, '_blank');
       
       if (printWindow) {
         printWindow.onload = () => {
-          // Auto-trigger print dialog
           setTimeout(() => {
             printWindow.print();
           }, 500);
@@ -92,17 +121,6 @@ export function SalaryRecordsList() {
     try {
       setEmailingId(recordId);
       
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast({
-          title: 'Error',
-          description: 'You must be logged in to send emails',
-          variant: 'destructive',
-        });
-        return;
-      }
-
       const response = await supabase.functions.invoke('send-salary-email', {
         body: { salaryRecordId: recordId },
       });
@@ -133,17 +151,6 @@ export function SalaryRecordsList() {
     try {
       setIsSendingAll(true);
       
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast({
-          title: 'Error',
-          description: 'You must be logged in to send emails',
-          variant: 'destructive',
-        });
-        return;
-      }
-
       let successCount = 0;
       let failCount = 0;
 
@@ -166,12 +173,12 @@ export function SalaryRecordsList() {
       if (failCount === 0) {
         toast({
           title: 'All Emails Sent',
-          description: `Successfully sent ${successCount} salary slip${successCount > 1 ? 's' : ''} to employees`,
+          description: `Successfully sent ${successCount} salary slip${successCount > 1 ? 's' : ''}`,
         });
       } else {
         toast({
           title: 'Emails Partially Sent',
-          description: `Sent ${successCount} email${successCount > 1 ? 's' : ''}, ${failCount} failed`,
+          description: `Sent ${successCount}, ${failCount} failed`,
           variant: 'destructive',
         });
       }
@@ -187,16 +194,16 @@ export function SalaryRecordsList() {
     }
   };
 
-  if (isLoadingSalaryRecords) {
+  if (isLoading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Recent Salary Records</CardTitle>
+          <CardTitle>Salary Records</CardTitle>
           <CardDescription>Previously generated salary slips</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {[1, 2, 3].map(i => (
-            <Skeleton key={i} className="h-20 w-full" />
+            <Skeleton key={i} className="h-24 w-full" />
           ))}
         </CardContent>
       </Card>
@@ -207,14 +214,14 @@ export function SalaryRecordsList() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Recent Salary Records</CardTitle>
+          <CardTitle>Salary Records</CardTitle>
           <CardDescription>Previously generated salary slips</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
             <p>No salary records yet</p>
-            <p className="text-sm">Generate salaries to see records here</p>
+            <p className="text-sm">Generate salaries from the Calculate tab</p>
           </div>
         </CardContent>
       </Card>
@@ -225,12 +232,12 @@ export function SalaryRecordsList() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <div>
-          <CardTitle>Recent Salary Records</CardTitle>
+          <CardTitle>Salary Records</CardTitle>
           <CardDescription>Previously generated salary slips</CardDescription>
         </div>
         <Button
           onClick={handleSendAllEmails}
-          disabled={isSendingAll || !salaryRecords || salaryRecords.length === 0}
+          disabled={isSendingAll || salaryRecords.length === 0}
           size="sm"
         >
           {isSendingAll ? (
@@ -241,7 +248,7 @@ export function SalaryRecordsList() {
           ) : (
             <>
               <Send className="h-4 w-4 mr-2" />
-              Email All ({salaryRecords?.length || 0})
+              Email All ({salaryRecords.length})
             </>
           )}
         </Button>
@@ -252,7 +259,7 @@ export function SalaryRecordsList() {
             key={record.id} 
             className="p-4 border rounded-lg hover:bg-accent/50 transition-colors"
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <User className="h-5 w-5 text-primary" />
@@ -260,13 +267,13 @@ export function SalaryRecordsList() {
                 <div>
                   <p className="font-medium">{getProfileName(record.user_id)}</p>
                   <p className="text-sm text-muted-foreground">
-                    {format(new Date(record.period_start), 'MMM d')} - {format(new Date(record.period_end), 'MMM d, yyyy')}
+                    {record.month_year || `${format(new Date(record.period_start), 'MMM d')} - ${format(new Date(record.period_end), 'MMM d, yyyy')}`}
                   </p>
                 </div>
               </div>
               
-              <div className="text-right flex items-center gap-2 md:gap-4">
-                <div className="hidden sm:block">
+              <div className="flex items-center gap-2">
+                <div className="text-right mr-2">
                   <p className="font-semibold text-lg">{formatCurrency(record.net_salary)}</p>
                   <p className="text-xs text-muted-foreground">
                     Base: {formatCurrency(record.base_salary)}
@@ -274,7 +281,7 @@ export function SalaryRecordsList() {
                 </div>
                 
                 <Button
-                  size="sm"
+                  size="icon"
                   variant="ghost"
                   onClick={() => handleEmailSalary(record.id, getProfileName(record.user_id))}
                   disabled={emailingId === record.id}
@@ -288,7 +295,7 @@ export function SalaryRecordsList() {
                 </Button>
                 
                 <Button
-                  size="sm"
+                  size="icon"
                   variant="ghost"
                   onClick={() => handleDownloadPDF(record.id, getProfileName(record.user_id))}
                   disabled={downloadingId === record.id}
@@ -303,14 +310,15 @@ export function SalaryRecordsList() {
                 
                 {record.is_finalized ? (
                   <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-                    <Check className="h-3 w-3 mr-1" />
+                    <Lock className="h-3 w-3 mr-1" />
                     Finalized
                   </Badge>
                 ) : (
                   <Button 
                     size="sm" 
                     variant="outline"
-                    onClick={() => finalizeSalary(record.id)}
+                    onClick={() => finalizeMutation.mutate(record.id)}
+                    disabled={finalizeMutation.isPending}
                   >
                     <Clock className="h-3 w-3 mr-1" />
                     Finalize
@@ -319,23 +327,26 @@ export function SalaryRecordsList() {
               </div>
             </div>
 
-            {/* Quick deduction summary */}
+            {/* Quick summary badges */}
             <div className="mt-3 pt-3 border-t flex flex-wrap gap-2 text-xs">
-              {record.late_deductions !== null && record.late_deductions > 0 && (
-                <Badge variant="secondary">Late: -{formatCurrency(record.late_deductions)}</Badge>
+              {record.included_overtime && record.overtime_amount && record.overtime_amount > 0 && (
+                <Badge variant="secondary" className="bg-green-100 text-green-700">
+                  Overtime: +{formatCurrency(record.overtime_amount)}
+                </Badge>
               )}
-              {record.leave_deductions !== null && record.leave_deductions > 0 && (
-                <Badge variant="secondary">Leave: -{formatCurrency(record.leave_deductions)}</Badge>
+              {record.included_bonus && record.bonus_amount && record.bonus_amount > 0 && (
+                <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                  Bonus: +{formatCurrency(record.bonus_amount)}
+                </Badge>
               )}
-              {record.tod_penalties !== null && record.tod_penalties > 0 && (
-                <Badge variant="secondary">TOD: -{formatCurrency(record.tod_penalties)}</Badge>
+              {record.included_late && record.late_deductions && record.late_deductions > 0 && (
+                <Badge variant="secondary" className="bg-red-100 text-red-700">
+                  Late: -{formatCurrency(record.late_deductions)}
+                </Badge>
               )}
-              {record.eod_penalties !== null && record.eod_penalties > 0 && (
-                <Badge variant="secondary">EOD: -{formatCurrency(record.eod_penalties)}</Badge>
-              )}
-              {record.extra_work_additions !== null && record.extra_work_additions > 0 && (
-                <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-                  Extra: +{formatCurrency(record.extra_work_additions)}
+              {record.included_custom_deduction && record.custom_deduction_amount && record.custom_deduction_amount > 0 && (
+                <Badge variant="secondary" className="bg-orange-100 text-orange-700">
+                  Deduction: -{formatCurrency(record.custom_deduction_amount)}
                 </Badge>
               )}
             </div>
