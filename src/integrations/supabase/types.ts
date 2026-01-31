@@ -858,7 +858,7 @@ export type Database = {
       salary_cycle_type: "monthly" | "bi_weekly" | "custom"
       shoot_status: "pending" | "in_progress" | "completed" | "given_by_editor"
       task_status: "pending" | "completed"
-      task_type: "tod" | "urgent_tod"
+      task_type: "tod" | "urgent_tod" | "utod" | "eod"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1015,7 +1015,7 @@ export const Constants = {
       salary_cycle_type: ["monthly", "bi_weekly", "custom"],
       shoot_status: ["pending", "in_progress", "completed", "given_by_editor"],
       task_status: ["pending", "completed"],
-      task_type: ["tod", "urgent_tod"],
+      task_type: ["tod", "urgent_tod", "utod", "eod"],
     },
   },
 } as const
