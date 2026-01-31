@@ -12,6 +12,8 @@ import { ShootCard } from '@/components/shoots/ShootCard';
 import { ShootCalendar } from '@/components/shoots/ShootCalendar';
 import { ShootDetailDialog } from '@/components/shoots/ShootDetailDialog';
 import { EditingListView } from '@/components/shoots/EditingListView';
+import { ShootStatusCards, type ShootStatusFilter } from '@/components/shoots/ShootStatusCards';
+import { ShootStatusFilter as StatusFilterDropdown } from '@/components/shoots/ShootStatusFilter';
 import { cn } from '@/lib/utils';
 
 export default function AdminShoots() {
@@ -34,6 +36,7 @@ export default function AdminShoots() {
   const [showDetail, setShowDetail] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState('calendar');
+  const [statusFilter, setStatusFilter] = useState<ShootStatusFilter>('all');
 
   // Keep selectedShoot in sync with the latest shoots state (e.g., after member remove/add)
   useEffect(() => {
@@ -42,10 +45,21 @@ export default function AdminShoots() {
     if (updated) setSelectedShoot(updated);
   }, [shoots, selectedShoot?.id]);
 
-  // Filter shoots: show all if no date selected, otherwise filter by date
-  const displayedShoots = selectedDate 
-    ? shoots.filter(shoot => isSameDay(parseISO(shoot.shoot_date), selectedDate))
-    : shoots;
+  // Filter shoots by date and status
+  const displayedShoots = shoots.filter(shoot => {
+    // Date filter
+    if (selectedDate && !isSameDay(parseISO(shoot.shoot_date), selectedDate)) {
+      return false;
+    }
+    // Status filter
+    if (statusFilter !== 'all') {
+      if (statusFilter === 'pending') {
+        return shoot.status === 'pending' || shoot.status === 'in_progress';
+      }
+      return shoot.status === statusFilter;
+    }
+    return true;
+  });
 
   const handleCreateShoot = async (data: Parameters<typeof createShoot>[0]) => {
     if (creatingRef.current) return;
@@ -53,8 +67,9 @@ export default function AdminShoots() {
     setIsSubmitting(true);
     try {
       await createShoot(data);
-      // Clear date filter to show all shoots including the new one, and switch to list view
+      // Clear filters to show all shoots including the new one, and switch to list view
       setSelectedDate(null);
+      setStatusFilter('all');
       setActiveTab('list');
     } finally {
       setIsSubmitting(false);
@@ -124,25 +139,45 @@ export default function AdminShoots() {
 
         <TabsContent value="list">
           <div className="space-y-4">
+            {/* Status Summary Cards */}
+            <ShootStatusCards
+              shoots={shoots}
+              selectedStatus={statusFilter}
+              onStatusSelect={setStatusFilter}
+            />
+
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <h2 className="text-lg font-semibold">
                 {selectedDate 
                   ? `Shoots for ${format(selectedDate, 'MMMM d, yyyy')} (${displayedShoots.length})`
+                  : statusFilter !== 'all'
+                  ? `${statusFilter === 'pending' ? 'Pending' : statusFilter === 'completed' ? 'Completed' : 'Given By Editor'} Shoots (${displayedShoots.length})`
                   : `All Shoots (${displayedShoots.length})`
                 }
               </h2>
-              <div className="flex items-center gap-2">
-                {selectedDate && (
-                  <Button variant="ghost" size="sm" onClick={() => setSelectedDate(null)}>
-                    Clear Filter
+              <div className="flex flex-wrap items-center gap-2">
+                {(selectedDate || statusFilter !== 'all') && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => {
+                      setSelectedDate(null);
+                      setStatusFilter('all');
+                    }}
+                  >
+                    Clear All Filters
                   </Button>
                 )}
+                <StatusFilterDropdown
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                />
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-[240px] justify-start text-left font-normal",
+                        "w-[200px] justify-start text-left font-normal",
                         !selectedDate && "text-muted-foreground"
                       )}
                     >
