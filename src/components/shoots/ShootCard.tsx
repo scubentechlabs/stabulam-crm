@@ -217,6 +217,10 @@ export function ShootCard({ shoot, onStatusChange, onEditorAssignment, onDelete,
             <span className="line-clamp-1">{shoot.location}</span>
           </div>
 
+          <div className="text-xs text-muted-foreground/70">
+            Created: {format(parseISO(shoot.created_at), 'MMM d, yyyy \'at\' h:mm a')}
+          </div>
+
           {shoot.brief && (
             <p className="text-sm text-muted-foreground line-clamp-2 pt-1 border-t">
               {shoot.brief}
