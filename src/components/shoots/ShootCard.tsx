@@ -126,7 +126,7 @@ export function ShootCard({ shoot, onStatusChange, onEditorAssignment, onDelete,
               <p className="text-sm text-muted-foreground truncate">{shoot.brand_name}</p>
             </div>
             
-            {canModify && (
+            {user && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                   <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100">
