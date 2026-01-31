@@ -156,9 +156,15 @@ export function ShootDetailDialog({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="given_by_editor">Given By Editor</SelectItem>
+                        <SelectItem value="pending" className="bg-red-500 text-white hover:bg-red-600 focus:bg-red-600 focus:text-white my-1 rounded-md">
+                          Pending
+                        </SelectItem>
+                        <SelectItem value="completed" className="bg-yellow-500 text-black hover:bg-yellow-600 focus:bg-yellow-600 focus:text-black my-1 rounded-md">
+                          Completed
+                        </SelectItem>
+                        <SelectItem value="given_by_editor" className="bg-green-500 text-white hover:bg-green-600 focus:bg-green-600 focus:text-white my-1 rounded-md">
+                          Given By Editor
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   ) : (
