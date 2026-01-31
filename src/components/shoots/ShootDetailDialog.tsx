@@ -147,7 +147,7 @@ export function ShootDetailDialog({
                       Edit
                     </Button>
                   )}
-                  {canModify ? (
+                  {user ? (
                     <Select
                       value={status}
                       onValueChange={(value) => onStatusChange?.(shoot.id, value as ShootStatus)}
