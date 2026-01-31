@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { format, parseISO, isSameDay } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,7 @@ export default function Shoots() {
   const [activeTab, setActiveTab] = useState('calendar');
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const creatingRef = useRef(false);
   const [selectedShoot, setSelectedShoot] = useState<ShootWithAssignments | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -47,12 +48,18 @@ export default function Shoots() {
   );
 
   const handleCreateShoot = async (data: Parameters<typeof createShoot>[0]) => {
+    if (creatingRef.current) return;
+    creatingRef.current = true;
     setIsSubmitting(true);
-    await createShoot(data);
-    setIsSubmitting(false);
-    // Update selectedDate to the new shoot's date and switch to list view
-    setSelectedDate(parseISO(data.shoot_date));
-    setActiveTab('list');
+    try {
+      await createShoot(data);
+      // Update selectedDate to the new shoot's date and switch to list view
+      setSelectedDate(parseISO(data.shoot_date));
+      setActiveTab('list');
+    } finally {
+      setIsSubmitting(false);
+      creatingRef.current = false;
+    }
   };
 
   const handleShootClick = (shoot: ShootWithAssignments) => {
