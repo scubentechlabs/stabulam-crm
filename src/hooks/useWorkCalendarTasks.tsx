@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { formatDateIST } from '@/lib/utils';
 import type { Database } from '@/integrations/supabase/types';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
@@ -24,6 +25,9 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // IST (Indian Standard Time) is UTC+5:30
+  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+
   const fetchTasks = useCallback(async () => {
     if (!user) return;
 
@@ -42,14 +46,18 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
         query = query.eq('user_id', user.id);
       }
 
-      // Filter by month if provided - use submitted_at for task date filtering
+      // Filter by month if provided - in IST boundaries, using submitted_at
       if (selectedMonth) {
-        const startOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth(), 1);
-        const endOfMonth = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0);
-        
+        const y = selectedMonth.getFullYear();
+        const m = selectedMonth.getMonth();
+
+        // Convert IST month start to UTC instant
+        const startUTC = new Date(Date.UTC(y, m, 1, 0, 0, 0) - IST_OFFSET_MS);
+        const nextMonthStartUTC = new Date(Date.UTC(y, m + 1, 1, 0, 0, 0) - IST_OFFSET_MS);
+
         query = query
-          .gte('submitted_at', startOfMonth.toISOString())
-          .lte('submitted_at', endOfMonth.toISOString());
+          .gte('submitted_at', startUTC.toISOString())
+          .lt('submitted_at', nextMonthStartUTC.toISOString());
       }
 
       const { data, error } = await query;
@@ -216,9 +224,10 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
 
   // Group tasks by date
   const tasksByDate = tasks.reduce((acc, task) => {
-    const dateKey = task.submitted_at 
-      ? new Date(task.submitted_at).toISOString().split('T')[0]
-      : new Date(task.created_at).toISOString().split('T')[0];
+    // IMPORTANT: Use IST date keys so tasks don't shift to previous day due to UTC ISO strings.
+    const dateKey = task.submitted_at
+      ? formatDateIST(task.submitted_at, 'yyyy-MM-dd')
+      : formatDateIST(task.created_at, 'yyyy-MM-dd');
     
     if (!acc[dateKey]) {
       acc[dateKey] = [];
