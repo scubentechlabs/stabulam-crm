@@ -99,25 +99,38 @@ export function ShootCalendar({ shoots, onDateClick, onShootClick }: ShootCalend
               </div>
               
               <div className="space-y-1">
-                {dayShots.slice(0, 2).map(shoot => (
-                  <div
-                    key={shoot.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onShootClick?.(shoot);
-                    }}
-                    className={cn(
-                      'text-xs truncate px-1 py-0.5 rounded cursor-pointer',
-                      shoot.status === 'completed' 
-                        ? 'bg-muted text-muted-foreground' 
-                        : shoot.status === 'in_progress'
-                        ? 'bg-primary/20 text-primary'
-                        : 'bg-secondary text-secondary-foreground'
-                    )}
-                  >
-                    {shoot.event_name}
-                  </div>
-                ))}
+                {dayShots.slice(0, 2).map(shoot => {
+                  // Status-based color coding: Red=Pending, Yellow=Completed, Green=Given By Editor
+                  const getStatusStyles = () => {
+                    switch (shoot.status) {
+                      case 'given_by_editor':
+                        return 'bg-emerald-500 text-white';
+                      case 'completed':
+                        return 'bg-yellow-500 text-white';
+                      case 'in_progress':
+                        return 'bg-blue-500 text-white';
+                      case 'pending':
+                      default:
+                        return 'bg-red-500 text-white';
+                    }
+                  };
+
+                  return (
+                    <div
+                      key={shoot.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onShootClick?.(shoot);
+                      }}
+                      className={cn(
+                        'text-xs truncate px-1 py-0.5 rounded cursor-pointer font-medium',
+                        getStatusStyles()
+                      )}
+                    >
+                      {shoot.event_name}
+                    </div>
+                  );
+                })}
                 {dayShots.length > 2 && (
                   <Badge variant="outline" className="text-xs h-5">
                     +{dayShots.length - 2} more
@@ -132,16 +145,16 @@ export function ShootCalendar({ shoots, onDateClick, onShootClick }: ShootCalend
       {/* Legend */}
       <div className="flex items-center gap-4 mt-4 text-xs text-muted-foreground">
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded bg-secondary" />
+          <div className="w-3 h-3 rounded bg-red-500" />
           <span>Pending</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded bg-primary/20" />
-          <span>In Progress</span>
+          <div className="w-3 h-3 rounded bg-yellow-500" />
+          <span>Completed</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded bg-muted" />
-          <span>Completed</span>
+          <div className="w-3 h-3 rounded bg-emerald-500" />
+          <span>Given By Editor</span>
         </div>
       </div>
     </div>
