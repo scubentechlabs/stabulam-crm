@@ -32,6 +32,7 @@ export default function Shoots() {
   const [selectedShoot, setSelectedShoot] = useState<ShootWithAssignments | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [activeTab, setActiveTab] = useState('calendar');
 
   // Keep selectedShoot in sync with the latest shoots state (e.g., after member remove/add)
   useEffect(() => {
@@ -77,7 +78,7 @@ export default function Shoots() {
         </Button>
       </div>
 
-      <Tabs defaultValue="calendar" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="calendar" className="gap-2">
             <CalendarIcon className="h-4 w-4" />
