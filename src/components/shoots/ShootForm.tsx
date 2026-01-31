@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -65,6 +65,8 @@ export function ShootForm({ open, onOpenChange, onSubmit, isSubmitting }: ShootF
   const { teamMembers, isLoadingTeam } = useUsers();
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [localSubmitting, setLocalSubmitting] = useState(false);
+  // Synchronous guard (state updates are async; rapid clicks can fire twice before re-render)
+  const submittingRef = useRef(false);
 
   const form = useForm<ShootFormValues>({
     resolver: zodResolver(shootFormSchema),
@@ -84,7 +86,8 @@ export function ShootForm({ open, onOpenChange, onSubmit, isSubmitting }: ShootF
 
   const handleSubmit = async (values: ShootFormValues) => {
     // Prevent double submission
-    if (isCurrentlySubmitting) return;
+    if (submittingRef.current || isCurrentlySubmitting) return;
+    submittingRef.current = true;
     
     setLocalSubmitting(true);
     try {
@@ -102,6 +105,7 @@ export function ShootForm({ open, onOpenChange, onSubmit, isSubmitting }: ShootF
       setSelectedUsers([]);
       onOpenChange(false);
     } finally {
+      submittingRef.current = false;
       setLocalSubmitting(false);
     }
   };
