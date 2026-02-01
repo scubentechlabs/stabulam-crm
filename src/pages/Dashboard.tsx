@@ -15,6 +15,7 @@ import {
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { TodayShootsWidget } from '@/components/dashboard/TodayShootsWidget';
+import { EmployeeOverviewCalendar } from '@/components/dashboard/EmployeeOverviewCalendar';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { formatTimeIST } from '@/lib/utils';
 
@@ -260,6 +261,9 @@ export default function Dashboard() {
 
         <TodayShootsWidget />
       </div>
+
+      {/* Employee Overview Calendar */}
+      <EmployeeOverviewCalendar />
     </div>
   );
 }
