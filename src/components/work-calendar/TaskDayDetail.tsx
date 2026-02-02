@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { Clock, CheckCircle2, AlertCircle, FileText, Edit, Trash2 } from 'lucide-react';
+import { Clock, CheckCircle2, AlertCircle, FileText, Edit } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -42,14 +42,13 @@ export function TaskDayDetail({
     );
   }
 
-  // Use local date format for selectedDate (it's already a local Date object from calendar click)
-  // But use IST format for database timestamps
-  const dateKey = format(selectedDate, 'yyyy-MM-dd');
+  // Use IST format for both calendar dates and database timestamps for consistency
+  const dateKey = formatDateIST(selectedDate, 'yyyy-MM-dd');
   const dayTasks = tasks.filter(task => {
-    const taskDate = task.submitted_at
+    const taskDateStr = task.submitted_at
       ? formatDateIST(task.submitted_at, 'yyyy-MM-dd')
       : formatDateIST(task.created_at, 'yyyy-MM-dd');
-    return taskDate === dateKey;
+    return taskDateStr === dateKey;
   });
 
   const todTasks = dayTasks.filter(t => t.task_type === 'tod');
