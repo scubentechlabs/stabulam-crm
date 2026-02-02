@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isWeekend } from 'date-fns';
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday } from 'date-fns';
 import { ChevronLeft, ChevronRight, Users, UserX, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
+import { cn, isSundayHoliday, isDayHeaderHoliday } from '@/lib/utils';
 import { useTeamAvailability } from '@/hooks/useTeamAvailability';
 
 export function TeamAvailabilityCalendar() {
@@ -86,7 +86,7 @@ export function TeamAvailabilityCalendar() {
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-muted" />
-            <span className="text-muted-foreground">Weekend</span>
+            <span className="text-muted-foreground">Holiday (Sunday)</span>
           </div>
         </div>
       </CardHeader>
@@ -99,7 +99,7 @@ export function TeamAvailabilityCalendar() {
               key={day}
               className={cn(
                 'text-center text-sm font-medium py-2',
-                (day === 'Sun' || day === 'Sat') ? 'text-muted-foreground' : ''
+                isDayHeaderHoliday(day) ? 'text-muted-foreground' : ''
               )}
             >
               {day}
@@ -118,7 +118,7 @@ export function TeamAvailabilityCalendar() {
           {days.map(day => {
             const isCurrentMonth = isSameMonth(day, currentMonth);
             const isTodayDate = isToday(day);
-            const isWeekendDay = isWeekend(day);
+            const isHoliday = isSundayHoliday(day);
             const onLeave = getMembersOnLeaveForDate(day);
             const available = getAvailableMembersForDate(day);
 
@@ -131,7 +131,7 @@ export function TeamAvailabilityCalendar() {
                         'min-h-[100px] p-2 rounded-lg border transition-colors cursor-pointer hover:bg-muted/50',
                         !isCurrentMonth && 'opacity-50',
                         isTodayDate && 'ring-2 ring-primary',
-                        isWeekendDay && 'bg-muted/30'
+                        isHoliday && 'bg-muted/30'
                       )}
                     >
                       <div className={cn(
@@ -141,7 +141,7 @@ export function TeamAvailabilityCalendar() {
                         {format(day, 'd')}
                       </div>
 
-                      {!isWeekendDay && (
+                      {!isHoliday && (
                         <div className="space-y-1">
                           {/* Available count */}
                           <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
@@ -174,8 +174,8 @@ export function TeamAvailabilityCalendar() {
                         </div>
                       )}
 
-                      {isWeekendDay && (
-                        <div className="text-[10px] text-muted-foreground">Weekend</div>
+                      {isHoliday && (
+                        <div className="text-[10px] text-muted-foreground">Holiday</div>
                       )}
                     </div>
                   </TooltipTrigger>
@@ -183,7 +183,7 @@ export function TeamAvailabilityCalendar() {
                     <div className="space-y-2">
                       <p className="font-medium">{format(day, 'EEEE, MMMM d, yyyy')}</p>
                       
-                      {!isWeekendDay && (
+                      {!isHoliday && (
                         <>
                           {onLeave.length > 0 && (
                             <div>
@@ -236,8 +236,8 @@ export function TeamAvailabilityCalendar() {
                         </>
                       )}
 
-                      {isWeekendDay && (
-                        <p className="text-sm text-muted-foreground">Weekend - Office Closed</p>
+                      {isHoliday && (
+                        <p className="text-sm text-muted-foreground">Sunday - Holiday</p>
                       )}
                     </div>
                   </TooltipContent>

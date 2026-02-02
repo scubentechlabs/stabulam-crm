@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isWeekend } from 'date-fns';
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday } from 'date-fns';
 import { ChevronLeft, ChevronRight, Users, Calendar as CalendarIcon, Camera, Clock, UserX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
+import { cn, isSundayHoliday, isDayHeaderHoliday } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { DayDetailDialog } from './DayDetailDialog';
 
@@ -186,7 +186,7 @@ export function AdminOverviewCalendar() {
 
   // Fetch detailed data for a specific day when clicked
   const handleDayClick = async (day: Date) => {
-    if (isWeekend(day)) return;
+    if (isSundayHoliday(day)) return;
     
     setSelectedDate(day);
     setDialogOpen(true);
@@ -332,7 +332,7 @@ export function AdminOverviewCalendar() {
               key={day}
               className={cn(
                 'text-center text-sm font-medium py-2',
-                (day === 'Sun' || day === 'Sat') ? 'text-muted-foreground' : ''
+                isDayHeaderHoliday(day) ? 'text-muted-foreground' : ''
               )}
             >
               {day}
@@ -353,7 +353,7 @@ export function AdminOverviewCalendar() {
             const dayData = calendarData[dateStr] || { attendance: { present: 0, late: 0, total: 0 }, leaves: [], shoots: [] };
             const isCurrentMonth = isSameMonth(day, currentMonth);
             const isTodayDate = isToday(day);
-            const isWeekendDay = isWeekend(day);
+            const isHoliday = isSundayHoliday(day);
 
             return (
               <TooltipProvider key={day.toISOString()}>
@@ -365,7 +365,7 @@ export function AdminOverviewCalendar() {
                         'min-h-[90px] p-2 rounded-lg border transition-colors cursor-pointer hover:bg-muted/50 hover:border-primary/50',
                         !isCurrentMonth && 'opacity-50',
                         isTodayDate && 'ring-2 ring-primary bg-primary/5',
-                        isWeekendDay && 'bg-muted/30 cursor-default hover:border-transparent'
+                        isHoliday && 'bg-muted/30 cursor-default hover:border-transparent'
                       )}
                     >
                       <div className={cn(
@@ -375,7 +375,7 @@ export function AdminOverviewCalendar() {
                         {format(day, 'd')}
                       </div>
 
-                      {!isWeekendDay && (
+                      {!isHoliday && (
                         <div className="space-y-1">
                           {/* Attendance indicator */}
                           {dayData.attendance.present > 0 && (
@@ -418,8 +418,8 @@ export function AdminOverviewCalendar() {
                         </div>
                       )}
 
-                      {isWeekendDay && (
-                        <div className="text-[10px] text-muted-foreground mt-1">Weekend</div>
+                      {isHoliday && (
+                        <div className="text-[10px] text-muted-foreground mt-1">Sunday</div>
                       )}
                     </div>
                   </TooltipTrigger>
@@ -427,7 +427,7 @@ export function AdminOverviewCalendar() {
                     <div className="space-y-3">
                       <p className="font-semibold border-b pb-2">{format(day, 'EEEE, MMMM d, yyyy')}</p>
                       
-                      {!isWeekendDay ? (
+                      {!isHoliday ? (
                         <>
                           {/* Attendance details */}
                           <div>
@@ -510,7 +510,7 @@ export function AdminOverviewCalendar() {
                           )}
                         </>
                       ) : (
-                        <p className="text-xs text-muted-foreground">Weekend - Office Closed</p>
+                        <p className="text-xs text-muted-foreground">Sunday - Holiday</p>
                       )}
                     </div>
                   </TooltipContent>

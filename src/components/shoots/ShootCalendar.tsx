@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { format, parseISO, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, addMonths, subMonths } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn, isSundayHoliday, isDayHeaderHoliday } from '@/lib/utils';
 import type { ShootWithAssignments } from '@/hooks/useShoots';
 import { ShootCalendarOverflowPopover } from '@/components/shoots/ShootCalendarOverflowPopover';
 
@@ -93,7 +93,10 @@ export function ShootCalendar({ shoots, onDateClick, onShootClick }: ShootCalend
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
           <div
             key={day}
-            className="text-center text-xs font-medium text-muted-foreground py-2"
+            className={cn(
+              'text-center text-xs font-medium py-2',
+              isDayHeaderHoliday(day) ? 'text-muted-foreground' : 'text-foreground'
+            )}
           >
             {day}
           </div>
@@ -106,6 +109,7 @@ export function ShootCalendar({ shoots, onDateClick, onShootClick }: ShootCalend
           const dayShots = getShootsForDay(day);
           const isToday = isSameDay(day, today);
           const isCurrentMonth = day.getMonth() === currentMonth.getMonth();
+          const isHoliday = isSundayHoliday(day);
           const hasMoreShoots = dayShots.length > 2;
           const remainingCount = Math.max(0, dayShots.length - 2);
 
@@ -116,6 +120,7 @@ export function ShootCalendar({ shoots, onDateClick, onShootClick }: ShootCalend
               className={cn(
                 'min-h-[80px] p-1 border rounded-md cursor-pointer transition-colors',
                 isCurrentMonth ? 'bg-background' : 'bg-muted/30',
+                isHoliday && 'bg-muted/30',
                 isToday && 'ring-2 ring-primary',
                 'hover:bg-muted/50'
               )}

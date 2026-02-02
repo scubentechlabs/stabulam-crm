@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format, differenceInDays, addDays } from 'date-fns';
+import { format, differenceInDays, addDays, eachDayOfInterval } from 'date-fns';
 import { CalendarIcon, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -31,7 +31,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { cn } from '@/lib/utils';
+import { cn, isSundayHoliday } from '@/lib/utils';
 import type { Database } from '@/integrations/supabase/types';
 
 type LeaveType = Database['public']['Enums']['leave_type'];
@@ -104,11 +104,15 @@ export function LeaveRequestForm({ onSubmit, onCancel, isSubmitting }: LeaveRequ
     setHasAdvanceNotice(hoursDifference >= 48);
   };
 
-  // Calculate number of days
+  // Calculate number of working days (excluding Sundays)
   const getDaysCount = () => {
     if (!startDate || !endDate) return 0;
     if (leaveType === 'half_day') return 0.5;
-    return differenceInDays(endDate, startDate) + 1;
+    
+    // For multiple days, count only working days (exclude Sundays)
+    const days = eachDayOfInterval({ start: startDate, end: endDate });
+    const workingDays = days.filter(day => !isSundayHoliday(day));
+    return workingDays.length;
   };
 
   const handleSubmit = async (values: LeaveFormValues) => {
@@ -260,7 +264,7 @@ export function LeaveRequestForm({ onSubmit, onCancel, isSubmitting }: LeaveRequ
                         }
                       }
                     }}
-                    disabled={(date) => date < new Date()}
+                    disabled={(date) => date < new Date() || isSundayHoliday(date)}
                     initialFocus
                     className="p-3 pointer-events-auto"
                   />
@@ -299,14 +303,14 @@ export function LeaveRequestForm({ onSubmit, onCancel, isSubmitting }: LeaveRequ
                     </FormControl>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={(date) => date < startDate}
-                      initialFocus
-                      className="p-3 pointer-events-auto"
-                    />
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    disabled={(date) => date < startDate || isSundayHoliday(date)}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
                   </PopoverContent>
                 </Popover>
                 <FormMessage />
@@ -318,7 +322,8 @@ export function LeaveRequestForm({ onSubmit, onCancel, isSubmitting }: LeaveRequ
         {/* Days Summary */}
         <div className="rounded-lg bg-muted p-4">
           <p className="text-sm font-medium">
-            Total Days: <span className="text-primary">{getDaysCount()}</span>
+            Total Working Days: <span className="text-primary">{getDaysCount()}</span>
+            <span className="text-xs text-muted-foreground ml-2">(Sundays excluded)</span>
           </p>
         </div>
 

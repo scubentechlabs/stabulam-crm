@@ -94,3 +94,28 @@ export function toISTMidnightUTC(date: Date): Date {
 export function formatINR(amount: number): string {
   return `₹${amount.toLocaleString('en-IN')}`;
 }
+
+/**
+ * Working week configuration
+ * Working days: Monday (1) to Saturday (6)
+ * Holiday: Sunday (0)
+ */
+export function isSundayHoliday(date: Date): boolean {
+  return date.getDay() === 0; // 0 = Sunday
+}
+
+export function isWorkingDay(date: Date): boolean {
+  return date.getDay() !== 0; // All days except Sunday
+}
+
+/**
+ * Get week day labels with Sunday highlighted as holiday
+ */
+export const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+
+/**
+ * Check if a day header should be styled as holiday
+ */
+export function isDayHeaderHoliday(dayName: string): boolean {
+  return dayName === 'Sun';
+}
