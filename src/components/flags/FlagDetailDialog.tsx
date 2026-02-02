@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useFlags, type Flag } from '@/hooks/useFlags';
+import { useFlagDetails } from '@/hooks/useFlagDetails';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Flag as FlagIcon,
@@ -34,7 +35,7 @@ interface FlagDetailDialogProps {
 
 export function FlagDetailDialog({ flag, open, onOpenChange }: FlagDetailDialogProps) {
   const { isAdmin, user } = useAuth();
-  const { useFlagDetails, addReply, isAddingReply, updateFlagStatus } = useFlags();
+  const { addReply, isAddingReply, updateFlagStatus } = useFlags();
   const [replyText, setReplyText] = useState('');
 
   const { data: flagDetails, isLoading } = useFlagDetails(flag?.id || null);
