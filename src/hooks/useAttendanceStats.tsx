@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { format, differenceInMinutes, parseISO, eachDayOfInterval, isWeekend, startOfMonth, endOfMonth } from 'date-fns';
+import { format, differenceInMinutes, parseISO, eachDayOfInterval, startOfMonth, endOfMonth } from 'date-fns';
 import { useRealtimeDashboard } from './useRealtimeDashboard';
+import { isWorkingDay } from '@/lib/utils';
 
 export interface DateRange {
   from: Date;
@@ -84,7 +85,7 @@ export function useAttendanceStats() {
 
       // Calculate working days in the range (excluding weekends)
       const allDays = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
-      const workingDays = allDays.filter(day => !isWeekend(day));
+      const workingDays = allDays.filter(day => isWorkingDay(day));
       const totalWorkingDays = workingDays.length;
 
       // Calculate employee stats
@@ -100,7 +101,7 @@ export function useAttendanceStats() {
           const leaveDaysInRange = eachDayOfInterval({
             start: leaveStart < dateRange.from ? dateRange.from : leaveStart,
             end: leaveEnd > dateRange.to ? dateRange.to : leaveEnd
-          }).filter(d => !isWeekend(d)).length;
+          }).filter(d => isWorkingDay(d)).length;
           
           if (leave.leave_type === 'half_day') {
             leaveDays += 0.5;
