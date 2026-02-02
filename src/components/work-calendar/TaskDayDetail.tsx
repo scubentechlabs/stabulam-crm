@@ -171,11 +171,9 @@ function TaskItem({ task, isAdmin, onEdit, onDelete }: TaskItemProps) {
               )}
               
               <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                {task.submitted_at && (
-                  <span>
-                    Created: {formatTimeIST(task.submitted_at)}
-                  </span>
-                )}
+                <span>
+                  Created: {formatTimeIST(task.created_at)}
+                </span>
                 {task.completed_at && (
                   <span className="text-green-600">
                     Completed: {formatTimeIST(task.completed_at)}
