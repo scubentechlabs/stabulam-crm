@@ -193,6 +193,8 @@ export function useFlags(filters?: FlagFilters) {
         };
       },
       enabled: !!flagId,
+      staleTime: 0,
+      refetchOnMount: 'always',
     });
   };
 
