@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,12 +16,16 @@ import { useUsers, type UserWithRole } from '@/hooks/useUsers';
 import { CreateUserForm } from '@/components/users/CreateUserForm';
 import { EditUserForm } from '@/components/users/EditUserForm';
 import { UserTable } from '@/components/users/UserTable';
+import { FlagForm } from '@/components/flags/FlagForm';
 
 export default function AdminUsers() {
+  const navigate = useNavigate();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showFlagForm, setShowFlagForm] = useState(false);
+  const [flagEmployeeId, setFlagEmployeeId] = useState<string | undefined>(undefined);
 
   const {
     users,
@@ -89,6 +94,15 @@ export default function AdminUsers() {
 
   const handleChangeRole = async (userId: string, role: 'admin' | 'employee') => {
     await updateUserRole(userId, role);
+  };
+
+  const handleIssueFlag = (userId: string) => {
+    setFlagEmployeeId(userId);
+    setShowFlagForm(true);
+  };
+
+  const handleViewFlags = (userId: string) => {
+    navigate(`/admin/flags?employee=${userId}`);
   };
 
   if (isLoading) {
@@ -201,6 +215,7 @@ export default function AdminUsers() {
                 onEdit={setEditingUser}
                 onToggleActive={handleToggleActive}
                 onChangeRole={handleChangeRole}
+                onIssueFlag={handleIssueFlag}
                 emptyMessage={searchQuery ? 'No matching employees found' : 'No employees added yet'}
               />
             </TabsContent>
@@ -211,6 +226,7 @@ export default function AdminUsers() {
                 onEdit={setEditingUser}
                 onToggleActive={handleToggleActive}
                 onChangeRole={handleChangeRole}
+                onIssueFlag={handleIssueFlag}
                 emptyMessage="No active employees"
               />
             </TabsContent>
@@ -221,6 +237,7 @@ export default function AdminUsers() {
                 onEdit={setEditingUser}
                 onToggleActive={handleToggleActive}
                 onChangeRole={handleChangeRole}
+                onIssueFlag={handleIssueFlag}
                 emptyMessage="No inactive employees"
               />
             </TabsContent>
@@ -264,6 +281,16 @@ export default function AdminUsers() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Issue Flag Dialog */}
+      <FlagForm
+        open={showFlagForm}
+        onOpenChange={(open) => {
+          setShowFlagForm(open);
+          if (!open) setFlagEmployeeId(undefined);
+        }}
+        preselectedEmployeeId={flagEmployeeId}
+      />
     </div>
   );
 }

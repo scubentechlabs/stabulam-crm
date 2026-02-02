@@ -22,6 +22,7 @@ import {
   UsersRound,
   User,
   HelpCircle,
+  Flag,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -63,6 +64,7 @@ const employeeNavItems: NavItem[] = [
   { title: 'Leave Requests', href: '/leaves', icon: Calendar },
   { title: 'Extra Work', href: '/extra-work', icon: Briefcase },
   { title: 'Shoots and Editing', href: '/shoots', icon: Camera },
+  { title: 'My Flags', href: '/flags', icon: Flag },
 ];
 
 const adminNavItems: NavItem[] = [
@@ -71,6 +73,7 @@ const adminNavItems: NavItem[] = [
   { title: 'Attendance Monitor', href: '/admin/attendance', icon: Clock, adminOnly: true },
   { title: 'Approvals', href: '/admin/approvals', icon: CheckSquare, adminOnly: true },
   { title: 'Shoots and Editing', href: '/admin/shoots', icon: Camera, adminOnly: true },
+  { title: 'Employee Flags', href: '/admin/flags', icon: Flag, adminOnly: true },
   { title: 'Salary Generator', href: '/admin/salary', icon: DollarSign, adminOnly: true },
   { title: 'Reports', href: '/admin/reports', icon: BarChart3, adminOnly: true },
   { title: 'Rules Config', href: '/admin/rules', icon: Settings, adminOnly: true },

@@ -1,0 +1,228 @@
+import { useState } from 'react';
+import { format } from 'date-fns';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { useFlags, type Flag } from '@/hooks/useFlags';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  Flag as FlagIcon,
+  User,
+  Calendar,
+  MessageSquare,
+  Send,
+  Loader2,
+  CheckCircle2,
+  Clock,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface FlagDetailDialogProps {
+  flag: Flag | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function FlagDetailDialog({ flag, open, onOpenChange }: FlagDetailDialogProps) {
+  const { isAdmin, user } = useAuth();
+  const { useFlagDetails, addReply, isAddingReply, updateFlagStatus } = useFlags();
+  const [replyText, setReplyText] = useState('');
+
+  const { data: flagDetails, isLoading } = useFlagDetails(flag?.id || null);
+
+  const handleSubmitReply = () => {
+    if (!flag || !replyText.trim()) return;
+
+    addReply(
+      { flag_id: flag.id, reply_text: replyText.trim() },
+      {
+        onSuccess: () => setReplyText(''),
+      }
+    );
+  };
+
+  const handleAcknowledge = () => {
+    if (!flag) return;
+    updateFlagStatus({ flagId: flag.id, status: 'acknowledged' });
+  };
+
+  const statusColors = {
+    open: 'bg-destructive/10 text-destructive border-destructive/20',
+    acknowledged: 'bg-green-500/10 text-green-600 border-green-500/20',
+  };
+
+  if (!flag) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col p-0">
+        <DialogHeader className="p-6 pb-0">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-destructive/10 shrink-0">
+                <FlagIcon className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <DialogTitle className="text-lg">{flag.title}</DialogTitle>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                  <Calendar className="h-3.5 w-3.5" />
+                  <span>{format(new Date(flag.created_at), 'dd MMM yyyy, hh:mm a')}</span>
+                </div>
+              </div>
+            </div>
+            <Badge
+              variant="outline"
+              className={cn('capitalize', statusColors[flag.status])}
+            >
+              {flag.status === 'open' ? (
+                <Clock className="mr-1 h-3 w-3" />
+              ) : (
+                <CheckCircle2 className="mr-1 h-3 w-3" />
+              )}
+              {flag.status}
+            </Badge>
+          </div>
+        </DialogHeader>
+
+        <ScrollArea className="flex-1 px-6">
+          <div className="space-y-4 py-4">
+            {/* Employee Info */}
+            {flag.employee_profile && (
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={flag.employee_profile.avatar_url || ''} />
+                  <AvatarFallback>
+                    {flag.employee_profile.full_name?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium">{flag.employee_profile.full_name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {flag.employee_profile.email}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Description */}
+            <div>
+              <h4 className="text-sm font-medium mb-2">Description</h4>
+              <div className="p-3 rounded-lg bg-muted/30 border">
+                <p className="text-sm whitespace-pre-wrap">{flag.description}</p>
+              </div>
+            </div>
+
+            {/* Issued By */}
+            {flag.issuer_profile && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <User className="h-4 w-4" />
+                <span>Issued by {flag.issuer_profile.full_name}</span>
+              </div>
+            )}
+
+            <Separator />
+
+            {/* Replies Section */}
+            <div>
+              <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                Responses ({flagDetails?.replies?.length || 0})
+              </h4>
+
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : flagDetails?.replies && flagDetails.replies.length > 0 ? (
+                <div className="space-y-3">
+                  {flagDetails.replies.map((reply) => (
+                    <div
+                      key={reply.id}
+                      className={cn(
+                        'p-3 rounded-lg border',
+                        reply.user_id === user?.id
+                          ? 'bg-primary/5 border-primary/20 ml-4'
+                          : 'bg-muted/30'
+                      )}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={reply.user_profile?.avatar_url || ''} />
+                          <AvatarFallback className="text-xs">
+                            {reply.user_profile?.full_name?.charAt(0) || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium">
+                          {reply.user_profile?.full_name}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(reply.created_at), 'dd MMM yyyy, hh:mm a')}
+                        </span>
+                      </div>
+                      <p className="text-sm whitespace-pre-wrap">{reply.reply_text}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-muted-foreground">
+                  <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No responses yet</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </ScrollArea>
+
+        {/* Reply Input */}
+        <div className="p-4 border-t bg-muted/30">
+          <div className="flex gap-2">
+            <Textarea
+              placeholder="Write your response..."
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              className="min-h-[80px] resize-none"
+            />
+          </div>
+          <div className="flex items-center justify-between mt-3">
+            <div className="text-xs text-muted-foreground">
+              Responses cannot be edited after submission
+            </div>
+            <div className="flex gap-2">
+              {isAdmin && flag.status === 'open' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAcknowledge}
+                >
+                  <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                  Mark Acknowledged
+                </Button>
+              )}
+              <Button
+                size="sm"
+                onClick={handleSubmitReply}
+                disabled={!replyText.trim() || isAddingReply}
+              >
+                {isAddingReply ? (
+                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="mr-1.5 h-4 w-4" />
+                )}
+                Submit Response
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

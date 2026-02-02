@@ -183,6 +183,71 @@ export type Database = {
           },
         ]
       }
+      flag_replies: {
+        Row: {
+          created_at: string
+          flag_id: string
+          id: string
+          reply_text: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          flag_id: string
+          id?: string
+          reply_text: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          flag_id?: string
+          id?: string
+          reply_text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flag_replies_flag_id_fkey"
+            columns: ["flag_id"]
+            isOneToOne: false
+            referencedRelation: "flags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flags: {
+        Row: {
+          created_at: string
+          description: string
+          employee_id: string
+          id: string
+          issued_by: string
+          status: Database["public"]["Enums"]["flag_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          employee_id: string
+          id?: string
+          issued_by: string
+          status?: Database["public"]["Enums"]["flag_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          employee_id?: string
+          id?: string
+          issued_by?: string
+          status?: Database["public"]["Enums"]["flag_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       leave_balances: {
         Row: {
           annual_allocation: number
@@ -840,6 +905,7 @@ export type Database = {
         | "revisions_round"
         | "final_delivered"
       extra_work_status: "pending" | "approved" | "rejected"
+      flag_status: "open" | "acknowledged"
       leave_status: "pending" | "approved" | "rejected"
       leave_type: "half_day" | "full_day" | "multiple_days"
       notification_type:
@@ -996,6 +1062,7 @@ export const Constants = {
         "final_delivered",
       ],
       extra_work_status: ["pending", "approved", "rejected"],
+      flag_status: ["open", "acknowledged"],
       leave_status: ["pending", "approved", "rejected"],
       leave_type: ["half_day", "full_day", "multiple_days"],
       notification_type: [
