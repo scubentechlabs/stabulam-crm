@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { format } from "date-fns";
+import { X } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn, formatTimeOnlyIST } from "@/lib/utils";
@@ -51,11 +53,21 @@ export function ShootCalendarOverflowPopover({
         onClick={(e) => e.stopPropagation()}
         onWheelCapture={(e) => e.stopPropagation()}
       >
-        <div className="p-3 border-b">
-          <h4 className="font-semibold text-sm">{format(day, "EEEE, MMMM d, yyyy")}</h4>
-          <p className="text-xs text-muted-foreground">
-            {dayShoots.length} shoot{dayShoots.length > 1 ? "s" : ""} scheduled
-          </p>
+        <div className="p-3 border-b flex items-start justify-between gap-2">
+          <div>
+            <h4 className="font-semibold text-sm">{format(day, "EEEE, MMMM d, yyyy")}</h4>
+            <p className="text-xs text-muted-foreground">
+              {dayShoots.length} shoot{dayShoots.length > 1 ? "s" : ""} scheduled
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 shrink-0 -mt-1 -mr-1"
+            onClick={() => setOpen(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
 
         <ScrollArea
