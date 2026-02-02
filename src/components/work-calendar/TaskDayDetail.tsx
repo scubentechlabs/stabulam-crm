@@ -123,7 +123,9 @@ interface TaskItemProps {
 }
 
 function TaskItem({ task, isAdmin, onEdit, onDelete }: TaskItemProps) {
-  const config = taskTypeConfig[task.task_type] || taskTypeConfig.tod;
+  // Normalize urgent_tod (legacy) to utod for display
+  const normalizedType = task.task_type === 'urgent_tod' ? 'utod' : task.task_type;
+  const config = taskTypeConfig[normalizedType] || taskTypeConfig.tod;
   const isCompleted = task.status === 'completed';
 
   return (
