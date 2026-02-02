@@ -218,6 +218,7 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
                     <TableHead>Editor</TableHead>
                     <TableHead>Deadline</TableHead>
                     <TableHead>Drive Link</TableHead>
+                    <TableHead>Requirements / Instructions</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -289,6 +290,15 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
                               <ExternalLink className="h-4 w-4 mr-1" />
                               Open
                             </Button>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {shoot.editor_description ? (
+                            <p className="text-sm truncate max-w-[200px]" title={shoot.editor_description}>
+                              {shoot.editor_description}
+                            </p>
                           ) : (
                             <span className="text-muted-foreground text-sm">—</span>
                           )}
