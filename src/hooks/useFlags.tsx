@@ -132,84 +132,8 @@ export function useFlags(filters?: FlagFilters) {
     enabled: !!user,
   });
 
-  // Fetch single flag with replies
-  const useFlagDetails = (flagId: string | null) => {
-    return useQuery({
-      queryKey: ['flag-details', flagId],
-      queryFn: async () => {
-        if (!flagId) return null;
+  // Note: useFlagDetails has been moved to a separate hook file: src/hooks/useFlagDetails.tsx
 
-        const { data: flag, error: flagError } = await supabase
-          .from('flags')
-          .select('*')
-          .eq('id', flagId)
-          .single();
-
-        if (flagError) throw flagError;
-
-        // Fetch profiles
-        const { data: employeeProfile } = await supabase
-          .from('profiles')
-          .select('full_name, email, avatar_url')
-          .eq('user_id', flag.employee_id)
-          .single();
-
-        const { data: issuerProfile } = await supabase
-          .from('profiles')
-          .select('full_name')
-          .eq('user_id', flag.issued_by)
-          .single();
-
-        // Fetch replies
-        const { data: replies, error: repliesError } = await supabase
-          .from('flag_replies')
-          .select('*')
-          .eq('flag_id', flagId)
-          .order('created_at', { ascending: true });
-
-        console.log('Fetched replies for flag', flagId, ':', replies, 'Error:', repliesError);
-
-        if (repliesError) throw repliesError;
-
-        // Fetch reply user profiles - use try/catch to ensure failures don't break the whole list
-        const repliesWithProfiles: FlagReply[] = [];
-        for (const reply of (replies || [])) {
-          try {
-            const { data: userProfile } = await supabase
-              .from('profiles')
-              .select('full_name, avatar_url')
-              .eq('user_id', reply.user_id)
-              .single();
-
-            repliesWithProfiles.push({
-              ...reply,
-              user_profile: userProfile || { full_name: 'Unknown User', avatar_url: null },
-            } as FlagReply);
-          } catch (err) {
-            console.error('Error fetching profile for reply:', reply.id, err);
-            repliesWithProfiles.push({
-              ...reply,
-              user_profile: { full_name: 'Unknown User', avatar_url: null },
-            } as FlagReply);
-          }
-        }
-        
-        console.log('Processed replies with profiles:', repliesWithProfiles);
-
-        return {
-          ...flag,
-          employee_profile: employeeProfile,
-          issuer_profile: issuerProfile,
-          replies: repliesWithProfiles,
-        };
-      },
-      enabled: !!flagId,
-      staleTime: 0,
-      gcTime: 0,
-      refetchOnMount: true,
-      refetchOnWindowFocus: false,
-    });
-  };
 
   // Create flag (admin only)
   const createFlagMutation = useMutation({
@@ -394,7 +318,6 @@ export function useFlags(filters?: FlagFilters) {
     addReply: addReplyMutation.mutate,
     isAddingReply: addReplyMutation.isPending,
     updateFlagStatus: updateFlagStatusMutation.mutate,
-    useFlagDetails,
     useFlagStats,
     useEmployeeFlagCount,
   };
