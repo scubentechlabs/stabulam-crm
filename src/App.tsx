@@ -35,6 +35,7 @@ import AdminShoots from "./pages/admin/AdminShoots";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminRules from "./pages/admin/AdminRules";
 import AdminFlags from "./pages/admin/AdminFlags";
+import AdminHolidays from "./pages/admin/AdminHolidays";
 import Flags from "./pages/Flags";
 
 const queryClient = new QueryClient();
@@ -150,6 +151,14 @@ const App = () => (
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminRules />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/holidays"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminHolidays />
                   </ProtectedRoute>
                 }
               />
