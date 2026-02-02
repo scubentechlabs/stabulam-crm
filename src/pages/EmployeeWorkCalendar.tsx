@@ -137,7 +137,7 @@ export default function EmployeeWorkCalendar() {
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select employee" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-background">
               {users.map(u => (
                 <SelectItem key={u.user_id} value={u.user_id}>
                   {u.full_name}
