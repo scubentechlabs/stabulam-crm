@@ -23,6 +23,7 @@ import {
   User,
   HelpCircle,
   Flag,
+  PartyPopper,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -75,6 +76,7 @@ const adminNavItems: NavItem[] = [
   { title: 'Employee Flags', href: '/admin/flags', icon: Flag, adminOnly: true },
   { title: 'Salary Generator', href: '/admin/salary', icon: DollarSign, adminOnly: true },
   { title: 'Reports', href: '/admin/reports', icon: BarChart3, adminOnly: true },
+  { title: 'Holidays', href: '/admin/holidays', icon: PartyPopper, adminOnly: true },
   { title: 'Rules Config', href: '/admin/rules', icon: Settings, adminOnly: true },
   { title: 'Work Calendar', href: '/employee-work-calendar', icon: CalendarDays, adminOnly: true },
 ];

@@ -18,13 +18,15 @@ import { format } from 'date-fns';
 import { TodayShootsWidget } from '@/components/dashboard/TodayShootsWidget';
 import { EmployeeOverviewCalendar } from '@/components/dashboard/EmployeeOverviewCalendar';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
-import { formatTimeIST, isWorkingDay } from '@/lib/utils';
+import { useHolidays } from '@/hooks/useHolidays';
+import { formatTimeIST } from '@/lib/utils';
 
 export default function Dashboard() {
   const { profile } = useAuth();
   const { stats, todayStatus, isLoading } = useDashboardStats();
+  const { isHoliday, isLoading: isLoadingHolidays } = useHolidays();
   const today = new Date();
-  const isSunday = !isWorkingDay(today);
+  const holidayStatus = isHoliday(today);
   const greeting = getGreeting();
 
   function getGreeting() {
@@ -49,10 +51,15 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex gap-2">
-          {isSunday ? (
+          {isLoadingHolidays ? (
+            <Button variant="outline" size="lg" className="gap-2" disabled>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading...
+            </Button>
+          ) : holidayStatus.isHoliday ? (
             <Button variant="outline" size="lg" className="gap-2" disabled>
               <PartyPopper className="h-4 w-4" />
-              Holiday Today
+              {holidayStatus.reason === 'Sunday' ? 'Holiday Today' : holidayStatus.reason}
             </Button>
           ) : (
             <Button asChild size="lg" className="gap-2">
@@ -199,11 +206,13 @@ export default function Dashboard() {
             <CardDescription>Your attendance and task status for today</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {isSunday ? (
+            {holidayStatus.isHoliday ? (
               <div className="flex items-center justify-center p-8 rounded-lg bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
                 <div className="text-center">
                   <PartyPopper className="h-8 w-8 text-amber-500 mx-auto mb-2" />
-                  <p className="font-medium text-amber-700 dark:text-amber-400">It's Sunday!</p>
+                  <p className="font-medium text-amber-700 dark:text-amber-400">
+                    {holidayStatus.reason === 'Sunday' ? "It's Sunday!" : holidayStatus.reason}
+                  </p>
                   <p className="text-sm text-muted-foreground mt-1">Enjoy your day off 🌟</p>
                 </div>
               </div>

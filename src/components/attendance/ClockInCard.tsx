@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { CameraCapture } from './CameraCapture';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useAttendance } from '@/hooks/useAttendance';
+import { useHolidays } from '@/hooks/useHolidays';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { isWorkingDay } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ClockInCardProps {
   onClockInComplete: () => void;
@@ -16,13 +17,16 @@ interface ClockInCardProps {
 
 export function ClockInCard({ onClockInComplete }: ClockInCardProps) {
   const today = new Date();
-  const isSunday = !isWorkingDay(today);
   const { user } = useAuth();
   const { toast } = useToast();
   const { clockIn, isClockingIn } = useAttendance();
   const { getPosition, isLoading: isGettingLocation } = useGeolocation();
+  const { isHoliday, isLoading: isLoadingHolidays } = useHolidays();
   const [showCamera, setShowCamera] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Check if today is a holiday (Sunday or custom holiday)
+  const holidayStatus = isHoliday(today);
 
   const handleStartClockIn = () => {
     setShowCamera(true);
@@ -144,8 +148,26 @@ export function ClockInCard({ onClockInComplete }: ClockInCardProps) {
     );
   }
 
-  // Show holiday message on Sundays
-  if (isSunday) {
+  // Show loading state while checking holidays
+  if (isLoadingHolidays) {
+    return (
+      <Card className="max-w-md mx-auto">
+        <CardHeader className="text-center">
+          <Skeleton className="h-20 w-20 rounded-full mx-auto mb-4" />
+          <Skeleton className="h-6 w-48 mx-auto" />
+          <Skeleton className="h-4 w-64 mx-auto mt-2" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-24 w-full rounded-xl" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show holiday message if it's a holiday
+  if (holidayStatus.isHoliday) {
+    const isSunday = holidayStatus.reason === 'Sunday';
+    
     return (
       <Card className="max-w-md mx-auto">
         <CardHeader className="text-center">
@@ -154,14 +176,23 @@ export function ClockInCard({ onClockInComplete }: ClockInCardProps) {
           </div>
           <CardTitle className="text-2xl">It's a Holiday!</CardTitle>
           <CardDescription className="text-base mt-2">
-            Today is Sunday - enjoy your day off!
+            {isSunday ? "Today is Sunday - enjoy your day off!" : `Today is ${holidayStatus.reason}`}
           </CardDescription>
         </CardHeader>
         <CardContent className="text-center space-y-4">
           <div className="bg-muted/50 rounded-xl p-6">
             <p className="text-muted-foreground">
-              Clock-in is not available on Sundays. Our working week runs from 
-              <span className="font-medium text-foreground"> Monday to Saturday</span>.
+              {isSunday ? (
+                <>
+                  Clock-in is not available on Sundays. Our working week runs from 
+                  <span className="font-medium text-foreground"> Monday to Saturday</span>.
+                </>
+              ) : (
+                <>
+                  Clock-in is not available on <span className="font-medium text-foreground">{holidayStatus.reason}</span>. 
+                  Enjoy your holiday!
+                </>
+              )}
             </p>
           </div>
           <p className="text-sm text-muted-foreground">
