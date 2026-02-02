@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isWeekend } from 'date-fns';
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Camera, Clock, UserX, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
+import { cn, isSundayHoliday, isDayHeaderHoliday } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -228,7 +228,7 @@ export function EmployeeOverviewCalendar() {
               key={day}
               className={cn(
                 'text-center text-xs font-medium py-1',
-                (day === 'Sun' || day === 'Sat') ? 'text-muted-foreground' : ''
+                isDayHeaderHoliday(day) ? 'text-muted-foreground' : ''
               )}
             >
               {day}
@@ -249,7 +249,7 @@ export function EmployeeOverviewCalendar() {
             const dayData = calendarData[dateStr] || { attendance: null, leave: null, shoots: [] };
             const isCurrentMonth = isSameMonth(day, currentMonth);
             const isTodayDate = isToday(day);
-            const isWeekendDay = isWeekend(day);
+            const isHoliday = isSundayHoliday(day);
 
             return (
               <TooltipProvider key={day.toISOString()}>
@@ -260,7 +260,7 @@ export function EmployeeOverviewCalendar() {
                         'min-h-[70px] p-1.5 rounded-md border transition-colors',
                         !isCurrentMonth && 'opacity-50',
                         isTodayDate && 'ring-2 ring-primary bg-primary/5',
-                        isWeekendDay && 'bg-muted/30'
+                        isHoliday && 'bg-muted/30'
                       )}
                     >
                       <div className={cn(
@@ -270,7 +270,7 @@ export function EmployeeOverviewCalendar() {
                         {format(day, 'd')}
                       </div>
 
-                      {!isWeekendDay && (
+                      {!isHoliday && (
                         <div className="space-y-0.5">
                           {/* Attendance indicator */}
                           {dayData.attendance && (
@@ -308,8 +308,8 @@ export function EmployeeOverviewCalendar() {
                         </div>
                       )}
 
-                      {isWeekendDay && (
-                        <div className="text-[8px] text-muted-foreground">Off</div>
+                      {isHoliday && (
+                        <div className="text-[8px] text-muted-foreground">Holiday</div>
                       )}
                     </div>
                   </TooltipTrigger>
@@ -317,7 +317,7 @@ export function EmployeeOverviewCalendar() {
                     <div className="space-y-2">
                       <p className="font-semibold text-xs border-b pb-1">{format(day, 'EEEE, MMM d')}</p>
                       
-                      {!isWeekendDay ? (
+                      {!isHoliday ? (
                         <>
                           {/* Attendance details */}
                           {dayData.attendance ? (
@@ -377,7 +377,7 @@ export function EmployeeOverviewCalendar() {
                           )}
                         </>
                       ) : (
-                        <p className="text-xs text-muted-foreground">Weekend</p>
+                        <p className="text-xs text-muted-foreground">Sunday - Holiday</p>
                       )}
                     </div>
                   </TooltipContent>
