@@ -2,12 +2,9 @@ import { useState } from 'react';
 import { format, parseISO, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, addMonths, subMonths } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { formatTimeOnlyIST } from '@/lib/utils';
 import type { ShootWithAssignments } from '@/hooks/useShoots';
+import { ShootCalendarOverflowPopover } from '@/components/shoots/ShootCalendarOverflowPopover';
 
 interface ShootCalendarProps {
   shoots: ShootWithAssignments[];
@@ -110,7 +107,7 @@ export function ShootCalendar({ shoots, onDateClick, onShootClick }: ShootCalend
           const isToday = isSameDay(day, today);
           const isCurrentMonth = day.getMonth() === currentMonth.getMonth();
           const hasMoreShoots = dayShots.length > 2;
-          const remainingShoots = dayShots.slice(2);
+          const remainingCount = Math.max(0, dayShots.length - 2);
 
           return (
             <div
@@ -149,67 +146,14 @@ export function ShootCalendar({ shoots, onDateClick, onShootClick }: ShootCalend
                 ))}
                 
                 {hasMoreShoots && (
-                  <Popover>
-                    <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
-                      <Badge 
-                        variant="outline" 
-                        className="text-xs h-5 cursor-pointer hover:bg-muted"
-                      >
-                        +{remainingShoots.length} more
-                      </Badge>
-                    </PopoverTrigger>
-                    <PopoverContent 
-                      className="w-72 p-0" 
-                      align="start"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="p-3 border-b">
-                        <h4 className="font-semibold text-sm">
-                          {format(day, 'EEEE, MMMM d, yyyy')}
-                        </h4>
-                        <p className="text-xs text-muted-foreground">
-                          {dayShots.length} shoot{dayShots.length > 1 ? 's' : ''} scheduled
-                        </p>
-                      </div>
-                      <ScrollArea className="max-h-[300px]">
-                        <div className="p-2 space-y-2">
-                          {dayShots.map(shoot => (
-                            <div
-                              key={shoot.id}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onShootClick?.(shoot);
-                              }}
-                              className="p-2 rounded-md border hover:bg-muted/50 cursor-pointer transition-colors"
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="min-w-0 flex-1">
-                                  <p className="font-medium text-sm truncate">
-                                    {shoot.event_name}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground truncate">
-                                    {shoot.brand_name}
-                                  </p>
-                                </div>
-                                <Badge 
-                                  className={cn(
-                                    'text-[10px] px-1.5 py-0 shrink-0',
-                                    getStatusStyles(shoot.status)
-                                  )}
-                                >
-                                  {getStatusLabel(shoot.status)}
-                                </Badge>
-                              </div>
-                              <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
-                                <span>{formatTimeOnlyIST(shoot.shoot_time)}</span>
-                                <span className="truncate">{shoot.location}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                    </PopoverContent>
-                  </Popover>
+                  <ShootCalendarOverflowPopover
+                    day={day}
+                    dayShoots={dayShots}
+                    remainingCount={remainingCount}
+                    getStatusStyles={getStatusStyles}
+                    getStatusLabel={getStatusLabel}
+                    onShootClick={onShootClick}
+                  />
                 )}
               </div>
             </div>
