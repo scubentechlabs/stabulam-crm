@@ -77,8 +77,6 @@ export function AttendanceTableView({ data, isLoading }: AttendanceTableViewProp
               <TableHead className="w-[100px] text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Clock In</TableHead>
               <TableHead className="w-[100px] text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Clock Out</TableHead>
               <TableHead className="w-[100px] text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Work Hours</TableHead>
-              <TableHead className="w-[120px] text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Location</TableHead>
-              <TableHead className="w-[80px] text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Overtime</TableHead>
               <TableHead className="w-[140px] text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Status</TableHead>
               <TableHead className="w-[100px] text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider text-right">Actions</TableHead>
             </TableRow>
@@ -165,25 +163,6 @@ export function AttendanceTableView({ data, isLoading }: AttendanceTableViewProp
                     ) : (
                       <span className="text-sm text-slate-400">-</span>
                     )}
-                  </TableCell>
-
-                  {/* LOCATION */}
-                  <TableCell>
-                    {row.department ? (
-                      <Badge 
-                        variant="outline" 
-                        className="bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-400 dark:border-cyan-800 font-medium"
-                      >
-                        {row.department}
-                      </Badge>
-                    ) : (
-                      <span className="text-sm text-slate-400">-</span>
-                    )}
-                  </TableCell>
-
-                  {/* OVERTIME */}
-                  <TableCell>
-                    <span className="text-sm text-slate-400">-</span>
                   </TableCell>
 
                   {/* STATUS */}
