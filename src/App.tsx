@@ -69,7 +69,14 @@ const App = () => (
               <Route path="/salary-history" element={<SalaryHistory />} />
               <Route path="/performance" element={<Performance />} />
               <Route path="/team-calendar" element={<TeamCalendar />} />
-              <Route path="/employee-work-calendar" element={<EmployeeWorkCalendar />} />
+              <Route
+                path="/employee-work-calendar"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <EmployeeWorkCalendar />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/settings" element={<Settings />} />
 
