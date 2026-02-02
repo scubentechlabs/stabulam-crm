@@ -52,8 +52,8 @@ export default function EmployeeWorkCalendar() {
         if (error) throw error;
         setUsers(data || []);
         
-        // Set default selection to current user for non-admins
-        if (!isAdmin && user) {
+        // Set default selection to current logged-in user
+        if (user) {
           setSelectedUserId(user.id);
         }
       } catch (error) {
