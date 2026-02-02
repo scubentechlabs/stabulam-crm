@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -81,6 +81,7 @@ export function useShoots() {
   const [shoots, setShoots] = useState<ShootWithAssignments[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchShoots = useCallback(async (showLoading = true) => {
     if (!user) return;
@@ -165,6 +166,17 @@ export function useShoots() {
     }
   }, [user, toast, hasFetchedOnce]);
 
+  // Debounced background refresh to avoid race conditions when multiple related realtime events fire
+  // (e.g., creating a shoot triggers shoots insert event + assignments insert event).
+  const scheduleRefresh = useCallback(() => {
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
+    refreshTimeoutRef.current = setTimeout(() => {
+      fetchShoots(false);
+    }, 300);
+  }, [fetchShoots]);
+
   useEffect(() => {
     fetchShoots(true);
 
@@ -175,24 +187,28 @@ export function useShoots() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'shoots' },
         () => {
-          // Background sync - don't show loading state
-          fetchShoots(false);
+          // Background sync - debounce to wait for related updates (e.g., assignments)
+          scheduleRefresh();
         }
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'shoot_assignments' },
         () => {
-          // Background sync - don't show loading state
-          fetchShoots(false);
+          // Background sync - debounce to wait for related updates (e.g., shoots)
+          scheduleRefresh();
         }
       )
       .subscribe();
 
     return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+        refreshTimeoutRef.current = null;
+      }
       supabase.removeChannel(shootsChannel);
     };
-  }, [fetchShoots]);
+  }, [fetchShoots, scheduleRefresh]);
 
   const createShoot = async (data: CreateShootData) => {
     if (!user) return { error: new Error('Not authenticated') };
@@ -260,8 +276,28 @@ export function useShoots() {
         description: 'Shoot created successfully',
       });
 
-      // Fetch fresh data to ensure assignments are included (realtime may have stale data)
-      await fetchShoots(false);
+      // Optimistically add the shoot with assignments so the UI shows team members immediately.
+      const newShoot: ShootWithAssignments = {
+        ...shootData,
+        status: shootData.status || 'pending',
+        editing_status: shootData.editing_status || 'not_started',
+        location_coordinates: shootData.location_coordinates as { lat: number; lng: number } | null,
+        assignments: createdAssignments,
+        assigned_editor: null,
+      };
+
+      setShoots(prev => {
+        const shootsMap = new Map(prev.map(s => [s.id, s]));
+        shootsMap.set(newShoot.id, newShoot);
+        return Array.from(shootsMap.values()).sort((a, b) => {
+          const dateCompare = a.shoot_date.localeCompare(b.shoot_date);
+          if (dateCompare !== 0) return dateCompare;
+          return b.created_at.localeCompare(a.created_at);
+        });
+      });
+
+      // Background refresh (debounced) to reconcile with backend state.
+      scheduleRefresh();
 
       return { error: null, shoot: shootData };
     } catch (error) {
