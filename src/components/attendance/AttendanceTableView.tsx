@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,6 +20,7 @@ import {
 } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn, formatTimeIST } from '@/lib/utils';
+import { AttendanceSelfieAvatar } from './AttendanceSelfieAvatar';
 import type { AttendanceTableRow } from '@/hooks/useAttendanceTable';
 
 interface AttendanceTableViewProps {
@@ -104,12 +104,11 @@ export function AttendanceTableView({ data, isLoading }: AttendanceTableViewProp
 
                   {/* SELFIE */}
                   <TableCell>
-                    <Avatar className="h-10 w-10 border-2 border-slate-200 dark:border-slate-700">
-                      <AvatarImage src={row.clock_in_photo_url || row.avatar_url || undefined} />
-                      <AvatarFallback className="text-xs bg-slate-100 dark:bg-slate-800">
-                        {row.user_name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    <AttendanceSelfieAvatar
+                      clockInPhotoUrl={row.clock_in_photo_url}
+                      avatarUrl={row.avatar_url}
+                      userName={row.user_name}
+                    />
                   </TableCell>
 
                   {/* EMPLOYEE */}
