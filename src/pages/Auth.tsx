@@ -6,9 +6,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff, ShieldX } from 'lucide-react';
 import { z } from 'zod';
 import stabulamLogo from '@/assets/logo.webp';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -16,7 +25,7 @@ const loginSchema = z.object({
 });
 
 export default function Auth() {
-  const { user, signIn, isLoading } = useAuth();
+  const { user, signIn, isLoading, isDeactivated, clearDeactivatedState } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -24,11 +33,19 @@ export default function Auth() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showAccessDenied, setShowAccessDenied] = useState(false);
   
   // Login form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+  // Show access denied dialog when user is deactivated
+  useEffect(() => {
+    if (isDeactivated) {
+      setShowAccessDenied(true);
+    }
+  }, [isDeactivated]);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -58,6 +75,12 @@ export default function Auth() {
     setIsSubmitting(false);
 
     if (error) {
+      // Check if it's a deactivation error
+      if (error.message.includes('deactivated')) {
+        setShowAccessDenied(true);
+        return;
+      }
+      
       toast({
         variant: 'destructive',
         title: 'Login Failed',
@@ -73,6 +96,11 @@ export default function Auth() {
     }
   };
 
+  const handleAccessDeniedClose = () => {
+    setShowAccessDenied(false);
+    clearDeactivatedState();
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -82,118 +110,142 @@ export default function Auth() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary/10 via-primary/5 to-muted items-center justify-center p-12">
-        <div className="flex flex-col items-center justify-center">
-          <img 
-            src={stabulamLogo} 
-            alt="Stabulam" 
-            className="h-32 w-auto mb-6"
-          />
-          <p className="text-muted-foreground text-lg text-center max-w-sm">
-            Operations Management Platform
-          </p>
-        </div>
-      </div>
+    <>
+      {/* Access Denied Dialog */}
+      <AlertDialog open={showAccessDenied} onOpenChange={setShowAccessDenied}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader className="flex flex-col items-center text-center">
+            <div className="h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+              <ShieldX className="h-8 w-8 text-destructive" />
+            </div>
+            <AlertDialogTitle className="text-xl">Access Denied</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              Your account has been deactivated by an administrator. You no longer have access to this application.
+              <br /><br />
+              Please contact your administrator to reactivate your account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center">
+            <AlertDialogAction onClick={handleAccessDeniedClose} className="min-w-[120px]">
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      {/* Right Side - Login Form */}
-      <div className="flex-1 flex items-center justify-center bg-card p-6 sm:p-12">
-        <div className="w-full max-w-md">
-          {/* Mobile Logo - Only visible on smaller screens */}
-          <div className="lg:hidden flex items-center justify-center mb-10">
+      <div className="min-h-screen flex flex-col lg:flex-row">
+        {/* Left Side - Branding */}
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary/10 via-primary/5 to-muted items-center justify-center p-12">
+          <div className="flex flex-col items-center justify-center">
             <img 
               src={stabulamLogo} 
               alt="Stabulam" 
-              className="h-16 w-auto"
+              className="h-32 w-auto mb-6"
             />
+            <p className="text-muted-foreground text-lg text-center max-w-sm">
+              Operations Management Platform
+            </p>
           </div>
+        </div>
 
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-foreground">Welcome Back</h1>
-            <p className="text-muted-foreground mt-2">Please sign in to continue</p>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium">
-                Email Address
-              </Label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-12 pl-11 bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary"
-                />
-              </div>
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email}</p>
-              )}
+        {/* Right Side - Login Form */}
+        <div className="flex-1 flex items-center justify-center bg-card p-6 sm:p-12">
+          <div className="w-full max-w-md">
+            {/* Mobile Logo - Only visible on smaller screens */}
+            <div className="lg:hidden flex items-center justify-center mb-10">
+              <img 
+                src={stabulamLogo} 
+                alt="Stabulam" 
+                className="h-16 w-auto"
+              />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium">
-                Password
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 pl-11 pr-11 bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="text-sm text-destructive">{errors.password}</p>
-              )}
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-bold text-foreground">Welcome Back</h1>
+              <p className="text-muted-foreground mt-2">Please sign in to continue</p>
             </div>
 
-            <div className="flex items-center">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="remember"
-                  checked={rememberMe}
-                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                />
-                <Label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">
-                  Remember me
+            {/* Form */}
+            <form onSubmit={handleLogin} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Email Address
                 </Label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-12 pl-11 bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary"
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-sm text-destructive">{errors.email}</p>
+                )}
               </div>
-            </div>
 
-            <Button 
-              type="submit" 
-              className="w-full h-12 text-base font-medium rounded-xl" 
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                'Sign In'
-              )}
-            </Button>
-          </form>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-12 pl-11 pr-11 bg-muted/50 border-0 focus-visible:ring-2 focus-visible:ring-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-destructive">{errors.password}</p>
+                )}
+              </div>
+
+              <div className="flex items-center">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="remember"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                  />
+                  <Label htmlFor="remember" className="text-sm text-muted-foreground cursor-pointer">
+                    Remember me
+                  </Label>
+                </div>
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full h-12 text-base font-medium rounded-xl" 
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  'Sign In'
+                )}
+              </Button>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
