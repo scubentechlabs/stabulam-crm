@@ -16,6 +16,7 @@ export interface AttendanceTableRow {
   user_id: string;
   user_name: string;
   avatar_url: string | null;
+  clock_in_photo_url: string | null;
   department: string | null;
   date: string;
   clock_in_time: string | null;
@@ -119,6 +120,7 @@ export function useAttendanceTable() {
             user_id: employee.user_id,
             user_name: employee.full_name,
             avatar_url: employee.avatar_url,
+            clock_in_photo_url: record.clock_in_photo_url,
             department: employee.department,
             date: record.date,
             clock_in_time: record.clock_in_time,
@@ -137,6 +139,7 @@ export function useAttendanceTable() {
             user_id: employee.user_id,
             user_name: employee.full_name,
             avatar_url: employee.avatar_url,
+            clock_in_photo_url: null,
             department: employee.department,
             date: dateStr,
             clock_in_time: null,
