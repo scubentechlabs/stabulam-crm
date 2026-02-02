@@ -42,7 +42,9 @@ export function TaskDayDetail({
     );
   }
 
-  const dateKey = formatDateIST(selectedDate, 'yyyy-MM-dd');
+  // Use local date format for selectedDate (it's already a local Date object from calendar click)
+  // But use IST format for database timestamps
+  const dateKey = format(selectedDate, 'yyyy-MM-dd');
   const dayTasks = tasks.filter(task => {
     const taskDate = task.submitted_at
       ? formatDateIST(task.submitted_at, 'yyyy-MM-dd')

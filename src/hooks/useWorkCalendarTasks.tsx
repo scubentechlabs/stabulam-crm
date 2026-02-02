@@ -98,12 +98,21 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
 
     setIsSubmitting(true);
     try {
+      // Normalize to IST midnight - extract date components and create UTC timestamp
+      // that represents midnight IST for that date
+      const year = taskDate.getFullYear();
+      const month = taskDate.getMonth();
+      const day = taskDate.getDate();
+      // Create UTC timestamp for midnight IST of that date
+      // Midnight IST = (date at midnight UTC) - 5.5 hours
+      const istMidnightUTC = new Date(Date.UTC(year, month, day, 0, 0, 0) - IST_OFFSET_MS);
+      
       const taskData: TaskInsert = {
         user_id: assignedUserId,
         title,
         description,
         task_type: taskType as DbTaskType,
-        submitted_at: taskDate.toISOString(),
+        submitted_at: istMidnightUTC.toISOString(),
       };
 
       const { data, error } = await supabase
