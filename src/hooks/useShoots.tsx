@@ -216,19 +216,42 @@ export function useShoots() {
 
       if (shootError) throw shootError;
 
-      // Add assignments if provided
+      // Add assignments if provided and fetch their profiles for immediate display
+      let createdAssignments: ShootAssignment[] = [];
+      
       if (data.assigned_user_ids && data.assigned_user_ids.length > 0) {
         const assignmentInserts = data.assigned_user_ids.map(userId => ({
           shoot_id: shootData.id,
           user_id: userId,
         }));
 
-        const { error: assignmentError } = await supabase
+        const { data: assignmentsData, error: assignmentError } = await supabase
           .from('shoot_assignments')
-          .insert(assignmentInserts);
+          .insert(assignmentInserts)
+          .select();
 
         if (assignmentError) {
           console.error('Error creating assignments:', assignmentError);
+        } else if (assignmentsData) {
+          // Fetch profiles for the assigned users
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('user_id, full_name, email, avatar_url')
+            .in('user_id', data.assigned_user_ids);
+
+          const profilesMap = new Map<string, { full_name: string; email: string; avatar_url: string | null }>();
+          profilesData?.forEach(p => {
+            profilesMap.set(p.user_id, {
+              full_name: p.full_name,
+              email: p.email,
+              avatar_url: p.avatar_url,
+            });
+          });
+
+          createdAssignments = assignmentsData.map(a => ({
+            ...a,
+            profile: profilesMap.get(a.user_id),
+          }));
         }
       }
 
@@ -237,13 +260,13 @@ export function useShoots() {
         description: 'Shoot created successfully',
       });
 
-      // Add new shoot to state directly (realtime will also trigger but Map prevents duplicates)
+      // Add new shoot to state directly with assignments included
       const newShoot: ShootWithAssignments = {
         ...shootData,
         status: shootData.status || 'pending',
         editing_status: shootData.editing_status || 'not_started',
         location_coordinates: shootData.location_coordinates as { lat: number; lng: number } | null,
-        assignments: [],
+        assignments: createdAssignments,
         assigned_editor: null,
       };
       
