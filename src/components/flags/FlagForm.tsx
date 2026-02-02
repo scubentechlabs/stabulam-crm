@@ -91,7 +91,7 @@ export function FlagForm({ open, onOpenChange, preselectedEmployeeId }: FlagForm
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
-            <ScrollArea className="flex-1 pr-4">
+            <ScrollArea className="flex-1 pr-4" scrollbarClassName="w-2" thumbClassName="bg-muted-foreground/30">
               <div className="space-y-4">
                 <FormField
                   control={form.control}
