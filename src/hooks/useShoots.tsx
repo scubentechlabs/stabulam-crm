@@ -152,7 +152,28 @@ export function useShoots() {
         });
       });
 
-      setShoots(Array.from(shootsMap.values()));
+      // Merge with previous state to avoid a race where realtime refresh briefly returns
+      // a shoot with no assignments right after creation.
+      setShoots(prev => {
+        const prevMap = new Map(prev.map(s => [s.id, s]));
+        return Array.from(shootsMap.values()).map((s) => {
+          const prevShoot = prevMap.get(s.id);
+          if (!prevShoot) return s;
+
+          const mergedAssignments = (s.assignments?.length ?? 0) > 0
+            ? s.assignments
+            : prevShoot.assignments;
+
+          const mergedEditor = s.assigned_editor ?? prevShoot.assigned_editor ?? null;
+
+          return {
+            ...prevShoot,
+            ...s,
+            assignments: mergedAssignments,
+            assigned_editor: mergedEditor,
+          };
+        });
+      });
     } catch (error) {
       console.error('Error fetching shoots:', error);
       toast({
@@ -241,14 +262,27 @@ export function useShoots() {
           user_id: userId,
         }));
 
-        const { data: assignmentsData, error: assignmentError } = await supabase
+        const { data: insertedAssignments, error: assignmentError } = await supabase
           .from('shoot_assignments')
           .insert(assignmentInserts)
           .select();
 
         if (assignmentError) {
           console.error('Error creating assignments:', assignmentError);
-        } else if (assignmentsData) {
+        } else {
+          // Some policies can block RETURNING rows; fallback to fetching by shoot_id.
+          let assignmentRows = insertedAssignments;
+          if (!assignmentRows || assignmentRows.length === 0) {
+            const { data: fetchedAssignments, error: fetchAssignmentsError } = await supabase
+              .from('shoot_assignments')
+              .select('*')
+              .eq('shoot_id', shootData.id);
+            if (fetchAssignmentsError) {
+              console.error('Error fetching assignments after insert:', fetchAssignmentsError);
+            }
+            assignmentRows = fetchedAssignments ?? [];
+          }
+
           // Fetch profiles for the assigned users
           const { data: profilesData } = await supabase
             .from('profiles')
@@ -264,12 +298,18 @@ export function useShoots() {
             });
           });
 
-          createdAssignments = assignmentsData.map(a => ({
+          createdAssignments = (assignmentRows || []).map(a => ({
             ...a,
             profile: profilesMap.get(a.user_id),
           }));
         }
       }
+
+      console.debug('[useShoots] createShoot assignments', {
+        shootId: shootData.id,
+        assignedCount: data.assigned_user_ids?.length ?? 0,
+        createdAssignmentsCount: createdAssignments.length,
+      });
 
       toast({
         title: 'Success',
