@@ -89,112 +89,115 @@ export function FlagForm({ open, onOpenChange, preselectedEmployeeId }: FlagForm
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 -mx-6 px-6 overflow-y-auto">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="employee_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Select Employee</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={!!preselectedEmployeeId}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose an employee" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {usersLoading ? (
-                        <div className="flex items-center justify-center p-4">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        </div>
-                      ) : (
-                        activeEmployees.map((employee) => (
-                          <SelectItem key={employee.user_id} value={employee.user_id}>
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarImage src={employee.avatar_url || ''} />
-                                <AvatarFallback className="text-xs">
-                                  {employee.full_name?.charAt(0) || 'U'}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span>{employee.full_name}</span>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+            <ScrollArea className="flex-1 pr-4">
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="employee_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Select Employee</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        disabled={!!preselectedEmployeeId}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose an employee" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {usersLoading ? (
+                            <div className="flex items-center justify-center p-4">
+                              <Loader2 className="h-4 w-4 animate-spin" />
                             </div>
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                          ) : (
+                            activeEmployees.map((employee) => (
+                              <SelectItem key={employee.user_id} value={employee.user_id}>
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="h-6 w-6">
+                                    <AvatarImage src={employee.avatar_url || ''} />
+                                    <AvatarFallback className="text-xs">
+                                      {employee.full_name?.charAt(0) || 'U'}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span>{employee.full_name}</span>
+                                </div>
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            {selectedEmployee && (
-              <div className="p-3 rounded-lg bg-muted/50 border">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={selectedEmployee.avatar_url || ''} />
-                    <AvatarFallback>
-                      {selectedEmployee.full_name?.charAt(0) || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{selectedEmployee.full_name}</p>
-                    <p className="text-sm text-muted-foreground">{selectedEmployee.email}</p>
+                {selectedEmployee && (
+                  <div className="p-3 rounded-lg bg-muted/50 border">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={selectedEmployee.avatar_url || ''} />
+                        <AvatarFallback>
+                          {selectedEmployee.full_name?.charAt(0) || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">{selectedEmployee.full_name}</p>
+                        <p className="text-sm text-muted-foreground">{selectedEmployee.email}</p>
+                      </div>
+                    </div>
                   </div>
+                )}
+
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Flag Title</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., Late arrival without notice"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Detailed Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Provide a detailed explanation of the incident, violation, or notice..."
+                          className="min-h-[120px] resize-none"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                  <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                  <p className="text-sm text-amber-700 dark:text-amber-400">
+                    This flag will be permanently attached to the employee's profile and cannot be deleted or edited.
+                  </p>
                 </div>
               </div>
-            )}
+            </ScrollArea>
 
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Flag Title</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="e.g., Late arrival without notice"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Detailed Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Provide a detailed explanation of the incident, violation, or notice..."
-                      className="min-h-[120px] resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              <AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-              <p className="text-sm text-amber-700 dark:text-amber-400">
-                This flag will be permanently attached to the employee's profile and cannot be deleted or edited.
-              </p>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2 pt-4 mt-4 border-t">
               <Button
                 type="button"
                 variant="outline"
@@ -210,7 +213,6 @@ export function FlagForm({ open, onOpenChange, preselectedEmployeeId }: FlagForm
             </div>
           </form>
         </Form>
-        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
