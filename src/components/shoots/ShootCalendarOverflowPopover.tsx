@@ -26,23 +26,28 @@ export function ShootCalendarOverflowPopover({
 }: Props) {
   const [open, setOpen] = useState(false);
 
+  const handleTriggerClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setOpen(true);
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Badge
-          variant="outline"
-          className="text-xs h-5 cursor-pointer hover:bg-muted"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => e.stopPropagation()}
-        >
-          +{remainingCount} more
-        </Badge>
+        <div onClick={handleTriggerClick}>
+          <Badge
+            variant="outline"
+            className="text-xs h-5 cursor-pointer hover:bg-muted"
+          >
+            +{remainingCount} more
+          </Badge>
+        </div>
       </PopoverTrigger>
 
       <PopoverContent
         className="w-72 p-0 z-[9999]"
         align="start"
-        onPointerDown={(e) => e.stopPropagation()}
+        onPointerDownOutside={(e) => e.preventDefault()}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-3 border-b">
