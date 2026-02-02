@@ -87,10 +87,20 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
     assignedUserId: string,
     taskDate: Date
   ) => {
-    if (!user || !isAdmin) {
+    if (!user) {
       toast({
         title: 'Permission Denied',
-        description: 'Only admins can create tasks',
+        description: 'You must be logged in to create tasks',
+        variant: 'destructive',
+      });
+      return null;
+    }
+
+    // Non-admins can only create tasks for themselves
+    if (!isAdmin && assignedUserId !== user.id) {
+      toast({
+        title: 'Permission Denied',
+        description: 'You can only create tasks for yourself',
         variant: 'destructive',
       });
       return null;

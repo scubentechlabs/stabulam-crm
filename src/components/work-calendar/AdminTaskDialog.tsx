@@ -44,6 +44,7 @@ interface AdminTaskDialogProps {
     taskDate: Date;
   }) => Promise<boolean>;
   isSubmitting: boolean;
+  isAdmin?: boolean;
 }
 
 const taskTypes = [
@@ -60,6 +61,7 @@ export function AdminTaskDialog({
   editingTask,
   onSubmit,
   isSubmitting,
+  isAdmin = false,
 }: AdminTaskDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -92,7 +94,8 @@ export function AdminTaskDialog({
       setTitle('');
       setDescription('');
       setTaskType('tod');
-      setAssignedUserId('');
+      // For non-admins, auto-select their own user id
+      setAssignedUserId(users.length === 1 ? users[0].user_id : '');
       setTaskDate(selectedDate || new Date());
     }
   }, [editingTask, selectedDate, open]);
@@ -159,26 +162,30 @@ export function AdminTaskDialog({
             </Select>
           </div>
 
-          {/* Assigned User */}
-          <div className="grid gap-2">
-            <Label>Assign to Employee *</Label>
-            <Select 
-              value={assignedUserId} 
-              onValueChange={setAssignedUserId}
-              disabled={isEditing}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select employee" />
-              </SelectTrigger>
-              <SelectContent>
-                {users.map(user => (
-                  <SelectItem key={user.user_id} value={user.user_id}>
-                    {user.full_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Assigned User - Only show selector for admins */}
+          {isAdmin ? (
+            <div className="grid gap-2">
+              <Label>Assign to Employee *</Label>
+              <Select 
+                value={assignedUserId} 
+                onValueChange={setAssignedUserId}
+                disabled={isEditing}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select employee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map(user => (
+                    <SelectItem key={user.user_id} value={user.user_id}>
+                      {user.full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            <input type="hidden" value={assignedUserId} />
+          )}
 
           {/* Task Date */}
           <div className="grid gap-2">
