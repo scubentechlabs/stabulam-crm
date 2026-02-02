@@ -135,7 +135,7 @@ export function useFlags(filters?: FlagFilters) {
   // Fetch single flag with replies
   const useFlagDetails = (flagId: string | null) => {
     return useQuery({
-      queryKey: ['flag', flagId],
+      queryKey: ['flag-details', flagId],
       queryFn: async () => {
         if (!flagId) return null;
 
@@ -167,6 +167,8 @@ export function useFlags(filters?: FlagFilters) {
           .eq('flag_id', flagId)
           .order('created_at', { ascending: true });
 
+        console.log('Fetched replies for flag', flagId, ':', replies, 'Error:', repliesError);
+
         if (repliesError) throw repliesError;
 
         // Fetch reply user profiles
@@ -194,7 +196,9 @@ export function useFlags(filters?: FlagFilters) {
       },
       enabled: !!flagId,
       staleTime: 0,
-      refetchOnMount: 'always',
+      gcTime: 0,
+      refetchOnMount: true,
+      refetchOnWindowFocus: false,
     });
   };
 
@@ -257,7 +261,7 @@ export function useFlags(filters?: FlagFilters) {
       return newReply;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['flag', variables.flag_id] });
+      queryClient.invalidateQueries({ queryKey: ['flag-details', variables.flag_id] });
       queryClient.invalidateQueries({ queryKey: ['flags'] });
       toast.success('Reply submitted');
     },
