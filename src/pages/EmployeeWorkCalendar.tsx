@@ -65,7 +65,7 @@ export default function EmployeeWorkCalendar() {
   }, [user, isAdmin]);
 
   const handleUserChange = (userId: string) => {
-    setSelectedUserId(userId === 'all' ? '' : userId);
+    setSelectedUserId(userId);
   };
 
   const handleCreateTask = () => {
@@ -131,14 +131,13 @@ export default function EmployeeWorkCalendar() {
         <div className="flex items-center gap-2 flex-1 max-w-xs">
           <Users className="h-4 w-4 text-muted-foreground" />
           <Select 
-            value={selectedUserId || 'all'} 
+            value={selectedUserId} 
             onValueChange={handleUserChange}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select employee" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Employees</SelectItem>
               {users.map(u => (
                 <SelectItem key={u.user_id} value={u.user_id}>
                   {u.full_name}
