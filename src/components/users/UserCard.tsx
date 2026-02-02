@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { User, Mail, Phone, Building2, Clock, IndianRupee, Shield, MoreHorizontal, Pencil, UserX, UserCheck } from 'lucide-react';
+import { User, Mail, Phone, Building2, Clock, IndianRupee, Shield, MoreHorizontal, Pencil, UserX, UserCheck, Flag } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,15 +12,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { UserWithRole } from '@/hooks/useUsers';
+import { useFlags } from '@/hooks/useFlags';
 
 interface UserCardProps {
   user: UserWithRole;
   onEdit: (user: UserWithRole) => void;
   onToggleActive: (userId: string, isActive: boolean) => void;
   onChangeRole: (userId: string, role: 'admin' | 'employee') => void;
+  onViewFlags?: (userId: string) => void;
 }
 
-export function UserCard({ user, onEdit, onToggleActive, onChangeRole }: UserCardProps) {
+export function UserCard({ user, onEdit, onToggleActive, onChangeRole, onViewFlags }: UserCardProps) {
+  const { useEmployeeFlagCount } = useFlags();
+  const { data: flagCount } = useEmployeeFlagCount(user.user_id);
+
   const initials = user.full_name
     .split(' ')
     .map(n => n[0])
@@ -109,7 +114,7 @@ export function UserCard({ user, onEdit, onToggleActive, onChangeRole }: UserCar
           </DropdownMenu>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
           {user.department && (
             <div className="flex items-center gap-2">
               <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -126,6 +131,15 @@ export function UserCard({ user, onEdit, onToggleActive, onChangeRole }: UserCar
               {user.work_start_time?.slice(0, 5) || '09:00'} - {user.work_end_time?.slice(0, 5) || '18:00'}
             </span>
           </div>
+          <button 
+            onClick={() => onViewFlags?.(user.user_id)}
+            className="flex items-center gap-2 hover:text-destructive transition-colors cursor-pointer"
+          >
+            <Flag className="h-4 w-4 text-muted-foreground" />
+            <span className={flagCount && flagCount > 0 ? 'text-destructive font-medium' : ''}>
+              {flagCount || 0} {flagCount === 1 ? 'Flag' : 'Flags'}
+            </span>
+          </button>
           <div className="text-muted-foreground">
             Joined {format(new Date(user.created_at), 'MMM yyyy')}
           </div>

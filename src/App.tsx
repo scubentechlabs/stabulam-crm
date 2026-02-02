@@ -34,6 +34,8 @@ import AdminSalary from "./pages/admin/AdminSalary";
 import AdminShoots from "./pages/admin/AdminShoots";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminRules from "./pages/admin/AdminRules";
+import AdminFlags from "./pages/admin/AdminFlags";
+import Flags from "./pages/Flags";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +65,7 @@ const App = () => (
               <Route path="/leaves" element={<Leaves />} />
               <Route path="/extra-work" element={<ExtraWork />} />
               <Route path="/shoots" element={<Shoots />} />
+              <Route path="/flags" element={<Flags />} />
               <Route path="/salary-history" element={<SalaryHistory />} />
               <Route path="/performance" element={<Performance />} />
               <Route path="/team-calendar" element={<TeamCalendar />} />
@@ -124,6 +127,14 @@ const App = () => (
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminReports />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/flags"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <AdminFlags />
                   </ProtectedRoute>
                 }
               />

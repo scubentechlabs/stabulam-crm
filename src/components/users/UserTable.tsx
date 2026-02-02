@@ -1,4 +1,4 @@
-import { MoreHorizontal, Pencil, Shield, User, UserCheck, UserX, Users, Mail, Phone } from 'lucide-react';
+import { MoreHorizontal, Pencil, Shield, User, UserCheck, UserX, Users, Mail, Phone, Flag } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ interface UserTableProps {
   onEdit: (user: UserWithRole) => void;
   onToggleActive: (userId: string, isActive: boolean) => void;
   onChangeRole: (userId: string, role: 'admin' | 'employee') => void;
+  onIssueFlag?: (userId: string) => void;
   emptyMessage?: string;
   showFilters?: boolean;
 }
@@ -32,7 +33,8 @@ export function UserTable({
   users, 
   onEdit, 
   onToggleActive, 
-  onChangeRole, 
+  onChangeRole,
+  onIssueFlag, 
   emptyMessage = 'No users found',
   showFilters = true,
 }: UserTableProps) {
@@ -213,6 +215,14 @@ export function UserTable({
                           <DropdownMenuItem onClick={() => onEdit(user)}>
                             <Pencil className="h-4 w-4 mr-2" />
                             Edit Details
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={() => onIssueFlag?.(user.user_id)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Flag className="h-4 w-4 mr-2" />
+                            Issue Flag
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           {user.role === 'employee' ? (
