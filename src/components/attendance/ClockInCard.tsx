@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Clock, Camera, MapPin, Loader2 } from 'lucide-react';
+import { Clock, Camera, MapPin, Loader2, PartyPopper } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CameraCapture } from './CameraCapture';
@@ -8,12 +8,15 @@ import { useAttendance } from '@/hooks/useAttendance';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { isWorkingDay } from '@/lib/utils';
 
 interface ClockInCardProps {
   onClockInComplete: () => void;
 }
 
 export function ClockInCard({ onClockInComplete }: ClockInCardProps) {
+  const today = new Date();
+  const isSunday = !isWorkingDay(today);
   const { user } = useAuth();
   const { toast } = useToast();
   const { clockIn, isClockingIn } = useAttendance();
@@ -136,6 +139,34 @@ export function ClockInCard({ onClockInComplete }: ClockInCardProps) {
               onCancel={handleCancel}
             />
           )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show holiday message on Sundays
+  if (isSunday) {
+    return (
+      <Card className="max-w-md mx-auto">
+        <CardHeader className="text-center">
+          <div className="mx-auto w-20 h-20 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-4">
+            <PartyPopper className="h-10 w-10 text-amber-600 dark:text-amber-400" />
+          </div>
+          <CardTitle className="text-2xl">It's a Holiday!</CardTitle>
+          <CardDescription className="text-base mt-2">
+            Today is Sunday - enjoy your day off!
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="text-center space-y-4">
+          <div className="bg-muted/50 rounded-xl p-6">
+            <p className="text-muted-foreground">
+              Clock-in is not available on Sundays. Our working week runs from 
+              <span className="font-medium text-foreground"> Monday to Saturday</span>.
+            </p>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            See you on the next working day! 🌟
+          </p>
         </CardContent>
       </Card>
     );
