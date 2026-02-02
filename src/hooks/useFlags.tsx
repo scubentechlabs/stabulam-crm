@@ -171,21 +171,30 @@ export function useFlags(filters?: FlagFilters) {
 
         if (repliesError) throw repliesError;
 
-        // Fetch reply user profiles
-        const repliesWithProfiles = await Promise.all(
-          (replies || []).map(async (reply) => {
+        // Fetch reply user profiles - use try/catch to ensure failures don't break the whole list
+        const repliesWithProfiles: FlagReply[] = [];
+        for (const reply of (replies || [])) {
+          try {
             const { data: userProfile } = await supabase
               .from('profiles')
               .select('full_name, avatar_url')
               .eq('user_id', reply.user_id)
               .single();
 
-            return {
+            repliesWithProfiles.push({
               ...reply,
-              user_profile: userProfile,
-            } as FlagReply;
-          })
-        );
+              user_profile: userProfile || { full_name: 'Unknown User', avatar_url: null },
+            } as FlagReply);
+          } catch (err) {
+            console.error('Error fetching profile for reply:', reply.id, err);
+            repliesWithProfiles.push({
+              ...reply,
+              user_profile: { full_name: 'Unknown User', avatar_url: null },
+            } as FlagReply);
+          }
+        }
+        
+        console.log('Processed replies with profiles:', repliesWithProfiles);
 
         return {
           ...flag,
