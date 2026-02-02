@@ -63,7 +63,9 @@ export function WorkCalendarView({
     const counts: Record<string, number> = {};
     
     dateTasks.forEach(task => {
-      counts[task.task_type] = (counts[task.task_type] || 0) + 1;
+      // Normalize urgent_tod (legacy) to utod for display
+      const normalizedType = task.task_type === 'urgent_tod' ? 'utod' : task.task_type;
+      counts[normalizedType] = (counts[normalizedType] || 0) + 1;
     });
     
     return counts;
