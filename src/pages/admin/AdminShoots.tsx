@@ -12,7 +12,7 @@ import { ShootCard } from '@/components/shoots/ShootCard';
 import { ShootCalendar } from '@/components/shoots/ShootCalendar';
 import { ShootDetailDialog } from '@/components/shoots/ShootDetailDialog';
 import { EditingListView } from '@/components/shoots/EditingListView';
-import { ShootStatusCards, type ShootStatusFilter } from '@/components/shoots/ShootStatusCards';
+import { type ShootStatusFilter } from '@/components/shoots/ShootStatusCards';
 import { ShootStatusFilter as StatusFilterDropdown } from '@/components/shoots/ShootStatusFilter';
 import { cn } from '@/lib/utils';
 
@@ -139,13 +139,6 @@ export default function AdminShoots() {
 
         <TabsContent value="list">
           <div className="space-y-4">
-            {/* Status Summary Cards */}
-            <ShootStatusCards
-              shoots={shoots}
-              selectedStatus={statusFilter}
-              onStatusSelect={setStatusFilter}
-            />
-
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <h2 className="text-lg font-semibold">
                 {selectedDate 
