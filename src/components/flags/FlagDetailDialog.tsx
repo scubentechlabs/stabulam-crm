@@ -94,7 +94,7 @@ export function FlagDetailDialog({ flag, open, onOpenChange }: FlagDetailDialogP
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-6" scrollbarClassName="w-2" thumbClassName="bg-muted-foreground/30">
+        <ScrollArea className="flex-1 min-h-0 max-h-[40vh] px-6" scrollbarClassName="w-2" thumbClassName="bg-muted-foreground/30">
           <div className="space-y-4 py-4">
             {/* Employee Info */}
             {flag.employee_profile && (
