@@ -91,7 +91,7 @@ export function useTaskStats() {
         const userTasks = (tasks || []).filter(t => t.user_id === profile.user_id);
         const userAttendance = (attendance || []).filter(a => a.user_id === profile.user_id);
 
-        const todTasks = userTasks.filter(t => t.task_type === 'tod' || t.task_type === 'urgent_tod');
+        const todTasks = userTasks.filter(t => t.task_type === 'tod' || t.task_type === 'utod' || t.task_type === 'urgent_tod');
         const completedTodTasks = todTasks.filter(t => t.status === 'completed').length;
         const pendingTodTasks = todTasks.filter(t => t.status === 'pending').length;
 

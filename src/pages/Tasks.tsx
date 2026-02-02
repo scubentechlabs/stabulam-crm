@@ -26,7 +26,7 @@ type Task = Database['public']['Tables']['tasks']['Row'];
 export default function Tasks() {
   const { user } = useAuth();
   const { todayAttendance } = useAttendance();
-  const { todTasks, urgentTasks, addTask, isLoading, refetch } = useTasks(todayAttendance?.id);
+  const { todTasks, utodTasks, addTask, isLoading, refetch } = useTasks(todayAttendance?.id);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [historicalTasks, setHistoricalTasks] = useState<Task[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -78,13 +78,13 @@ export default function Tasks() {
     return !!result;
   };
 
-  const handleAddUrgentTask = async (title: string, description: string | null): Promise<boolean> => {
-    const result = await addTask(title, description, 'urgent_tod', todayAttendance?.id);
+  const handleAddUtodTask = async (title: string, description: string | null): Promise<boolean> => {
+    const result = await addTask(title, description, 'utod', todayAttendance?.id);
     return !!result;
   };
 
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
-  const displayTasks = isToday ? [...todTasks, ...urgentTasks] : historicalTasks;
+  const displayTasks = isToday ? [...todTasks, ...utodTasks] : historicalTasks;
   const completedCount = displayTasks.filter(t => t.status === 'completed').length;
   const pendingCount = displayTasks.filter(t => t.status === 'pending').length;
 
@@ -140,9 +140,9 @@ export default function Tasks() {
                     buttonVariant="outline"
                   />
                   <TaskForm 
-                    taskType="urgent_tod"
-                    onSubmit={handleAddUrgentTask}
-                    buttonText="Add Urgent"
+                    taskType="utod"
+                    onSubmit={handleAddUtodTask}
+                    buttonText="Add UTOD"
                     buttonVariant="default"
                   />
                 </div>
@@ -172,7 +172,7 @@ export default function Tasks() {
                 <TabsList>
                   <TabsTrigger value="all">All ({displayTasks.length})</TabsTrigger>
                   <TabsTrigger value="tod">TOD ({todTasks.length})</TabsTrigger>
-                  <TabsTrigger value="urgent">Urgent ({urgentTasks.length})</TabsTrigger>
+                  <TabsTrigger value="utod">UTOD ({utodTasks.length})</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="all" className="mt-4">
@@ -183,8 +183,8 @@ export default function Tasks() {
                   <TaskList tasks={todTasks} emptyMessage="No TOD tasks added" />
                 </TabsContent>
                 
-                <TabsContent value="urgent" className="mt-4">
-                  <TaskList tasks={urgentTasks} emptyMessage="No urgent tasks added" />
+                <TabsContent value="utod" className="mt-4">
+                  <TaskList tasks={utodTasks} emptyMessage="No UTOD tasks added" />
                 </TabsContent>
               </Tabs>
             ) : (

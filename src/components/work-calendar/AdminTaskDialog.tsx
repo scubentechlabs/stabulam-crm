@@ -39,7 +39,7 @@ interface AdminTaskDialogProps {
   onSubmit: (data: {
     title: string;
     description: string | null;
-    taskType: 'tod' | 'eod' | 'utod' | 'urgent_tod';
+    taskType: 'tod' | 'utod' | 'eod';
     assignedUserId: string;
     taskDate: Date;
   }) => Promise<boolean>;
@@ -63,7 +63,7 @@ export function AdminTaskDialog({
 }: AdminTaskDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [taskType, setTaskType] = useState<'tod' | 'eod' | 'utod' | 'urgent_tod'>('tod');
+  const [taskType, setTaskType] = useState<'tod' | 'utod' | 'eod'>('tod');
   const [assignedUserId, setAssignedUserId] = useState('');
   const [taskDate, setTaskDate] = useState<Date | undefined>(selectedDate || new Date());
 
@@ -73,7 +73,7 @@ export function AdminTaskDialog({
     if (editingTask) {
       setTitle(editingTask.title);
       setDescription(editingTask.description || '');
-      setTaskType(editingTask.task_type as 'tod' | 'eod' | 'utod' | 'urgent_tod');
+      setTaskType(editingTask.task_type as 'tod' | 'utod' | 'eod');
       setAssignedUserId(editingTask.user_id);
       setTaskDate(editingTask.submitted_at 
         ? new Date(editingTask.submitted_at) 

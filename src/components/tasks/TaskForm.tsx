@@ -74,17 +74,22 @@ export function TaskForm({
   };
 
   const getDialogTitle = () => {
-    return taskType === 'tod' ? 'Add Tasks of the Day' : 'Add Urgent Tasks';
+    if (taskType === 'tod') return 'Add Tasks of the Day';
+    if (taskType === 'utod') return 'Add UTOD (Urgent Task of the Day)';
+    return 'Add EOD Tasks';
   };
 
   const getDialogDescription = () => {
-    return taskType === 'tod' 
-      ? 'Add your planned tasks for today. You can add multiple tasks at once.'
-      : 'Add unplanned or emergency tasks.';
+    if (taskType === 'tod') return 'Add your planned tasks for today. You can add multiple tasks at once.';
+    if (taskType === 'utod') return 'Add unplanned or emergency tasks.';
+    return 'Add end of day tasks.';
   };
 
   const getButtonText = () => {
-    return buttonText || (taskType === 'tod' ? 'Add TOD Task' : 'Add Urgent Task');
+    if (buttonText) return buttonText;
+    if (taskType === 'tod') return 'Add TOD Task';
+    if (taskType === 'utod') return 'Add UTOD Task';
+    return 'Add EOD Task';
   };
 
   const validTitlesCount = titles.filter(t => t.trim()).length;

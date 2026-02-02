@@ -14,16 +14,14 @@ interface WorkCalendarViewProps {
 
 const taskTypeColors: Record<string, string> = {
   tod: 'bg-blue-500',
+  utod: 'bg-red-500',
   eod: 'bg-green-500',
-  utod: 'bg-purple-500',
-  urgent_tod: 'bg-red-500',
 };
 
 const taskTypeLabels: Record<string, string> = {
   tod: 'TOD',
-  eod: 'EOD',
   utod: 'UTOD',
-  urgent_tod: 'Urgent',
+  eod: 'EOD',
 };
 
 export function WorkCalendarView({

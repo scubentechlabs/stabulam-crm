@@ -139,8 +139,8 @@ export function EodPanel({ attendanceId, onComplete }: EodPanelProps) {
                       >
                         {task.title}
                       </Label>
-                      <Badge variant={task.task_type === 'urgent_tod' ? 'destructive' : 'secondary'} className="text-xs">
-                        {task.task_type === 'urgent_tod' ? 'Urgent' : 'TOD'}
+                      <Badge variant={task.task_type === 'utod' || task.task_type === 'urgent_tod' ? 'destructive' : 'secondary'} className="text-xs">
+                        {task.task_type === 'utod' || task.task_type === 'urgent_tod' ? 'UTOD' : 'TOD'}
                       </Badge>
                     </div>
                     

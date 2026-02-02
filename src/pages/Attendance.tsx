@@ -17,7 +17,7 @@ type AttendanceStep = 'clock-in' | 'tod' | 'working' | 'eod' | 'clock-out' | 'co
 
 export default function Attendance() {
   const { todayAttendance, isLoading, refetch } = useAttendance();
-  const { addTask, urgentTasks, todTasks, refetch: refetchTasks } = useTasks(todayAttendance?.id);
+  const { addTask, utodTasks, todTasks, refetch: refetchTasks } = useTasks(todayAttendance?.id);
   const [currentStep, setCurrentStep] = useState<AttendanceStep>('clock-in');
   const [showEod, setShowEod] = useState(false);
 
@@ -63,8 +63,8 @@ export default function Attendance() {
     setCurrentStep('complete');
   };
 
-  const handleAddUrgentTask = async (title: string, description: string | null): Promise<boolean> => {
-    const result = await addTask(title, description, 'urgent_tod', todayAttendance?.id);
+  const handleAddUtodTask = async (title: string, description: string | null): Promise<boolean> => {
+    const result = await addTask(title, description, 'utod', todayAttendance?.id);
     if (result) {
       refetchTasks();
     }
@@ -115,7 +115,7 @@ export default function Attendance() {
           <Tabs defaultValue="tasks" className="w-full">
             <TabsList className="w-full max-w-md mx-auto grid grid-cols-2">
               <TabsTrigger value="tasks">Today's Tasks</TabsTrigger>
-              <TabsTrigger value="urgent">Urgent Tasks</TabsTrigger>
+              <TabsTrigger value="utod">UTOD Tasks</TabsTrigger>
             </TabsList>
             
             <TabsContent value="tasks" className="mt-6">
@@ -135,24 +135,24 @@ export default function Attendance() {
               </Card>
             </TabsContent>
             
-            <TabsContent value="urgent" className="mt-6">
+            <TabsContent value="utod" className="mt-6">
               <Card className="max-w-2xl mx-auto">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <AlertTriangle className="h-5 w-5 text-destructive" />
-                    Urgent Tasks
+                    UTOD (Urgent Task of the Day)
                   </CardTitle>
                   <TaskForm 
-                    taskType="urgent_tod"
-                    onSubmit={handleAddUrgentTask}
-                    buttonText="Add Urgent"
+                    taskType="utod"
+                    onSubmit={handleAddUtodTask}
+                    buttonText="Add UTOD"
                     buttonVariant="outline"
                   />
                 </CardHeader>
                 <CardContent>
                   <TaskList 
-                    tasks={urgentTasks} 
-                    emptyMessage="No urgent tasks added"
+                    tasks={utodTasks} 
+                    emptyMessage="No UTOD tasks added"
                   />
                 </CardContent>
               </Card>
