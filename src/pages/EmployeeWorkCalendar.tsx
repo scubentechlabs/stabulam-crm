@@ -119,12 +119,10 @@ export default function EmployeeWorkCalendar() {
             </p>
           </div>
 
-          {isAdmin && (
-            <Button onClick={handleCreateTask}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Task
-            </Button>
-          )}
+          <Button onClick={handleCreateTask}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Task
+          </Button>
         </div>
       </div>
 
@@ -185,18 +183,17 @@ export default function EmployeeWorkCalendar() {
         </div>
       </div>
 
-      {/* Admin Task Dialog */}
-      {isAdmin && (
-        <AdminTaskDialog
-          open={isTaskDialogOpen}
-          onOpenChange={setIsTaskDialogOpen}
-          users={users}
-          selectedDate={selectedDate}
-          editingTask={editingTask}
-          onSubmit={handleTaskSubmit}
-          isSubmitting={isSubmitting}
-        />
-      )}
+      {/* Task Dialog - Available for all users */}
+      <AdminTaskDialog
+        open={isTaskDialogOpen}
+        onOpenChange={setIsTaskDialogOpen}
+        users={isAdmin ? users : users.filter(u => u.user_id === user?.id)}
+        selectedDate={selectedDate}
+        editingTask={editingTask}
+        onSubmit={handleTaskSubmit}
+        isSubmitting={isSubmitting}
+        isAdmin={isAdmin}
+      />
     </div>
   );
 }
