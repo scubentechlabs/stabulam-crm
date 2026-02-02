@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -30,6 +31,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { HolidayForm } from '@/components/holidays/HolidayForm';
+import { HolidayCalendarView } from '@/components/holidays/HolidayCalendarView';
 import { useHolidays, Holiday } from '@/hooks/useHolidays';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -110,98 +112,111 @@ export default function AdminHolidays() {
         </Card>
       </div>
 
-      {/* Holidays Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Holidays</CardTitle>
-          <CardDescription>
-            Manage company holidays and public events. Sundays are automatically treated as holidays.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          ) : holidays.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Calendar className="h-12 w-12 text-muted-foreground/30 mb-4" />
-              <h3 className="text-lg font-medium">No holidays configured</h3>
-              <p className="text-sm text-muted-foreground mt-1 mb-4">
-                Add public holidays and company events to block clock-in on those days.
-              </p>
-              <Button onClick={() => setShowAddDialog(true)} variant="outline">
-                <Plus className="h-4 w-4 mr-2" />
-                Add First Holiday
-              </Button>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Holiday Name</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {holidays.map((holiday) => {
-                  const holidayDate = new Date(holiday.date);
-                  const isPast = holidayDate < new Date() && !holiday.is_recurring;
-                  
-                  return (
-                    <TableRow key={holiday.id} className={isPast ? 'opacity-60' : ''}>
-                      <TableCell className="font-medium">{holiday.name}</TableCell>
-                      <TableCell>
-                        {holiday.is_recurring 
-                          ? format(holidayDate, 'MMMM d') + ' (every year)'
-                          : format(holidayDate, 'MMMM d, yyyy')
-                        }
-                      </TableCell>
-                      <TableCell>
-                        {holiday.is_recurring ? (
-                          <Badge variant="secondary" className="gap-1">
-                            <Repeat className="h-3 w-3" />
-                            Annual
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline">One-time</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground max-w-[200px] truncate">
-                        {holiday.description || '-'}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setEditingHoliday(holiday)}
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => setDeletingHoliday(holiday)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+      {/* Tabs for Calendar and Table View */}
+      <Tabs defaultValue="calendar" className="w-full">
+        <TabsList>
+          <TabsTrigger value="calendar">Calendar View</TabsTrigger>
+          <TabsTrigger value="table">Table View</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="calendar" className="mt-4">
+          <HolidayCalendarView holidays={holidays} isLoading={isLoading} />
+        </TabsContent>
+
+        <TabsContent value="table" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>All Holidays</CardTitle>
+              <CardDescription>
+                Manage company holidays and public events. Sundays are automatically treated as holidays.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="space-y-3">
+                  {[...Array(5)].map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full" />
+                  ))}
+                </div>
+              ) : holidays.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Calendar className="h-12 w-12 text-muted-foreground/30 mb-4" />
+                  <h3 className="text-lg font-medium">No holidays configured</h3>
+                  <p className="text-sm text-muted-foreground mt-1 mb-4">
+                    Add public holidays and company events to block clock-in on those days.
+                  </p>
+                  <Button onClick={() => setShowAddDialog(true)} variant="outline">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add First Holiday
+                  </Button>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Holiday Name</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {holidays.map((holiday) => {
+                      const holidayDate = new Date(holiday.date);
+                      const isPast = holidayDate < new Date() && !holiday.is_recurring;
+                      
+                      return (
+                        <TableRow key={holiday.id} className={isPast ? 'opacity-60' : ''}>
+                          <TableCell className="font-medium">{holiday.name}</TableCell>
+                          <TableCell>
+                            {holiday.is_recurring 
+                              ? format(holidayDate, 'MMMM d') + ' (every year)'
+                              : format(holidayDate, 'MMMM d, yyyy')
+                            }
+                          </TableCell>
+                          <TableCell>
+                            {holiday.is_recurring ? (
+                              <Badge variant="secondary" className="gap-1">
+                                <Repeat className="h-3 w-3" />
+                                Annual
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline">One-time</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground max-w-[200px] truncate">
+                            {holiday.description || '-'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setEditingHoliday(holiday)}
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => setDeletingHoliday(holiday)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Add Holiday Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
