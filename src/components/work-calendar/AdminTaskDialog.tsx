@@ -48,9 +48,8 @@ interface AdminTaskDialogProps {
 
 const taskTypes = [
   { value: 'tod', label: 'TOD (Task of the Day)', color: 'bg-blue-500' },
+  { value: 'utod', label: 'Urgent Task', color: 'bg-red-500' },
   { value: 'eod', label: 'EOD (End of Day)', color: 'bg-green-500' },
-  { value: 'utod', label: 'UTOD (Upcoming Task)', color: 'bg-purple-500' },
-  { value: 'urgent_tod', label: 'Urgent Task', color: 'bg-red-500' },
 ];
 
 export function AdminTaskDialog({
