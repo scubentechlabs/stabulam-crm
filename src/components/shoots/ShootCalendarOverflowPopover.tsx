@@ -59,10 +59,10 @@ export function ShootCalendarOverflowPopover({
         </div>
 
         <ScrollArea
-          className="max-h-[300px]"
+          className="h-[min(320px,60vh)]"
           type="always"
-          scrollbarClassName="w-3 rounded-full bg-muted/40"
-          thumbClassName="bg-muted-foreground/50"
+          scrollbarClassName="w-3 rounded-full bg-muted/60"
+          thumbClassName="bg-muted-foreground/70"
         >
           <div className="p-2 pr-4 space-y-2 overscroll-contain">
             {dayShoots.map((shoot) => (
