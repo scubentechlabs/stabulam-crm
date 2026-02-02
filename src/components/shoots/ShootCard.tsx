@@ -77,7 +77,8 @@ export function ShootCard({ shoot, onStatusChange, onEditorAssignment, onDelete,
   const isOwner = shoot.created_by === user?.id;
   const isAssigned = shoot.assignments.some(a => a.user_id === user?.id);
   const canModify = isAdmin || isOwner || isAssigned;
-  const canDelete = isAdmin || isOwner || isAssigned;
+  // All authenticated users can delete any shoot
+  const canDelete = !!user;
   
   const formatTime = (time: string) => formatTimeOnlyIST(time);
 

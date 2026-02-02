@@ -643,23 +643,6 @@ export function useShoots() {
   const deleteShoot = async (shootId: string) => {
     if (!user) return { error: new Error('Not authenticated') };
 
-    // Check if user can delete: creator, assigned, or admin
-    const shoot = shoots.find(s => s.id === shootId);
-    if (!shoot) return { error: new Error('Shoot not found') };
-    
-    const isCreator = shoot.created_by === user.id;
-    const isAssigned = shoot.assignments.some(a => a.user_id === user.id);
-    const canDelete = isAdmin || isCreator || isAssigned;
-    
-    if (!canDelete) {
-      toast({
-        title: 'Not Authorized',
-        description: 'You can only delete shoots you created or are assigned to',
-        variant: 'destructive',
-      });
-      return { error: new Error('Not authorized') };
-    }
-
     try {
       // Optimistically remove from state
       setShoots(prev => prev.filter(s => s.id !== shootId));
