@@ -62,7 +62,7 @@ export function ShootDetailDialog({
   onUpdateShoot,
 }: ShootDetailDialogProps) {
   const { isAdmin, user } = useAuth();
-  const { activeUsers } = useUsers();
+  const { teamMembers } = useUsers();
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -85,7 +85,8 @@ export function ShootDetailDialog({
   };
 
   const assignedUserIds = shoot.assignments.map(a => a.user_id);
-  const availableUsers = activeUsers.filter(u => !assignedUserIds.includes(u.user_id));
+  // NOTE: useUsers().users is admin-only; use teamMembers (all authenticated) for assignment list
+  const availableUsers = teamMembers.filter(u => !assignedUserIds.includes(u.user_id));
 
   const handleSaveEdit = async (data: {
     event_name: string;
@@ -240,6 +241,14 @@ export function ShootDetailDialog({
                     ))}
                   </SelectContent>
                 </Select>
+              )}
+
+              {/* Keep the control visible for all shoots; disable when nobody is available */}
+              {canModify && availableUsers.length === 0 && (
+                <Button variant="outline" size="sm" className="h-8" disabled>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  <span className="text-xs">Add Member</span>
+                </Button>
               )}
             </div>
 

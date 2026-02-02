@@ -601,7 +601,8 @@ export function useShoots() {
   };
 
   const removeAssignment = async (assignmentId: string) => {
-    if (!user || !isAdmin) return { error: new Error('Not authorized') };
+    // All authenticated users can remove members (matches backend permissions)
+    if (!user) return { error: new Error('Not authenticated') };
 
     try {
       // Optimistic UI: remove immediately
