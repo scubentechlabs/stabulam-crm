@@ -152,18 +152,27 @@ export function useShoots() {
         });
       });
 
-      // Merge with previous state to avoid a race where realtime refresh briefly returns
-      // a shoot with no assignments right after creation.
+      // Merge with previous state to avoid a race where a freshly-created shoot
+      // can momentarily fetch with 0 assignments before assignment rows are visible.
+      // IMPORTANT: Only preserve assignments for *very new* shoots to avoid breaking
+      // legitimate cases where a shoot truly has 0 members (e.g., after removals).
       setShoots(prev => {
         const prevMap = new Map(prev.map(s => [s.id, s]));
+        const now = Date.now();
+
         return Array.from(shootsMap.values()).map((s) => {
           const prevShoot = prevMap.get(s.id);
           if (!prevShoot) return s;
 
-          const mergedAssignments = (s.assignments?.length ?? 0) > 0
-            ? s.assignments
-            : prevShoot.assignments;
+          const createdAtMs = Number.isNaN(Date.parse(s.created_at)) ? 0 : Date.parse(s.created_at);
+          const isVeryNew = createdAtMs > 0 && now - createdAtMs < 10_000;
 
+          const shouldPreserveAssignments =
+            isVeryNew &&
+            (prevShoot.assignments?.length ?? 0) > 0 &&
+            (s.assignments?.length ?? 0) === 0;
+
+          const mergedAssignments = shouldPreserveAssignments ? prevShoot.assignments : s.assignments;
           const mergedEditor = s.assigned_editor ?? prevShoot.assigned_editor ?? null;
 
           return {
@@ -476,21 +485,112 @@ export function useShoots() {
     if (!user) return { error: new Error('Not authenticated') };
 
     try {
-      const { error } = await supabase
-        .from('shoot_assignments')
-        .insert({ shoot_id: shootId, user_id: userId });
+      const tempId = `temp-${shootId}-${userId}-${Date.now()}`;
 
-      if (error) throw error;
+      // Optimistic UI: show the member immediately (even if realtime is not enabled)
+      setShoots(prev => prev.map(shoot => {
+        if (shoot.id !== shootId) return shoot;
+        if (shoot.assignments.some(a => a.user_id === userId)) return shoot;
+        return {
+          ...shoot,
+          assignments: [
+            ...shoot.assignments,
+            {
+              id: tempId,
+              shoot_id: shootId,
+              user_id: userId,
+              created_at: new Date().toISOString(),
+            },
+          ],
+        };
+      }));
+
+      // Insert and try to get the real row back
+      const { data: inserted, error: insertError } = await supabase
+        .from('shoot_assignments')
+        .insert({ shoot_id: shootId, user_id: userId })
+        .select('*')
+        .maybeSingle();
+
+      if (insertError) throw insertError;
+
+      // Some environments/policies may not return INSERT rows; fallback to fetch.
+      let assignmentRow = inserted;
+      if (!assignmentRow) {
+        const { data: fetched, error: fetchErr } = await supabase
+          .from('shoot_assignments')
+          .select('*')
+          .eq('shoot_id', shootId)
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (fetchErr) throw fetchErr;
+        assignmentRow = fetched ?? null;
+      }
+
+      // Fetch profile for immediate display
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('full_name, email, avatar_url')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      const resolvedAssignment: ShootAssignment = assignmentRow
+        ? {
+            ...(assignmentRow as unknown as ShootAssignment),
+            profile: profileData
+              ? {
+                  full_name: profileData.full_name,
+                  email: profileData.email,
+                  avatar_url: profileData.avatar_url,
+                }
+              : undefined,
+          }
+        : {
+            id: tempId,
+            shoot_id: shootId,
+            user_id: userId,
+            created_at: new Date().toISOString(),
+            profile: profileData
+              ? {
+                  full_name: profileData.full_name,
+                  email: profileData.email,
+                  avatar_url: profileData.avatar_url,
+                }
+              : undefined,
+          };
+
+      // Replace optimistic temp row with the real assignment (and attach profile)
+      setShoots(prev => prev.map(shoot => {
+        if (shoot.id !== shootId) return shoot;
+        const next = shoot.assignments
+          .filter(a => a.id !== tempId && a.user_id !== userId)
+          .concat(resolvedAssignment);
+
+        // Deduplicate by assignment id
+        const map = new Map(next.map(a => [a.id, a]));
+        return { ...shoot, assignments: Array.from(map.values()) };
+      }));
 
       toast({
         title: 'Success',
         description: 'Team member assigned',
       });
 
-      // Realtime subscription will handle the update
+      // Ensure state sync even when realtime isn't available
+      scheduleRefresh();
       return { error: null };
     } catch (error) {
       console.error('Error adding assignment:', error);
+
+      // Revert optimistic row on error
+      setShoots(prev => prev.map(shoot => {
+        if (shoot.id !== shootId) return shoot;
+        return { ...shoot, assignments: shoot.assignments.filter(a => a.user_id !== userId) };
+      }));
+
       toast({
         title: 'Error',
         description: 'Failed to assign team member',
@@ -504,6 +604,12 @@ export function useShoots() {
     if (!user || !isAdmin) return { error: new Error('Not authorized') };
 
     try {
+      // Optimistic UI: remove immediately
+      setShoots(prev => prev.map(shoot => {
+        if (!shoot.assignments.some(a => a.id === assignmentId)) return shoot;
+        return { ...shoot, assignments: shoot.assignments.filter(a => a.id !== assignmentId) };
+      }));
+
       const { error } = await supabase
         .from('shoot_assignments')
         .delete()
@@ -516,10 +622,15 @@ export function useShoots() {
         description: 'Team member removed',
       });
 
-      // Realtime subscription will handle the update
+      // Ensure state sync even when realtime isn't available
+      scheduleRefresh();
       return { error: null };
     } catch (error) {
       console.error('Error removing assignment:', error);
+
+      // Re-sync on error (restores UI if needed)
+      await fetchShoots(false);
+
       toast({
         title: 'Error',
         description: 'Failed to remove team member',
