@@ -135,7 +135,7 @@ export function FlagDetailDialog({ flag, open, onOpenChange }: FlagDetailDialogP
             <div>
               <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
-                Responses ({flagDetails?.replies?.length || 0})
+                Responses ({flagDetails?.replies?.length ?? flag?.replies_count ?? 0})
               </h4>
 
               {isLoading ? (
@@ -171,6 +171,11 @@ export function FlagDetailDialog({ flag, open, onOpenChange }: FlagDetailDialogP
                       <p className="text-sm whitespace-pre-wrap">{reply.reply_text}</p>
                     </div>
                   ))}
+                </div>
+              ) : !isLoading && (flag?.replies_count ?? 0) > 0 ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-sm text-muted-foreground">Loading responses...</span>
                 </div>
               ) : (
                 <div className="text-center py-6 text-muted-foreground">
