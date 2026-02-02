@@ -105,7 +105,7 @@ export function AttendanceTableView({ data, isLoading }: AttendanceTableViewProp
                   {/* SELFIE */}
                   <TableCell>
                     <Avatar className="h-10 w-10 border-2 border-slate-200 dark:border-slate-700">
-                      <AvatarImage src={row.avatar_url || undefined} />
+                      <AvatarImage src={row.clock_in_photo_url || row.avatar_url || undefined} />
                       <AvatarFallback className="text-xs bg-slate-100 dark:bg-slate-800">
                         {row.user_name.split(' ').map(n => n[0]).join('').toUpperCase()}
                       </AvatarFallback>
