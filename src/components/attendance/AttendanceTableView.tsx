@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
 import { 
   ArrowRight,
@@ -21,6 +22,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn, formatTimeIST } from '@/lib/utils';
 import { AttendanceSelfieAvatar } from './AttendanceSelfieAvatar';
+import { AttendanceDetailDialog } from './AttendanceDetailDialog';
 import type { AttendanceTableRow } from '@/hooks/useAttendanceTable';
 
 interface AttendanceTableViewProps {
@@ -29,6 +31,14 @@ interface AttendanceTableViewProps {
 }
 
 export function AttendanceTableView({ data, isLoading }: AttendanceTableViewProps) {
+  const [selectedRecord, setSelectedRecord] = useState<AttendanceTableRow | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+
+  const handleViewDetails = (record: AttendanceTableRow) => {
+    setSelectedRecord(record);
+    setDetailDialogOpen(true);
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -204,6 +214,7 @@ export function AttendanceTableView({ data, isLoading }: AttendanceTableViewProp
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                        onClick={() => handleViewDetails(row)}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -233,6 +244,13 @@ export function AttendanceTableView({ data, isLoading }: AttendanceTableViewProp
           </TableBody>
         </Table>
       </ScrollArea>
+
+      {/* Detail Dialog */}
+      <AttendanceDetailDialog
+        record={selectedRecord}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+      />
     </Card>
   );
 }
