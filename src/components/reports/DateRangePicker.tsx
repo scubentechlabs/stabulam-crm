@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { format, subDays, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, subMonths } from 'date-fns';
+import { format, subDays, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, subMonths, startOfDay, endOfDay } from 'date-fns';
 import { Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,16 @@ interface PresetOption {
 }
 
 const presets: PresetOption[] = [
+  {
+    label: 'Today',
+    getValue: () => {
+      const today = new Date();
+      return {
+        from: startOfDay(today),
+        to: endOfDay(today),
+      };
+    },
+  },
   {
     label: 'Last 7 days',
     getValue: () => ({
