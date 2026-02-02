@@ -17,9 +17,8 @@ interface TaskDayDetailProps {
 
 const taskTypeConfig: Record<string, { label: string; color: string; bgColor: string }> = {
   tod: { label: 'TOD', color: 'text-blue-600', bgColor: 'bg-blue-500' },
+  utod: { label: 'UTOD', color: 'text-red-600', bgColor: 'bg-red-500' },
   eod: { label: 'EOD', color: 'text-green-600', bgColor: 'bg-green-500' },
-  utod: { label: 'UTOD', color: 'text-purple-600', bgColor: 'bg-purple-500' },
-  urgent_tod: { label: 'Urgent', color: 'text-red-600', bgColor: 'bg-red-500' },
 };
 
 export function TaskDayDetail({ 
@@ -52,9 +51,8 @@ export function TaskDayDetail({
   });
 
   const todTasks = dayTasks.filter(t => t.task_type === 'tod');
+  const utodTasks = dayTasks.filter(t => t.task_type === 'utod' || t.task_type === 'urgent_tod');
   const eodTasks = dayTasks.filter(t => t.task_type === 'eod');
-  const utodTasks = dayTasks.filter(t => t.task_type === 'utod');
-  const urgentTasks = dayTasks.filter(t => t.task_type === 'urgent_tod');
 
   const renderTaskList = (taskList: WorkCalendarTask[], emptyMessage: string) => {
     if (taskList.length === 0) {
@@ -91,12 +89,11 @@ export function TaskDayDetail({
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="all">All ({dayTasks.length})</TabsTrigger>
             <TabsTrigger value="tod">TOD ({todTasks.length})</TabsTrigger>
-            <TabsTrigger value="eod">EOD ({eodTasks.length})</TabsTrigger>
             <TabsTrigger value="utod">UTOD ({utodTasks.length})</TabsTrigger>
-            <TabsTrigger value="urgent">Urgent ({urgentTasks.length})</TabsTrigger>
+            <TabsTrigger value="eod">EOD ({eodTasks.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="mt-4">
@@ -105,14 +102,11 @@ export function TaskDayDetail({
           <TabsContent value="tod" className="mt-4">
             {renderTaskList(todTasks, 'No TOD tasks')}
           </TabsContent>
-          <TabsContent value="eod" className="mt-4">
-            {renderTaskList(eodTasks, 'No EOD tasks')}
-          </TabsContent>
           <TabsContent value="utod" className="mt-4">
             {renderTaskList(utodTasks, 'No UTOD tasks')}
           </TabsContent>
-          <TabsContent value="urgent" className="mt-4">
-            {renderTaskList(urgentTasks, 'No Urgent tasks')}
+          <TabsContent value="eod" className="mt-4">
+            {renderTaskList(eodTasks, 'No EOD tasks')}
           </TabsContent>
         </Tabs>
       </CardContent>

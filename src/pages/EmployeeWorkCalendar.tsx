@@ -81,7 +81,7 @@ export default function EmployeeWorkCalendar() {
   const handleTaskSubmit = async (data: {
     title: string;
     description: string | null;
-    taskType: 'tod' | 'eod' | 'utod' | 'urgent_tod';
+    taskType: 'tod' | 'utod' | 'eod';
     assignedUserId: string;
     taskDate: Date;
   }): Promise<boolean> => {

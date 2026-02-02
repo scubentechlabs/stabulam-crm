@@ -75,7 +75,7 @@ export function useTasks(attendanceId?: string) {
 
       toast({
         title: 'Task Added',
-        description: taskType === 'tod' ? 'Task of the Day added.' : 'Urgent task added.',
+        description: taskType === 'tod' ? 'Task of the Day added.' : taskType === 'utod' ? 'UTOD task added.' : 'EOD task added.',
       });
 
       await fetchTasks();
@@ -189,7 +189,8 @@ export function useTasks(attendanceId?: string) {
   }, [user, toast, fetchTasks]);
 
   const todTasks = tasks.filter(t => t.task_type === 'tod');
-  const urgentTasks = tasks.filter(t => t.task_type === 'urgent_tod');
+  const utodTasks = tasks.filter(t => t.task_type === 'utod' || t.task_type === 'urgent_tod');
+  const eodTasks = tasks.filter(t => t.task_type === 'eod');
   const allTasks = tasks;
   const pendingTasks = tasks.filter(t => t.status === 'pending');
   const completedTasks = tasks.filter(t => t.status === 'completed');
@@ -197,7 +198,8 @@ export function useTasks(attendanceId?: string) {
   return {
     tasks,
     todTasks,
-    urgentTasks,
+    utodTasks,
+    eodTasks,
     allTasks,
     pendingTasks,
     completedTasks,

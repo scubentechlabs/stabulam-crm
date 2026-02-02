@@ -39,7 +39,20 @@ interface TaskItemProps {
 
 function TaskItem({ task, showType }: TaskItemProps) {
   const isCompleted = task.status === 'completed';
-  const isUrgent = task.task_type === 'urgent_tod';
+  const isUtod = task.task_type === 'utod' || task.task_type === 'urgent_tod';
+  const isEod = task.task_type === 'eod';
+
+  const getTaskLabel = () => {
+    if (isUtod) return 'UTOD';
+    if (isEod) return 'EOD';
+    return 'TOD';
+  };
+
+  const getBadgeVariant = () => {
+    if (isUtod) return 'destructive';
+    if (isEod) return 'default';
+    return 'secondary';
+  };
 
   return (
     <Card className={cn(
@@ -71,8 +84,8 @@ function TaskItem({ task, showType }: TaskItemProps) {
               </h4>
               
               {showType && (
-                <Badge variant={isUrgent ? 'destructive' : 'secondary'} className="text-xs">
-                  {isUrgent ? 'Urgent' : 'TOD'}
+                <Badge variant={getBadgeVariant()} className="text-xs">
+                  {getTaskLabel()}
                 </Badge>
               )}
               

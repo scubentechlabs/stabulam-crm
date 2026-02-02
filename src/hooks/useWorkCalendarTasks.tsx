@@ -7,8 +7,8 @@ import type { Database } from '@/integrations/supabase/types';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
 type TaskInsert = Database['public']['Tables']['tasks']['Insert'];
-// Extended task types - includes new enum values added via migration
-type TaskType = 'tod' | 'eod' | 'utod' | 'urgent_tod';
+// Extended task types - standardized to tod, utod, eod (urgent_tod legacy support)
+type TaskType = 'tod' | 'utod' | 'eod';
 type DbTaskType = Database['public']['Enums']['task_type'];
 
 export interface WorkCalendarTask extends Task {
@@ -236,19 +236,17 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
     return acc;
   }, {} as Record<string, WorkCalendarTask[]>);
 
-  // Filter tasks by type
+  // Filter tasks by type (utod includes legacy urgent_tod)
   const todTasks = tasks.filter(t => t.task_type === 'tod');
+  const utodTasks = tasks.filter(t => t.task_type === 'utod' || t.task_type === 'urgent_tod');
   const eodTasks = tasks.filter(t => t.task_type === 'eod');
-  const utodTasks = tasks.filter(t => t.task_type === 'utod');
-  const urgentTasks = tasks.filter(t => t.task_type === 'urgent_tod');
 
   return {
     tasks,
     tasksByDate,
     todTasks,
-    eodTasks,
     utodTasks,
-    urgentTasks,
+    eodTasks,
     isLoading,
     isSubmitting,
     createTask,
