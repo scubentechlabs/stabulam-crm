@@ -133,15 +133,12 @@ export default function EmployeeWorkCalendar() {
           <Select 
             value={selectedUserId || 'all'} 
             onValueChange={handleUserChange}
-            disabled={!isAdmin && !!user}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select employee" />
             </SelectTrigger>
             <SelectContent>
-              {isAdmin && (
-                <SelectItem value="all">All Employees</SelectItem>
-              )}
+              <SelectItem value="all">All Employees</SelectItem>
               {users.map(u => (
                 <SelectItem key={u.user_id} value={u.user_id}>
                   {u.full_name}
