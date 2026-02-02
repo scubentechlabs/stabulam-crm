@@ -60,7 +60,6 @@ const employeeNavItems: NavItem[] = [
   { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { title: 'Attendance', href: '/attendance', icon: Clock },
   { title: 'Tasks', href: '/tasks', icon: ClipboardList },
-  { title: 'Work Calendar', href: '/employee-work-calendar', icon: CalendarDays },
   { title: 'Leave Requests', href: '/leaves', icon: Calendar },
   { title: 'Extra Work', href: '/extra-work', icon: Briefcase },
   { title: 'Shoots and Editing', href: '/shoots', icon: Camera },
