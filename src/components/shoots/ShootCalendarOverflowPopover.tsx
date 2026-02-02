@@ -3,7 +3,7 @@ import { format } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn, formatTimeOnlyIST } from "@/lib/utils";
 import type { ShootWithAssignments } from "@/hooks/useShoots";
 
@@ -58,8 +58,8 @@ export function ShootCalendarOverflowPopover({
           </p>
         </div>
 
-        <ScrollArea className="max-h-[300px]">
-          <div className="p-2 space-y-2 overscroll-contain">
+        <ScrollArea className="max-h-[300px]" type="always">
+          <div className="p-2 pr-4 space-y-2 overscroll-contain">
             {dayShoots.map((shoot) => (
               <button
                 key={shoot.id}
@@ -95,6 +95,7 @@ export function ShootCalendarOverflowPopover({
               </button>
             ))}
           </div>
+          <ScrollBar className="w-2 bg-muted/50" />
         </ScrollArea>
       </PopoverContent>
     </Popover>
