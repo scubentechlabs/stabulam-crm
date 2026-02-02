@@ -1,4 +1,4 @@
-import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek } from 'date-fns';
+import { isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, format } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn, formatDateIST } from '@/lib/utils';
@@ -53,8 +53,8 @@ export function WorkCalendarView({
   };
 
   const getTasksForDate = (date: Date) => {
-    // Use local date format for calendar dates (already in local timezone)
-    const dateKey = format(date, 'yyyy-MM-dd');
+    // Use IST format consistently for calendar dates to match tasksByDate keys
+    const dateKey = formatDateIST(date, 'yyyy-MM-dd');
     return tasksByDate[dateKey] || [];
   };
 

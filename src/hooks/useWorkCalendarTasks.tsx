@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { formatDateIST } from '@/lib/utils';
+import { formatDateIST, toISTMidnightUTC } from '@/lib/utils';
 import type { Database } from '@/integrations/supabase/types';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
@@ -10,6 +10,9 @@ type TaskInsert = Database['public']['Tables']['tasks']['Insert'];
 // Extended task types - standardized to tod, utod, eod (urgent_tod legacy support)
 type TaskType = 'tod' | 'utod' | 'eod';
 type DbTaskType = Database['public']['Enums']['task_type'];
+
+// IST (Indian Standard Time) is UTC+5:30
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
 export interface WorkCalendarTask extends Task {
   profile?: {
@@ -24,9 +27,6 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
   const [tasks, setTasks] = useState<WorkCalendarTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // IST (Indian Standard Time) is UTC+5:30
-  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 
   const fetchTasks = useCallback(async () => {
     if (!user) return;
@@ -98,14 +98,8 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
 
     setIsSubmitting(true);
     try {
-      // Normalize to IST midnight - extract date components and create UTC timestamp
-      // that represents midnight IST for that date
-      const year = taskDate.getFullYear();
-      const month = taskDate.getMonth();
-      const day = taskDate.getDate();
-      // Create UTC timestamp for midnight IST of that date
-      // Midnight IST = (date at midnight UTC) - 5.5 hours
-      const istMidnightUTC = new Date(Date.UTC(year, month, day, 0, 0, 0) - IST_OFFSET_MS);
+      // Convert local date to UTC timestamp representing midnight IST for that date
+      const istMidnightUTC = toISTMidnightUTC(taskDate);
       
       const taskData: TaskInsert = {
         user_id: assignedUserId,

@@ -1,52 +1,57 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { format } from "date-fns";
+import { format as dateFnsFormat } from "date-fns";
+import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// IST (Indian Standard Time) is UTC+5:30
-const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+// IST timezone identifier
+const IST_TIMEZONE = 'Asia/Kolkata';
 
 /**
- * Converts a UTC date to IST
+ * Converts a UTC date to IST Date object
+ * Note: The returned Date object represents the IST time
  */
 export function toIST(date: Date | string | null): Date | null {
   if (!date) return null;
   const d = typeof date === 'string' ? new Date(date) : date;
   if (isNaN(d.getTime())) return null;
-  return new Date(d.getTime() + IST_OFFSET_MS);
+  return toZonedTime(d, IST_TIMEZONE);
 }
 
 /**
  * Formats a timestamp to IST time string (e.g., "9:30 AM")
+ * Always shows IST time regardless of user's local timezone
  */
 export function formatTimeIST(date: Date | string | null, formatStr: string = 'h:mm a'): string {
   if (!date) return '-';
-  const istDate = toIST(date);
-  if (!istDate) return '-';
-  return format(istDate, formatStr);
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return '-';
+  return formatInTimeZone(d, IST_TIMEZONE, formatStr);
 }
 
 /**
  * Formats a timestamp to IST date string (e.g., "Jan 15, 2024")
+ * Always shows IST date regardless of user's local timezone
  */
 export function formatDateIST(date: Date | string | null, formatStr: string = 'MMM d, yyyy'): string {
   if (!date) return '-';
-  const istDate = toIST(date);
-  if (!istDate) return '-';
-  return format(istDate, formatStr);
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return '-';
+  return formatInTimeZone(d, IST_TIMEZONE, formatStr);
 }
 
 /**
  * Formats a timestamp to IST datetime string (e.g., "Jan 15, 2024, 9:30 AM")
+ * Always shows IST datetime regardless of user's local timezone
  */
 export function formatDateTimeIST(date: Date | string | null, formatStr: string = 'MMM d, yyyy, h:mm a'): string {
   if (!date) return '-';
-  const istDate = toIST(date);
-  if (!istDate) return '-';
-  return format(istDate, formatStr);
+  const d = typeof date === 'string' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return '-';
+  return formatInTimeZone(d, IST_TIMEZONE, formatStr);
 }
 
 /**
@@ -58,14 +63,29 @@ export function formatTimeOnlyIST(time: string | null, formatStr: string = 'h:mm
   const [hours, minutes] = time.split(':');
   const date = new Date();
   date.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-  return format(date, formatStr);
+  return dateFnsFormat(date, formatStr);
 }
 
 /**
- * Gets current time in IST
+ * Gets current time in IST as a Date object
  */
 export function nowIST(): Date {
-  return new Date(Date.now() + IST_OFFSET_MS);
+  return toZonedTime(new Date(), IST_TIMEZONE);
+}
+
+/**
+ * Creates a UTC timestamp representing midnight IST for a given date
+ * Use this when storing dates that should be in IST context
+ */
+export function toISTMidnightUTC(date: Date): Date {
+  // Extract local date components (what the user sees/selects)
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const day = date.getDate();
+  // IST is UTC+5:30, so midnight IST = 18:30 UTC previous day
+  // Create midnight UTC for that date, then subtract 5.5 hours
+  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+  return new Date(Date.UTC(year, month, day, 0, 0, 0) - IST_OFFSET_MS);
 }
 
 /**

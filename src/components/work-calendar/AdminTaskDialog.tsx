@@ -75,10 +75,19 @@ export function AdminTaskDialog({
       setDescription(editingTask.description || '');
       setTaskType(editingTask.task_type as 'tod' | 'utod' | 'eod');
       setAssignedUserId(editingTask.user_id);
-      setTaskDate(editingTask.submitted_at 
-        ? new Date(editingTask.submitted_at) 
-        : new Date(editingTask.created_at)
-      );
+      // When editing, parse the submitted_at as IST date
+      if (editingTask.submitted_at) {
+        // The submitted_at is stored as UTC representing IST midnight
+        // We need to convert it back to a local Date for the calendar
+        const utcDate = new Date(editingTask.submitted_at);
+        // Add IST offset to get the IST time, then create a local date
+        const istOffset = 5.5 * 60 * 60 * 1000;
+        const istTime = new Date(utcDate.getTime() + istOffset);
+        // Create a date with just the date part (year, month, day)
+        setTaskDate(new Date(istTime.getFullYear(), istTime.getMonth(), istTime.getDate()));
+      } else {
+        setTaskDate(new Date(editingTask.created_at));
+      }
     } else {
       setTitle('');
       setDescription('');
