@@ -53,7 +53,8 @@ export function WorkCalendarView({
   };
 
   const getTasksForDate = (date: Date) => {
-    const dateKey = formatDateIST(date, 'yyyy-MM-dd');
+    // Use local date format for calendar dates (already in local timezone)
+    const dateKey = format(date, 'yyyy-MM-dd');
     return tasksByDate[dateKey] || [];
   };
 
