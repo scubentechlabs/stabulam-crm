@@ -53,7 +53,8 @@ export function TaskDayDetail({
 
   const todTasks = dayTasks.filter(t => t.task_type === 'tod');
   const utodTasks = dayTasks.filter(t => t.task_type === 'utod' || t.task_type === 'urgent_tod');
-  const eodTasks = dayTasks.filter(t => t.task_type === 'eod');
+  // EOD tab shows all completed tasks regardless of task_type
+  const eodTasks = dayTasks.filter(t => t.status === 'completed');
 
   const renderTaskList = (taskList: WorkCalendarTask[], emptyMessage: string) => {
     if (taskList.length === 0) {
