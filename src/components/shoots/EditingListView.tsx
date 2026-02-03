@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
+import { toast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -124,10 +125,16 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
 
   // Handle status change and switch to the new status tab
   const handleStatusChange = (shootId: string, newStatus: EditingStatus) => {
+    const newStatusLabel = editingStatusConfig[newStatus].label;
     // Call the parent handler first (optimistic update)
     onEditingStatusChange?.(shootId, newStatus);
     // Switch to the new status tab so user sees the shoot in its new location
     setActiveStatus(newStatus);
+    // Show success toast
+    toast({
+      title: "Status Updated",
+      description: `Editing status changed to "${newStatusLabel}"`,
+    });
   };
 
   const ActiveStatusIcon = editingStatusConfig[activeStatus].icon;
