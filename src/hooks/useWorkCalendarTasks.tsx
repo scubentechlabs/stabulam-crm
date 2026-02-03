@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { formatDateIST, toISTMidnightUTC } from '@/lib/utils';
 import type { Database } from '@/integrations/supabase/types';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 type Task = Database['public']['Tables']['tasks']['Row'];
 type TaskInsert = Database['public']['Tables']['tasks']['Insert'];
@@ -70,9 +71,51 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
     }
   }, [user, selectedUserId, selectedMonth, toast]);
 
+  const channelRef = useRef<RealtimeChannel | null>(null);
+
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
+
+  // Real-time subscription for tasks
+  useEffect(() => {
+    if (!selectedUserId) return;
+
+    // Clean up previous channel
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+    }
+
+    const channel = supabase
+      .channel(`tasks-realtime-${selectedUserId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tasks',
+          filter: `user_id=eq.${selectedUserId}`,
+        },
+        (payload) => {
+          console.log('Task realtime update:', payload.eventType);
+          fetchTasks();
+        }
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('Subscribed to tasks realtime for user:', selectedUserId);
+        }
+      });
+
+    channelRef.current = channel;
+
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
+  }, [selectedUserId, fetchTasks]);
 
   const createTask = useCallback(async (
     title: string,
