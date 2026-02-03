@@ -31,20 +31,17 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
   const fetchTasks = useCallback(async () => {
     if (!user) return;
 
+    // Don't fetch if no user is selected yet (wait for useEffect to set it)
+    const targetUserId = selectedUserId || user.id;
+    if (!targetUserId) return;
+
     setIsLoading(true);
     try {
       let query = supabase
         .from('tasks')
         .select('*')
+        .eq('user_id', targetUserId)
         .order('created_at', { ascending: false });
-
-      // If a specific user is selected, filter by that user
-      if (selectedUserId) {
-        query = query.eq('user_id', selectedUserId);
-      } else if (!isAdmin) {
-        // Non-admins can only see their own tasks
-        query = query.eq('user_id', user.id);
-      }
 
       // Filter by month if provided - in IST boundaries, using submitted_at
       if (selectedMonth) {
@@ -74,7 +71,7 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
     } finally {
       setIsLoading(false);
     }
-  }, [user, isAdmin, selectedUserId, selectedMonth, toast]);
+  }, [user, selectedUserId, selectedMonth, toast]);
 
   useEffect(() => {
     fetchTasks();
