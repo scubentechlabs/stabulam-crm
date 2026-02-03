@@ -80,17 +80,22 @@ interface LeaveRequestFormProps {
 }
 
 export function LeaveRequestForm({ onSubmit, onCancel, isSubmitting }: LeaveRequestFormProps) {
-  const [hasAdvanceNotice, setHasAdvanceNotice] = useState(true);
+  const [hasAdvanceNotice, setHasAdvanceNotice] = useState(false); // Default to false since today is < 48 hours
 
   const form = useForm<LeaveFormValues>({
     resolver: zodResolver(leaveFormSchema),
     defaultValues: {
       leave_type: 'full_day',
-      start_date: addDays(new Date(), 3), // Default to 3 days from now
-      end_date: addDays(new Date(), 3),
+      start_date: new Date(), // Default to today
+      end_date: new Date(),
       delegation_notes: '',
       reason: '',
     },
+  });
+  
+  // Check advance notice on initial load
+  useState(() => {
+    checkAdvanceNotice(new Date());
   });
 
   const leaveType = form.watch('leave_type');
