@@ -1,12 +1,13 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Bell, CheckCircle, Calendar, Clock, Camera, FileText, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { NotificationItem } from '@/components/notifications/NotificationItem';
-
 export default function Notifications() {
+  const navigate = useNavigate();
   const {
     notifications,
     unreadNotifications,
@@ -19,6 +20,31 @@ export default function Notifications() {
     markAsRead,
     markAllAsRead,
   } = useNotifications();
+
+  const handleNotificationClick = (notification: Notification) => {
+    if (!notification.is_read) {
+      markAsRead(notification.id);
+    }
+    // Navigate based on notification type
+    if (notification.notification_type === 'task_assigned') {
+      navigate('/tasks');
+    } else if (notification.notification_type === 'shoot_reminder') {
+      navigate('/shoots');
+    } else if (notification.notification_type === 'leave_request' || 
+               notification.notification_type === 'request_approved' || 
+               notification.notification_type === 'request_rejected') {
+      navigate('/leaves');
+    } else if (notification.notification_type === 'salary_generated') {
+      navigate('/salary-history');
+    } else if (notification.notification_type.startsWith('regularization')) {
+      navigate('/attendance');
+    } else if (notification.notification_type === 'extra_work_request') {
+      navigate('/extra-work');
+    } else if (notification.notification_type === 'missing_tod' || 
+               notification.notification_type === 'missing_eod') {
+      navigate('/tasks');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -73,6 +99,7 @@ export default function Notifications() {
           <NotificationList
             notifications={notifications}
             onMarkRead={markAsRead}
+            onNotificationClick={handleNotificationClick}
             emptyMessage="No notifications yet"
           />
         </TabsContent>
@@ -81,6 +108,7 @@ export default function Notifications() {
           <NotificationList
             notifications={unreadNotifications}
             onMarkRead={markAsRead}
+            onNotificationClick={handleNotificationClick}
             emptyMessage="You're all caught up!"
           />
         </TabsContent>
@@ -89,6 +117,7 @@ export default function Notifications() {
           <NotificationList
             notifications={leaveNotifications}
             onMarkRead={markAsRead}
+            onNotificationClick={handleNotificationClick}
             emptyMessage="No leave notifications"
           />
         </TabsContent>
@@ -97,6 +126,7 @@ export default function Notifications() {
           <NotificationList
             notifications={shootNotifications}
             onMarkRead={markAsRead}
+            onNotificationClick={handleNotificationClick}
             emptyMessage="No shoot notifications"
           />
         </TabsContent>
@@ -105,6 +135,7 @@ export default function Notifications() {
           <NotificationList
             notifications={taskNotifications}
             onMarkRead={markAsRead}
+            onNotificationClick={handleNotificationClick}
             emptyMessage="No task notifications"
           />
         </TabsContent>
@@ -114,12 +145,13 @@ export default function Notifications() {
 }
 
 interface NotificationListProps {
-  notifications: any[];
+  notifications: Notification[];
   onMarkRead: (id: string) => void;
+  onNotificationClick: (notification: Notification) => void;
   emptyMessage: string;
 }
 
-function NotificationList({ notifications, onMarkRead, emptyMessage }: NotificationListProps) {
+function NotificationList({ notifications, onMarkRead, onNotificationClick, emptyMessage }: NotificationListProps) {
   if (notifications.length === 0) {
     return (
       <Card>
@@ -142,6 +174,7 @@ function NotificationList({ notifications, onMarkRead, emptyMessage }: Notificat
               key={notification.id}
               notification={notification}
               onMarkRead={onMarkRead}
+              onClick={() => onNotificationClick(notification)}
             />
           ))}
         </div>
