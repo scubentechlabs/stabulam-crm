@@ -99,6 +99,7 @@ export function AttendanceTableView({ data, isLoading }: AttendanceTableViewProp
               const isAbsent = row.status === 'absent';
               const isNotClockIn = row.status === 'not_clock_in';
               const isHoliday = row.status === 'holiday';
+              const isOnLeave = row.status === 'on_leave';
               const isAutoClockOut = row.clock_out_time && row.work_hours && parseFloat(row.work_hours.replace('h', '').replace('m', '')) > 10;
               return (
                 <TableRow 
@@ -182,6 +183,10 @@ export function AttendanceTableView({ data, isLoading }: AttendanceTableViewProp
                       {isHoliday ? (
                         <Badge className="bg-orange-500 text-white border-0 text-xs font-medium w-fit">
                           Holiday{row.holiday_name ? ` (${row.holiday_name})` : ''}
+                        </Badge>
+                      ) : isOnLeave ? (
+                        <Badge className="bg-blue-500 text-white border-0 text-xs font-medium w-fit">
+                          On Leave
                         </Badge>
                       ) : isAbsent ? (
                         <Badge className="bg-red-500 text-white border-0 text-xs font-medium w-fit">
