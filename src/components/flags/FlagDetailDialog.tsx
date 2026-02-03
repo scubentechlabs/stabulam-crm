@@ -122,17 +122,7 @@ export function FlagDetailDialog({ flag, open, onOpenChange }: FlagDetailDialogP
               </div>
             </div>
 
-            {/* Issued By */}
-            {flag.issuer_profile && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <User className="h-4 w-4" />
-                <span>Issued by {flag.issuer_profile.full_name}</span>
-              </div>
-            )}
-
-            <Separator />
-
-            {/* Replies Section */}
+            {/* Replies Section - Now below Description */}
             <div>
               <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
@@ -186,6 +176,16 @@ export function FlagDetailDialog({ flag, open, onOpenChange }: FlagDetailDialogP
                 </div>
               )}
             </div>
+
+            <Separator />
+
+            {/* Issued By - Now at bottom */}
+            {flag.issuer_profile && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <User className="h-4 w-4" />
+                <span>Issued by {flag.issuer_profile.full_name}</span>
+              </div>
+            )}
           </div>
         </ScrollArea>
 
