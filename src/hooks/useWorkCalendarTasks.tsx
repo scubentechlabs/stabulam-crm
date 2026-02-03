@@ -28,6 +28,7 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
   const [tasks, setTasks] = useState<WorkCalendarTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   const fetchTasks = useCallback(async () => {
     // Only fetch if we have a valid target user ID
@@ -70,8 +71,6 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
       setIsLoading(false);
     }
   }, [user, selectedUserId, selectedMonth, toast]);
-
-  const channelRef = useRef<RealtimeChannel | null>(null);
 
   useEffect(() => {
     fetchTasks();
