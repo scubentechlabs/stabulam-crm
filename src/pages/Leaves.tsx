@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Calendar, Plus, Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { useLeaves } from '@/hooks/useLeaves';
+import { useAuth } from '@/contexts/AuthContext';
 import { LeaveRequestForm } from '@/components/leaves/LeaveRequestForm';
 import { LeaveTable } from '@/components/leaves/LeaveTable';
 
@@ -18,6 +19,7 @@ import { LeaveTable } from '@/components/leaves/LeaveTable';
 export default function Leaves() {
   const [showNewRequest, setShowNewRequest] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
   
   const { 
     pendingLeaves, 
@@ -133,6 +135,7 @@ export default function Leaves() {
               <LeaveTable 
                 leaves={pendingLeaves} 
                 onCancel={handleCancel}
+                currentUserId={user?.id}
                 emptyMessage="No pending leave requests"
               />
             </TabsContent>
@@ -140,6 +143,7 @@ export default function Leaves() {
             <TabsContent value="approved">
               <LeaveTable 
                 leaves={approvedLeaves}
+                currentUserId={user?.id}
                 emptyMessage="No approved leave requests"
               />
             </TabsContent>
@@ -147,6 +151,7 @@ export default function Leaves() {
             <TabsContent value="rejected">
               <LeaveTable 
                 leaves={rejectedLeaves}
+                currentUserId={user?.id}
                 emptyMessage="No rejected leave requests"
               />
             </TabsContent>
