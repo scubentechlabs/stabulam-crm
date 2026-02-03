@@ -268,25 +268,27 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
                             <span className="text-muted-foreground text-sm">Not assigned</span>
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           <DropdownMenu>
-                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              {(() => {
-                                const statusConfig = editingStatusConfig[currentEditingStatus];
-                                const StatusIcon = statusConfig.icon;
-                                return (
-                                  <Badge className={cn(
-                                    "flex items-center gap-1.5 whitespace-nowrap cursor-pointer",
-                                    statusConfig.pillBg,
-                                    statusConfig.pillText
-                                  )}>
-                                    <StatusIcon className="h-3 w-3" />
-                                    {statusConfig.label}
-                                  </Badge>
-                                );
-                              })()}
+                            <DropdownMenuTrigger asChild>
+                              <button type="button" className="focus:outline-none">
+                                {(() => {
+                                  const statusConfig = editingStatusConfig[currentEditingStatus];
+                                  const StatusIcon = statusConfig.icon;
+                                  return (
+                                    <Badge className={cn(
+                                      "flex items-center gap-1.5 whitespace-nowrap cursor-pointer",
+                                      statusConfig.pillBg,
+                                      statusConfig.pillText
+                                    )}>
+                                      <StatusIcon className="h-3 w-3" />
+                                      {statusConfig.label}
+                                    </Badge>
+                                  );
+                                })()}
+                              </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="w-48">
+                            <DropdownMenuContent align="start" className="w-48 bg-popover z-50">
                               <DropdownMenuLabel>Change Editing Status</DropdownMenuLabel>
                               <DropdownMenuSeparator />
                               {statusOrder.map((statusKey) => {
