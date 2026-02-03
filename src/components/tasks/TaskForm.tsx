@@ -18,13 +18,15 @@ type TaskType = Database['public']['Enums']['task_type'];
 interface TaskFormProps {
   taskType: TaskType;
   onSubmit: (title: string, description: string | null) => Promise<boolean>;
+  onBulkSubmit?: (titles: string[]) => Promise<boolean>;
   buttonText?: string;
   buttonVariant?: 'default' | 'outline' | 'secondary';
 }
 
 export function TaskForm({ 
   taskType, 
-  onSubmit, 
+  onSubmit,
+  onBulkSubmit,
   buttonText,
   buttonVariant = 'default',
 }: TaskFormProps) {
@@ -51,23 +53,32 @@ export function TaskForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const validTitles = titles.filter(t => t.trim());
+    const validTitles = titles.filter(t => t.trim()).map(t => t.trim());
     if (validTitles.length === 0) return;
 
     setIsSubmitting(true);
     
-    let allSuccess = true;
-    for (const title of validTitles) {
-      const success = await onSubmit(title.trim(), null);
-      if (!success) {
-        allSuccess = false;
-        break;
+    let success = false;
+    
+    // Use bulk submit for more than 3 tasks to show single toast
+    if (validTitles.length > 3 && onBulkSubmit) {
+      success = await onBulkSubmit(validTitles);
+    } else {
+      // Submit one by one for 3 or fewer tasks
+      let allSuccess = true;
+      for (const title of validTitles) {
+        const result = await onSubmit(title, null);
+        if (!result) {
+          allSuccess = false;
+          break;
+        }
       }
+      success = allSuccess;
     }
 
     setIsSubmitting(false);
 
-    if (allSuccess) {
+    if (success) {
       setTitles(['']);
       setOpen(false);
     }

@@ -49,7 +49,8 @@ export function useTasks(attendanceId?: string) {
     title: string,
     description: string | null,
     taskType: TaskType,
-    attendanceId?: string
+    attendanceId?: string,
+    showToast: boolean = true
   ) => {
     if (!user) return null;
 
@@ -73,10 +74,12 @@ export function useTasks(attendanceId?: string) {
 
       if (error) throw error;
 
-      toast({
-        title: 'Task Added',
-        description: taskType === 'tod' ? 'Task of the Day added.' : taskType === 'utod' ? 'UTOD task added.' : 'EOD task added.',
-      });
+      if (showToast) {
+        toast({
+          title: 'Task Added',
+          description: taskType === 'tod' ? 'Task of the Day added.' : taskType === 'utod' ? 'UTOD task added.' : 'EOD task added.',
+        });
+      }
 
       await fetchTasks();
       return data;
@@ -88,6 +91,58 @@ export function useTasks(attendanceId?: string) {
         variant: 'destructive',
       });
       return null;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [user, toast, fetchTasks]);
+
+  const addMultipleTasks = useCallback(async (
+    titles: string[],
+    taskType: TaskType,
+    attendanceId?: string
+  ) => {
+    if (!user || titles.length === 0) return false;
+
+    setIsSubmitting(true);
+    const taskCount = titles.length;
+    let successCount = 0;
+    
+    try {
+      for (const title of titles) {
+        const taskData: TaskInsert = {
+          user_id: user.id,
+          title,
+          description: null,
+          task_type: taskType,
+          attendance_id: attendanceId || null,
+          submitted_at: new Date().toISOString(),
+        };
+
+        const { error } = await supabase
+          .from('tasks')
+          .insert(taskData);
+
+        if (error) throw error;
+        successCount++;
+      }
+
+      // Show single toast for bulk creation (when more than 3 tasks)
+      const typeLabel = taskType === 'tod' ? 'TOD' : taskType === 'utod' ? 'UTOD' : 'EOD';
+      toast({
+        title: `${successCount} Tasks Added`,
+        description: `${successCount} ${typeLabel} task${successCount !== 1 ? 's' : ''} added successfully.`,
+      });
+
+      await fetchTasks();
+      return true;
+    } catch (error: any) {
+      console.error('Add multiple tasks error:', error);
+      toast({
+        title: 'Failed to Add Tasks',
+        description: `Added ${successCount} of ${taskCount} tasks. ${error.message || 'Please try again.'}`,
+        variant: 'destructive',
+      });
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -206,6 +261,7 @@ export function useTasks(attendanceId?: string) {
     isLoading,
     isSubmitting,
     addTask,
+    addMultipleTasks,
     updateTask,
     completeAllEod,
     refetch: fetchTasks,
