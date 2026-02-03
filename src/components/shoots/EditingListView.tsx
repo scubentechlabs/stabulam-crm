@@ -369,34 +369,7 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuLabel>Change Editing Status</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                {statusOrder.map((statusKey) => {
-                                  const statusItem = editingStatusConfig[statusKey];
-                                  const isActive = currentEditingStatus === statusKey;
-                                  
-                                  return (
-                                    <DropdownMenuItem
-                                      key={statusKey}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleStatusChange(shoot.id, statusKey);
-                                      }}
-                                      className="p-1 focus:bg-transparent"
-                                    >
-                                      <span className={cn(
-                                        "w-full px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center justify-between",
-                                        statusItem.pillBg,
-                                        statusItem.pillText
-                                      )}>
-                                        {statusItem.label}
-                                        {isActive && <Check className="h-3.5 w-3.5 ml-2" />}
-                                      </span>
-                                    </DropdownMenuItem>
-                                  );
-                                })}
-                                <DropdownMenuSeparator />
+                              <DropdownMenuContent align="end" className="w-40">
                                 <DropdownMenuItem
                                   onClick={(e) => {
                                     e.stopPropagation();
