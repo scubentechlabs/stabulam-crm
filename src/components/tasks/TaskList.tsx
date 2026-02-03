@@ -48,10 +48,10 @@ function TaskItem({ task, showType }: TaskItemProps) {
     return 'TOD';
   };
 
-  const getBadgeVariant = (): "destructive" | "info" | "secondary" => {
-    if (isUtod) return 'destructive';
-    if (isEod) return 'info';
-    return 'secondary';
+  const getBadgeColor = () => {
+    if (isUtod) return 'bg-red-500 text-white';
+    if (isEod) return 'bg-green-500 text-white';
+    return 'bg-blue-500 text-white'; // TOD = blue
   };
 
   return (
@@ -84,7 +84,7 @@ function TaskItem({ task, showType }: TaskItemProps) {
               </h4>
               
               {showType && (
-                <Badge variant={getBadgeVariant()} className="text-xs">
+                <Badge className={cn('text-xs', getBadgeColor())}>
                   {getTaskLabel()}
                 </Badge>
               )}
