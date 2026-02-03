@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -94,9 +94,9 @@ export function LeaveRequestForm({ onSubmit, onCancel, isSubmitting }: LeaveRequ
   });
   
   // Check advance notice on initial load
-  useState(() => {
+  useEffect(() => {
     checkAdvanceNotice(new Date());
-  });
+  }, []);
 
   const leaveType = form.watch('leave_type');
   const startDate = form.watch('start_date');
