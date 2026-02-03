@@ -48,9 +48,9 @@ function TaskItem({ task, showType }: TaskItemProps) {
     return 'TOD';
   };
 
-  const getBadgeVariant = () => {
+  const getBadgeVariant = (): "destructive" | "info" | "secondary" => {
     if (isUtod) return 'destructive';
-    if (isEod) return 'default';
+    if (isEod) return 'info';
     return 'secondary';
   };
 
