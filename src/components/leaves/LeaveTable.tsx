@@ -37,6 +37,7 @@ interface LeaveTableProps {
   showEmployeeName?: boolean;
   emptyMessage?: string;
   showFilters?: boolean;
+  currentUserId?: string;
 }
 
 const STATUS_OPTIONS = [
@@ -51,6 +52,7 @@ export function LeaveTable({
   showEmployeeName, 
   emptyMessage = 'No leave requests',
   showFilters = true,
+  currentUserId,
 }: LeaveTableProps) {
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [viewLeave, setViewLeave] = useState<LeaveWithProfile | null>(null);
@@ -224,7 +226,7 @@ export function LeaveTable({
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
-                        {leave.status === 'pending' && onCancel && (
+                        {leave.status === 'pending' && onCancel && leave.user_id === currentUserId && (
                           <DropdownMenuItem 
                             onClick={() => setCancelId(leave.id)}
                             className="text-destructive focus:text-destructive"
