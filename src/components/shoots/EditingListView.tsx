@@ -1,11 +1,15 @@
-import { useState } from 'react';
-import { format, parseISO } from 'date-fns';
+import { useState, useMemo } from 'react';
+import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,14 +27,18 @@ import {
   CheckCircle2, 
   Video,
   MapPin,
-  Calendar,
+  Calendar as CalendarIcon,
   ExternalLink,
   MoreVertical,
-  Check
+  Check,
+  Search,
+  X,
+  Filter
 } from 'lucide-react';
 import type { ShootWithAssignments } from '@/hooks/useShoots';
 import type { Database } from '@/integrations/supabase/types';
 import { cn } from '@/lib/utils';
+import { DateRange } from 'react-day-picker';
 
 type EditingStatus = Database['public']['Enums']['editing_status'];
 
@@ -103,6 +111,11 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
   // Only show shoots that have been "Given by Editor" (status === 'given_by_editor')
   const editorAssignedShoots = shoots.filter(shoot => shoot.status === 'given_by_editor');
 
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [stageFilter, setStageFilter] = useState<EditingStatus | 'all'>('all');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+
   // Find the first status with at least one shoot, or default to 'not_started'
   const getDefaultStatus = (): EditingStatus => {
     for (const status of statusOrder) {
@@ -115,8 +128,40 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
 
   const [activeStatus, setActiveStatus] = useState<EditingStatus>(() => getDefaultStatus());
 
+  // Apply filters to shoots
+  const filteredShoots = useMemo(() => {
+    return editorAssignedShoots.filter(shoot => {
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch = 
+          shoot.event_name.toLowerCase().includes(query) ||
+          shoot.brand_name.toLowerCase().includes(query) ||
+          shoot.location.toLowerCase().includes(query) ||
+          shoot.assigned_editor?.full_name?.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
+
+      // Stage filter
+      if (stageFilter !== 'all') {
+        const shootStatus = shoot.editing_status || 'not_started';
+        if (shootStatus !== stageFilter) return false;
+      }
+
+      // Date range filter
+      if (dateRange?.from) {
+        const shootDate = parseISO(shoot.shoot_date);
+        const from = startOfDay(dateRange.from);
+        const to = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from);
+        if (!isWithinInterval(shootDate, { start: from, end: to })) return false;
+      }
+
+      return true;
+    });
+  }, [editorAssignedShoots, searchQuery, stageFilter, dateRange]);
+
   const getShootsByStatus = (status: EditingStatus) => {
-    return editorAssignedShoots.filter(shoot => (shoot.editing_status || 'not_started') === status);
+    return filteredShoots.filter(shoot => (shoot.editing_status || 'not_started') === status);
   };
 
   const getStatusCount = (status: EditingStatus) => {
@@ -136,6 +181,14 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
       description: `Editing status changed to "${newStatusLabel}"`,
     });
   };
+
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setStageFilter('all');
+    setDateRange(undefined);
+  };
+
+  const hasActiveFilters = searchQuery || stageFilter !== 'all' || dateRange?.from;
 
   const ActiveStatusIcon = editingStatusConfig[activeStatus].icon;
 
@@ -197,6 +250,85 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
         })}
       </div>
 
+      {/* Filter Section */}
+      <Card>
+        <CardContent className="pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+            {/* Search Input */}
+            <div className="relative flex-1 w-full sm:max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search event, brand, editor..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
+            {/* Date Range Picker */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className={cn(
+                  "justify-start text-left font-normal min-w-[200px]",
+                  !dateRange?.from && "text-muted-foreground"
+                )}>
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateRange?.from ? (
+                    dateRange.to ? (
+                      <>
+                        {format(dateRange.from, 'MMM d')} - {format(dateRange.to, 'MMM d, yyyy')}
+                      </>
+                    ) : (
+                      format(dateRange.from, 'MMM d, yyyy')
+                    )
+                  ) : (
+                    "Select date range"
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
+                <Calendar
+                  mode="range"
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={1}
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+
+            {/* Stage Filter */}
+            <Select value={stageFilter} onValueChange={(value) => setStageFilter(value as EditingStatus | 'all')}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Filter by stage" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                <SelectItem value="all">All Stages</SelectItem>
+                {statusOrder.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {editingStatusConfig[status].label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Reset Button */}
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleResetFilters}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Reset
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Active Status Table */}
       <Card>
         <CardHeader className="pb-3">
@@ -213,6 +345,11 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
             <div className="text-center py-8 text-muted-foreground">
               <Video className="h-12 w-12 mx-auto mb-3 opacity-50" />
               <p>No shoots in "{editingStatusConfig[activeStatus].label}" status</p>
+              {hasActiveFilters && (
+                <Button variant="link" onClick={handleResetFilters} className="mt-2">
+                  Clear filters to see all shoots
+                </Button>
+              )}
             </div>
           ) : (
             <div className="rounded-md border overflow-hidden">
@@ -248,7 +385,7 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1.5">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                             <span>{format(parseISO(shoot.shoot_date), 'MMM d, yyyy')}</span>
                           </div>
                         </TableCell>
@@ -369,7 +506,7 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-40">
+                              <DropdownMenuContent align="end" className="w-40 bg-popover z-50">
                                 <DropdownMenuItem
                                   onClick={(e) => {
                                     e.stopPropagation();
