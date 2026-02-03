@@ -216,6 +216,7 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
                     <TableHead>Shoot Date</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Editor</TableHead>
+                    <TableHead>Current Stage</TableHead>
                     <TableHead>Deadline</TableHead>
                     <TableHead>Drive Link</TableHead>
                     <TableHead>Requirements / Instructions</TableHead>
@@ -266,6 +267,22 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
                           ) : (
                             <span className="text-muted-foreground text-sm">Not assigned</span>
                           )}
+                        </TableCell>
+                        <TableCell>
+                          {(() => {
+                            const statusConfig = editingStatusConfig[currentEditingStatus];
+                            const StatusIcon = statusConfig.icon;
+                            return (
+                              <Badge className={cn(
+                                "flex items-center gap-1.5 whitespace-nowrap",
+                                statusConfig.pillBg,
+                                statusConfig.pillText
+                              )}>
+                                <StatusIcon className="h-3 w-3" />
+                                {statusConfig.label}
+                              </Badge>
+                            );
+                          })()}
                         </TableCell>
                         <TableCell>
                           {shoot.editor_deadline ? (
