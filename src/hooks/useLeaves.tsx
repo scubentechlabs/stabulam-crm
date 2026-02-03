@@ -244,10 +244,15 @@ export function useLeaves() {
     if (!user) return { error: new Error('Not authenticated') };
 
     try {
-      // Only allow cancellation of pending leaves
+      // Update leave status to 'rejected' with a cancellation note instead of deleting
+      // since RLS doesn't allow DELETE on leaves table
       const { error } = await supabase
         .from('leaves')
-        .delete()
+        .update({
+          status: 'rejected' as const,
+          admin_comments: 'Cancelled by employee',
+          processed_at: new Date().toISOString(),
+        })
         .eq('id', leaveId)
         .eq('user_id', user.id)
         .eq('status', 'pending');
