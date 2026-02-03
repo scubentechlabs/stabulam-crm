@@ -1,11 +1,15 @@
-import { CheckCircle2, Clock, AlertCircle, FileText } from 'lucide-react';
+import { CheckCircle2, Clock, AlertCircle, FileText, UserCheck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Database } from '@/integrations/supabase/types';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
-type Task = Database['public']['Tables']['tasks']['Row'];
+type Task = Database['public']['Tables']['tasks']['Row'] & {
+  assigned_by?: string | null;
+};
 
 interface TaskListProps {
   tasks: Task[];
@@ -38,9 +42,28 @@ interface TaskItemProps {
 }
 
 function TaskItem({ task, showType }: TaskItemProps) {
+  const [assignerName, setAssignerName] = useState<string | null>(null);
   const isCompleted = task.status === 'completed';
   const isUtod = task.task_type === 'utod' || task.task_type === 'urgent_tod';
   const isEod = task.task_type === 'eod';
+
+  // Fetch assigner name if task was assigned by someone else
+  useEffect(() => {
+    async function fetchAssignerName() {
+      if (task.assigned_by) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('user_id', task.assigned_by)
+          .single();
+        
+        if (data) {
+          setAssignerName(data.full_name);
+        }
+      }
+    }
+    fetchAssignerName();
+  }, [task.assigned_by]);
 
   const getTaskLabel = () => {
     if (isUtod) return 'UTOD';
@@ -92,6 +115,13 @@ function TaskItem({ task, showType }: TaskItemProps) {
               {task.is_edited && (
                 <Badge variant="outline" className="text-xs">
                   Edited
+                </Badge>
+              )}
+              
+              {assignerName && (
+                <Badge variant="outline" className="text-xs flex items-center gap-1 bg-purple-50 dark:bg-purple-950/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800">
+                  <UserCheck className="h-3 w-3" />
+                  Assigned by {assignerName}
                 </Badge>
               )}
             </div>
