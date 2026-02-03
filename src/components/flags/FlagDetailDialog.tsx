@@ -38,7 +38,7 @@ export function FlagDetailDialog({ flag, open, onOpenChange }: FlagDetailDialogP
   const { addReply, isAddingReply, updateFlagStatus } = useFlags();
   const [replyText, setReplyText] = useState('');
 
-  const { data: flagDetails, isLoading, isFetching } = useFlagDetails(flag?.id || null);
+  const { data: flagDetails, isLoading, isFetching, error } = useFlagDetails(flag?.id || null);
 
   const handleSubmitReply = () => {
     if (!flag || !replyText.trim()) return;
@@ -143,6 +143,11 @@ export function FlagDetailDialog({ flag, open, onOpenChange }: FlagDetailDialogP
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                   <span className="ml-2 text-sm text-muted-foreground">Loading responses...</span>
+                </div>
+              ) : error ? (
+                <div className="text-center py-6 text-destructive">
+                  <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Failed to load responses. Please try again.</p>
                 </div>
               ) : flagDetails?.replies && flagDetails.replies.length > 0 ? (
                 <div className="space-y-3">
