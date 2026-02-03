@@ -26,7 +26,7 @@ type Task = Database['public']['Tables']['tasks']['Row'];
 export default function Tasks() {
   const { user } = useAuth();
   const { todayAttendance } = useAttendance();
-  const { addTask, isLoading, refetch } = useTasks(todayAttendance?.id);
+  const { addTask, addMultipleTasks, isLoading, refetch } = useTasks(todayAttendance?.id);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [historicalTasks, setHistoricalTasks] = useState<Task[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -107,9 +107,17 @@ export default function Tasks() {
     return !!result;
   };
 
+  const handleBulkAddTod = async (titles: string[]): Promise<boolean> => {
+    return await addMultipleTasks(titles, 'tod', todayAttendance?.id);
+  };
+
   const handleAddUtodTask = async (title: string, description: string | null): Promise<boolean> => {
     const result = await addTask(title, description, 'utod', todayAttendance?.id);
     return !!result;
+  };
+
+  const handleBulkAddUtod = async (titles: string[]): Promise<boolean> => {
+    return await addMultipleTasks(titles, 'utod', todayAttendance?.id);
   };
 
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
@@ -169,12 +177,14 @@ export default function Tasks() {
                   <TaskForm 
                     taskType="tod"
                     onSubmit={handleAddTask}
+                    onBulkSubmit={handleBulkAddTod}
                     buttonText="Add TOD"
                     buttonVariant="outline"
                   />
                   <TaskForm 
                     taskType="utod"
                     onSubmit={handleAddUtodTask}
+                    onBulkSubmit={handleBulkAddUtod}
                     buttonText="Add UTOD"
                     buttonVariant="default"
                   />
