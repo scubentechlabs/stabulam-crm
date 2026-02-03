@@ -10,6 +10,7 @@ import type { WorkCalendarTask } from '@/hooks/useWorkCalendarTasks';
 interface TaskDayDetailProps {
   selectedDate: Date | null;
   tasks: WorkCalendarTask[];
+  newTaskIds?: Set<string>;
   isAdmin: boolean;
   onEditTask?: (task: WorkCalendarTask) => void;
   onDeleteTask?: (taskId: string) => void;
@@ -24,6 +25,7 @@ const taskTypeConfig: Record<string, { label: string; color: string; bgColor: st
 export function TaskDayDetail({ 
   selectedDate, 
   tasks, 
+  newTaskIds = new Set(),
   isAdmin, 
   onEditTask,
   onDeleteTask 
@@ -72,6 +74,7 @@ export function TaskDayDetail({
           <TaskItem 
             key={task.id} 
             task={task} 
+            isNew={newTaskIds.has(task.id)}
             isAdmin={isAdmin}
             onEdit={onEditTask}
             onDelete={onDeleteTask}
@@ -118,19 +121,24 @@ export function TaskDayDetail({
 
 interface TaskItemProps {
   task: WorkCalendarTask;
+  isNew?: boolean;
   isAdmin: boolean;
   onEdit?: (task: WorkCalendarTask) => void;
   onDelete?: (taskId: string) => void;
 }
 
-function TaskItem({ task, isAdmin, onEdit, onDelete }: TaskItemProps) {
+function TaskItem({ task, isNew = false, isAdmin, onEdit, onDelete }: TaskItemProps) {
   // Normalize urgent_tod (legacy) to utod for display
   const normalizedType = task.task_type === 'urgent_tod' ? 'utod' : task.task_type;
   const config = taskTypeConfig[normalizedType] || taskTypeConfig.tod;
   const isCompleted = task.status === 'completed';
 
   return (
-    <Card className={cn('transition-all', isCompleted && 'opacity-75')}>
+    <Card className={cn(
+      'transition-all',
+      isCompleted && 'opacity-75',
+      isNew && 'animate-fade-in ring-2 ring-primary/30'
+    )}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 flex-1">
