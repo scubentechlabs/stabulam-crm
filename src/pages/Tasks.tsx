@@ -126,6 +126,7 @@ export default function Tasks() {
   const displayTasks = historicalTasks;
   const todTasksFiltered = displayTasks.filter(t => t.task_type === 'tod');
   const utodTasksFiltered = displayTasks.filter(t => t.task_type === 'utod' || t.task_type === 'urgent_tod');
+  const eodTasksFiltered = displayTasks.filter(t => t.status === 'completed');
   const completedCount = displayTasks.filter(t => t.status === 'completed').length;
   const pendingCount = displayTasks.filter(t => t.status === 'pending').length;
 
@@ -216,6 +217,7 @@ export default function Tasks() {
                   <TabsTrigger value="all">All ({displayTasks.length})</TabsTrigger>
                   <TabsTrigger value="tod">TOD ({todTasksFiltered.length})</TabsTrigger>
                   <TabsTrigger value="utod">UTOD ({utodTasksFiltered.length})</TabsTrigger>
+                  <TabsTrigger value="eod">EOD ({eodTasksFiltered.length})</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="all" className="mt-4">
@@ -228,6 +230,10 @@ export default function Tasks() {
                 
                 <TabsContent value="utod" className="mt-4">
                   <TaskList tasks={utodTasksFiltered} emptyMessage="No UTOD tasks added" />
+                </TabsContent>
+
+                <TabsContent value="eod" className="mt-4">
+                  <TaskList tasks={eodTasksFiltered} showType emptyMessage="No completed tasks yet" />
                 </TabsContent>
               </Tabs>
             ) : (
