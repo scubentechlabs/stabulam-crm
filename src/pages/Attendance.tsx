@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AttendanceStatus } from '@/components/attendance/AttendanceStatus';
 import { ClockInCard } from '@/components/attendance/ClockInCard';
@@ -9,7 +9,6 @@ import { TaskForm } from '@/components/tasks/TaskForm';
 import { TaskList } from '@/components/tasks/TaskList';
 import { useAttendance } from '@/hooks/useAttendance';
 import { useTasks } from '@/hooks/useTasks';
-import { useToast } from '@/hooks/use-toast';
 import { Loader2, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -19,10 +18,8 @@ type AttendanceStep = 'clock-in' | 'tod' | 'working' | 'eod' | 'clock-out' | 'co
 export default function Attendance() {
   const { todayAttendance, isLoading, refetch } = useAttendance();
   const { addTask, utodTasks, todTasks, refetch: refetchTasks } = useTasks(todayAttendance?.id);
-  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState<AttendanceStep>('clock-in');
   const [showEod, setShowEod] = useState(false);
-  const hasShownTaskToast = useRef(false);
 
   useEffect(() => {
     if (isLoading) return;
@@ -40,16 +37,8 @@ export default function Attendance() {
     }
   }, [todayAttendance, isLoading, showEod]);
 
-  const handleClockInComplete = async () => {
-    await refetch();
-    // Show toast if there are more than 3 tasks after clock-in
-    if (todTasks.length > 3 && !hasShownTaskToast.current) {
-      hasShownTaskToast.current = true;
-      toast({
-        title: 'Busy Day Ahead!',
-        description: `You have ${todTasks.length} tasks scheduled for today. Stay focused! 💪`,
-      });
-    }
+  const handleClockInComplete = () => {
+    refetch();
     setCurrentStep('tod');
   };
 
