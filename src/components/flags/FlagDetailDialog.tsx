@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { Separator } from '@/components/ui/separator';
 import { useFlags, type Flag } from '@/hooks/useFlags';
 import { useFlagDetails } from '@/hooks/useFlagDetails';
@@ -65,9 +65,9 @@ export function FlagDetailDialog({ flag, open, onOpenChange }: FlagDetailDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[650px] max-h-[90vh] flex flex-col p-0 gap-0">
+      <DialogContent className="sm:max-w-[650px] p-0 gap-0 overflow-hidden flex flex-col" style={{ maxHeight: '85vh' }}>
         {/* Header */}
-        <DialogHeader className="p-6 pb-4 border-b">
+        <DialogHeader className="p-6 pb-4 border-b shrink-0">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">
               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-destructive/10 shrink-0">
@@ -95,111 +95,105 @@ export function FlagDetailDialog({ flag, open, onOpenChange }: FlagDetailDialogP
           </div>
         </DialogHeader>
 
-        {/* Scrollable Content */}
-        <ScrollArea className="flex-1 min-h-0" scrollbarClassName="w-2" thumbClassName="bg-muted-foreground/30">
-          <div className="p-6 space-y-5">
-            {/* Employee Info Card */}
-            {flag.employee_profile && (
-              <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={flag.employee_profile.avatar_url || ''} />
-                  <AvatarFallback className="text-base">
-                    {flag.employee_profile.full_name?.charAt(0) || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold truncate">{flag.employee_profile.full_name}</p>
-                  <p className="text-sm text-muted-foreground truncate">
-                    {flag.employee_profile.email}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Description Section */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                Description
-              </h4>
-              <div className="p-4 rounded-xl bg-muted/30 border">
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{flag.description}</p>
+        {/* Scrollable Content - using native overflow */}
+        <div className="flex-1 overflow-y-auto min-h-0 p-6 space-y-5" style={{ scrollbarWidth: 'thin', scrollbarColor: 'hsl(var(--muted-foreground) / 0.4) transparent' }}>
+          {/* Employee Info Card */}
+          {flag.employee_profile && (
+            <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border">
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={flag.employee_profile.avatar_url || ''} />
+                <AvatarFallback className="text-base">
+                  {flag.employee_profile.full_name?.charAt(0) || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold truncate">{flag.employee_profile.full_name}</p>
+                <p className="text-sm text-muted-foreground truncate">
+                  {flag.employee_profile.email}
+                </p>
               </div>
             </div>
+          )}
 
-            {/* Issued By */}
-            {flag.issuer_profile && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground px-1">
-                <User className="h-4 w-4 shrink-0" />
-                <span>Issued by <span className="font-medium text-foreground">{flag.issuer_profile.full_name}</span></span>
-              </div>
-            )}
-
-            <Separator className="my-2" />
-
-            {/* Responses Section */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" />
-                Responses ({flagDetails?.replies?.length ?? flag?.replies_count ?? 0})
-              </h4>
-
-              {isLoading || isFetching ? (
-                <div className="flex items-center justify-center py-10 bg-muted/20 rounded-xl border border-dashed">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  <span className="ml-2 text-sm text-muted-foreground">Loading responses...</span>
-                </div>
-              ) : error ? (
-                <div className="text-center py-10 bg-destructive/5 rounded-xl border border-dashed border-destructive/20">
-                  <MessageSquare className="h-8 w-8 mx-auto mb-2 text-destructive/50" />
-                  <p className="text-sm text-destructive">Failed to load responses. Please try again.</p>
-                </div>
-              ) : flagDetails?.replies && flagDetails.replies.length > 0 ? (
-                <div className="rounded-xl border bg-muted/10 h-[250px] overflow-hidden">
-                  <ScrollArea className="h-full" scrollbarClassName="w-2.5 bg-muted/50" thumbClassName="bg-muted-foreground/50 hover:bg-muted-foreground/70">
-                    <div className="space-y-3 p-3">
-                      {flagDetails.replies.map((reply) => (
-                        <div
-                          key={reply.id}
-                          className={cn(
-                            'p-4 rounded-xl border',
-                            reply.user_id === user?.id
-                              ? 'bg-primary/5 border-primary/20'
-                              : 'bg-background'
-                          )}
-                        >
-                          <div className="flex items-center gap-2 mb-2">
-                            <Avatar className="h-7 w-7">
-                              <AvatarImage src={reply.user_profile?.avatar_url || ''} />
-                              <AvatarFallback className="text-xs">
-                                {reply.user_profile?.full_name?.charAt(0) || 'U'}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-sm font-medium">
-                              {reply.user_profile?.full_name}
-                            </span>
-                            <span className="text-xs text-muted-foreground ml-auto">
-                              {format(new Date(reply.created_at), 'dd MMM yyyy, hh:mm a')}
-                            </span>
-                          </div>
-                          <p className="text-sm leading-relaxed whitespace-pre-wrap pl-9">{reply.reply_text}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </div>
-              ) : (
-                <div className="text-center py-10 bg-muted/20 rounded-xl border border-dashed">
-                  <MessageSquare className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
-                  <p className="text-sm text-muted-foreground">No responses yet</p>
-                  <p className="text-xs text-muted-foreground/70 mt-1">Be the first to respond</p>
-                </div>
-              )}
+          {/* Description Section */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+              Description
+            </h4>
+            <div className="p-4 rounded-xl bg-muted/30 border">
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">{flag.description}</p>
             </div>
           </div>
-        </ScrollArea>
+
+          {/* Issued By */}
+          {flag.issuer_profile && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground px-1">
+              <User className="h-4 w-4 shrink-0" />
+              <span>Issued by <span className="font-medium text-foreground">{flag.issuer_profile.full_name}</span></span>
+            </div>
+          )}
+
+          <Separator className="my-2" />
+
+          {/* Responses Section */}
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Responses ({flagDetails?.replies?.length ?? flag?.replies_count ?? 0})
+            </h4>
+
+            {isLoading || isFetching ? (
+              <div className="flex items-center justify-center py-10 bg-muted/20 rounded-xl border border-dashed">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-sm text-muted-foreground">Loading responses...</span>
+              </div>
+            ) : error ? (
+              <div className="text-center py-10 bg-destructive/5 rounded-xl border border-dashed border-destructive/20">
+                <MessageSquare className="h-8 w-8 mx-auto mb-2 text-destructive/50" />
+                <p className="text-sm text-destructive">Failed to load responses. Please try again.</p>
+              </div>
+            ) : flagDetails?.replies && flagDetails.replies.length > 0 ? (
+              <div className="space-y-3">
+                {flagDetails.replies.map((reply) => (
+                  <div
+                    key={reply.id}
+                    className={cn(
+                      'p-4 rounded-xl border',
+                      reply.user_id === user?.id
+                        ? 'bg-primary/5 border-primary/20'
+                        : 'bg-muted/30'
+                    )}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <Avatar className="h-7 w-7">
+                        <AvatarImage src={reply.user_profile?.avatar_url || ''} />
+                        <AvatarFallback className="text-xs">
+                          {reply.user_profile?.full_name?.charAt(0) || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium">
+                        {reply.user_profile?.full_name}
+                      </span>
+                      <span className="text-xs text-muted-foreground ml-auto">
+                        {format(new Date(reply.created_at), 'dd MMM yyyy, hh:mm a')}
+                      </span>
+                    </div>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap pl-9">{reply.reply_text}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-10 bg-muted/20 rounded-xl border border-dashed">
+                <MessageSquare className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+                <p className="text-sm text-muted-foreground">No responses yet</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">Be the first to respond</p>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Fixed Footer - Reply Input */}
-        <div className="p-4 border-t bg-background">
+        <div className="p-4 border-t bg-background shrink-0">
           <Textarea
             placeholder="Write your response..."
             value={replyText}
