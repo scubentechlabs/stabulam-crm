@@ -154,34 +154,38 @@ export function FlagDetailDialog({ flag, open, onOpenChange }: FlagDetailDialogP
                   <p className="text-sm text-destructive">Failed to load responses. Please try again.</p>
                 </div>
               ) : flagDetails?.replies && flagDetails.replies.length > 0 ? (
-                <div className="space-y-3">
-                  {flagDetails.replies.map((reply) => (
-                    <div
-                      key={reply.id}
-                      className={cn(
-                        'p-4 rounded-xl border',
-                        reply.user_id === user?.id
-                          ? 'bg-primary/5 border-primary/20'
-                          : 'bg-muted/30'
-                      )}
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <Avatar className="h-7 w-7">
-                          <AvatarImage src={reply.user_profile?.avatar_url || ''} />
-                          <AvatarFallback className="text-xs">
-                            {reply.user_profile?.full_name?.charAt(0) || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm font-medium">
-                          {reply.user_profile?.full_name}
-                        </span>
-                        <span className="text-xs text-muted-foreground ml-auto">
-                          {format(new Date(reply.created_at), 'dd MMM yyyy, hh:mm a')}
-                        </span>
-                      </div>
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap pl-9">{reply.reply_text}</p>
+                <div className="rounded-xl border bg-muted/10">
+                  <ScrollArea className="max-h-[250px]" scrollbarClassName="w-2" thumbClassName="bg-muted-foreground/40">
+                    <div className="space-y-3 p-3">
+                      {flagDetails.replies.map((reply) => (
+                        <div
+                          key={reply.id}
+                          className={cn(
+                            'p-4 rounded-xl border',
+                            reply.user_id === user?.id
+                              ? 'bg-primary/5 border-primary/20'
+                              : 'bg-background'
+                          )}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <Avatar className="h-7 w-7">
+                              <AvatarImage src={reply.user_profile?.avatar_url || ''} />
+                              <AvatarFallback className="text-xs">
+                                {reply.user_profile?.full_name?.charAt(0) || 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm font-medium">
+                              {reply.user_profile?.full_name}
+                            </span>
+                            <span className="text-xs text-muted-foreground ml-auto">
+                              {format(new Date(reply.created_at), 'dd MMM yyyy, hh:mm a')}
+                            </span>
+                          </div>
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap pl-9">{reply.reply_text}</p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </ScrollArea>
                 </div>
               ) : (
                 <div className="text-center py-10 bg-muted/20 rounded-xl border border-dashed">
