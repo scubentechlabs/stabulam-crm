@@ -269,20 +269,52 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
                           )}
                         </TableCell>
                         <TableCell>
-                          {(() => {
-                            const statusConfig = editingStatusConfig[currentEditingStatus];
-                            const StatusIcon = statusConfig.icon;
-                            return (
-                              <Badge className={cn(
-                                "flex items-center gap-1.5 whitespace-nowrap",
-                                statusConfig.pillBg,
-                                statusConfig.pillText
-                              )}>
-                                <StatusIcon className="h-3 w-3" />
-                                {statusConfig.label}
-                              </Badge>
-                            );
-                          })()}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                              {(() => {
+                                const statusConfig = editingStatusConfig[currentEditingStatus];
+                                const StatusIcon = statusConfig.icon;
+                                return (
+                                  <Badge className={cn(
+                                    "flex items-center gap-1.5 whitespace-nowrap cursor-pointer",
+                                    statusConfig.pillBg,
+                                    statusConfig.pillText
+                                  )}>
+                                    <StatusIcon className="h-3 w-3" />
+                                    {statusConfig.label}
+                                  </Badge>
+                                );
+                              })()}
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="w-48">
+                              <DropdownMenuLabel>Change Editing Status</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              {statusOrder.map((statusKey) => {
+                                const statusItem = editingStatusConfig[statusKey];
+                                const isActive = currentEditingStatus === statusKey;
+                                
+                                return (
+                                  <DropdownMenuItem
+                                    key={statusKey}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleStatusChange(shoot.id, statusKey);
+                                    }}
+                                    className="p-1 focus:bg-transparent"
+                                  >
+                                    <span className={cn(
+                                      "w-full px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center justify-between",
+                                      statusItem.pillBg,
+                                      statusItem.pillText
+                                    )}>
+                                      {statusItem.label}
+                                      {isActive && <Check className="h-3.5 w-3.5 ml-2" />}
+                                    </span>
+                                  </DropdownMenuItem>
+                                );
+                              })}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                         <TableCell>
                           {shoot.editor_deadline ? (
