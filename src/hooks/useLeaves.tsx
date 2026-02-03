@@ -246,7 +246,7 @@ export function useLeaves() {
     try {
       // Update leave status to 'rejected' with a cancellation note instead of deleting
       // since RLS doesn't allow DELETE on leaves table
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('leaves')
         .update({
           status: 'rejected' as const,
@@ -255,9 +255,15 @@ export function useLeaves() {
         })
         .eq('id', leaveId)
         .eq('user_id', user.id)
-        .eq('status', 'pending');
+        .eq('status', 'pending')
+        .select('id');
 
       if (error) throw error;
+
+      // Check if any row was actually updated
+      if (!data || data.length === 0) {
+        throw new Error('Leave request not found or already processed');
+      }
 
       toast({
         title: 'Success',
@@ -270,7 +276,7 @@ export function useLeaves() {
       console.error('Error cancelling leave:', error);
       toast({
         title: 'Error',
-        description: 'Failed to cancel leave request',
+        description: error instanceof Error ? error.message : 'Failed to cancel leave request',
         variant: 'destructive',
       });
       return { error };
