@@ -81,6 +81,21 @@ export function NotificationBell() {
                       if (!notification.is_read) {
                         markAsRead(notification.id);
                       }
+                      setOpen(false);
+                      // Navigate based on notification type
+                      if (notification.notification_type === 'task_assigned') {
+                        navigate('/tasks');
+                      } else if (notification.notification_type === 'shoot_reminder') {
+                        navigate('/shoots');
+                      } else if (notification.notification_type === 'leave_request' || 
+                                 notification.notification_type === 'request_approved' || 
+                                 notification.notification_type === 'request_rejected') {
+                        navigate('/leaves');
+                      } else if (notification.notification_type === 'salary_generated') {
+                        navigate('/salary-history');
+                      } else if (notification.notification_type.startsWith('regularization')) {
+                        navigate('/attendance');
+                      }
                     }}
                   />
                 </div>
