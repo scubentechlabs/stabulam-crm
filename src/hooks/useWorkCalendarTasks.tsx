@@ -31,6 +31,8 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
   const [newTaskIds, setNewTaskIds] = useState<Set<string>>(new Set());
   const channelRef = useRef<RealtimeChannel | null>(null);
   const previousTaskIdsRef = useRef<Set<string>>(new Set());
+  const isInitialLoadRef = useRef(true);
+  const selfCreatedTaskIdsRef = useRef<Set<string>>(new Set());
 
   const fetchTasks = useCallback(async () => {
     // Only fetch if we have a valid target user ID
@@ -81,7 +83,27 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
       if (newIds.size > 0) {
         setNewTaskIds(newIds);
         setTimeout(() => setNewTaskIds(new Set()), 500);
+        
+        // Show toast notification for tasks assigned by someone else (not initial load, not self-created)
+        if (!isInitialLoadRef.current) {
+          const assignedByOthers = Array.from(newIds).filter(
+            id => !selfCreatedTaskIdsRef.current.has(id)
+          );
+          
+          if (assignedByOthers.length > 0 && selectedUserId === user?.id) {
+            const newTask = newData.find(t => assignedByOthers.includes(t.id));
+            if (newTask) {
+              toast({
+                title: '📋 New Task Assigned',
+                description: `"${newTask.title}" has been assigned to you`,
+              });
+            }
+          }
+        }
       }
+      
+      // Mark initial load as complete
+      isInitialLoadRef.current = false;
       
       setTasks(newData);
     } catch (error) {
@@ -191,6 +213,11 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
         title: 'Task Created',
         description: `${taskType.toUpperCase()} task created successfully`,
       });
+
+      // Track self-created task to avoid showing toast notification
+      if (data) {
+        selfCreatedTaskIdsRef.current.add(data.id);
+      }
 
       await fetchTasks();
       return data;
