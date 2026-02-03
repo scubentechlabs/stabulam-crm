@@ -28,7 +28,9 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
   const [tasks, setTasks] = useState<WorkCalendarTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newTaskIds, setNewTaskIds] = useState<Set<string>>(new Set());
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const previousTaskIdsRef = useRef<Set<string>>(new Set());
 
   const fetchTasks = useCallback(async () => {
     // Only fetch if we have a valid target user ID
@@ -59,7 +61,29 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
       const { data, error } = await query;
 
       if (error) throw error;
-      setTasks(data || []);
+      
+      const newData = data || [];
+      
+      // Detect new tasks (tasks that weren't in the previous set)
+      const currentIds = new Set(newData.map(t => t.id));
+      const newIds = new Set<string>();
+      
+      currentIds.forEach(id => {
+        if (!previousTaskIdsRef.current.has(id)) {
+          newIds.add(id);
+        }
+      });
+      
+      // Update previous IDs ref
+      previousTaskIdsRef.current = currentIds;
+      
+      // Set new task IDs for animation (clear after animation duration)
+      if (newIds.size > 0) {
+        setNewTaskIds(newIds);
+        setTimeout(() => setNewTaskIds(new Set()), 500);
+      }
+      
+      setTasks(newData);
     } catch (error) {
       console.error('Error fetching tasks:', error);
       toast({
@@ -296,6 +320,7 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
     todTasks,
     utodTasks,
     eodTasks,
+    newTaskIds,
     isLoading,
     isSubmitting,
     createTask,

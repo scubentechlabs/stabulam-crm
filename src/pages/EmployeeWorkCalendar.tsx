@@ -36,6 +36,7 @@ export default function EmployeeWorkCalendar() {
   const { 
     tasks, 
     tasksByDate, 
+    newTaskIds,
     isLoading, 
     isSubmitting,
     createTask,
@@ -176,6 +177,7 @@ export default function EmployeeWorkCalendar() {
           <TaskDayDetail
             selectedDate={selectedDate}
             tasks={tasks}
+            newTaskIds={newTaskIds}
             isAdmin={isAdmin}
             onEditTask={handleEditTask}
           />
