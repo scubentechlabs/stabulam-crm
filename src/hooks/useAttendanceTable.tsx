@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, parseISO } from 'date-fns';
+import { format, subDays, startOfMonth, endOfMonth, eachDayOfInterval, parseISO, isToday, parse } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useUsers } from '@/hooks/useUsers';
+import { useHolidays } from '@/hooks/useHolidays';
 import type { Database } from '@/integrations/supabase/types';
 
 type Attendance = Database['public']['Tables']['attendance']['Row'];
-
 export interface DateRange {
   from: Date;
   to: Date;
@@ -25,12 +25,14 @@ export interface AttendanceTableRow {
   late_minutes: number | null;
   tod_submitted: boolean | null;
   eod_submitted: boolean | null;
-  status: 'present' | 'absent' | 'late' | 'working' | 'completed';
+  status: 'present' | 'absent' | 'late' | 'working' | 'completed' | 'not_clock_in' | 'holiday';
   work_hours: string | null;
+  holiday_name?: string;
 }
 
 export function useAttendanceTable() {
   const { users } = useUsers();
+  const { isHoliday } = useHolidays();
   const [dateRange, setDateRange] = useState<DateRange>({
     from: startOfMonth(new Date()),
     to: endOfMonth(new Date()),
@@ -83,8 +85,36 @@ export function useAttendanceTable() {
     return `${hours}h ${minutes}m`;
   };
 
-  const getStatus = (record: Attendance): AttendanceTableRow['status'] => {
-    if (!record.clock_in_time) return 'absent';
+  const getStatus = (
+    record: Attendance | null, 
+    date: Date, 
+    workEndTime: string | null
+  ): AttendanceTableRow['status'] => {
+    // Check if it's a holiday first
+    const holidayCheck = isHoliday(date);
+    if (holidayCheck.isHoliday) return 'holiday';
+
+    // If there's no record or no clock in
+    if (!record || !record.clock_in_time) {
+      // If it's today, check if we're past work end time
+      if (isToday(date)) {
+        const now = new Date();
+        const endTime = workEndTime || '18:00:00';
+        const [hours, minutes] = endTime.split(':').map(Number);
+        const workEndDate = new Date();
+        workEndDate.setHours(hours, minutes, 0, 0);
+        
+        // If current time is past work end time, show Absent
+        if (now > workEndDate) {
+          return 'absent';
+        }
+        // Otherwise show Not Clock In
+        return 'not_clock_in';
+      }
+      // Past dates without clock in are Absent
+      return 'absent';
+    }
+    
     if (record.clock_out_time) return 'completed';
     if (record.is_late) return 'late';
     return 'working';
@@ -114,6 +144,9 @@ export function useAttendanceTable() {
           r => r.user_id === employee.user_id && r.date === dateStr
         );
         
+        const holidayCheck = isHoliday(date);
+        const status = getStatus(record || null, date, employee.work_end_time);
+        
         if (record) {
           rows.push({
             id: record.id,
@@ -129,11 +162,12 @@ export function useAttendanceTable() {
             late_minutes: record.late_minutes,
             tod_submitted: record.tod_submitted,
             eod_submitted: record.eod_submitted,
-            status: getStatus(record),
+            status,
             work_hours: calculateWorkHours(record.clock_in_time, record.clock_out_time),
+            holiday_name: holidayCheck.isHoliday ? holidayCheck.reason : undefined,
           });
         } else {
-          // Create absent row
+          // Create row for missing attendance
           rows.push({
             id: `absent-${employee.user_id}-${dateStr}`,
             user_id: employee.user_id,
@@ -148,8 +182,9 @@ export function useAttendanceTable() {
             late_minutes: null,
             tod_submitted: null,
             eod_submitted: null,
-            status: 'absent',
+            status,
             work_hours: null,
+            holiday_name: holidayCheck.isHoliday ? holidayCheck.reason : undefined,
           });
         }
       }
@@ -161,7 +196,7 @@ export function useAttendanceTable() {
       if (dateCompare !== 0) return dateCompare;
       return a.user_name.localeCompare(b.user_name);
     });
-  }, [users, attendanceRecords, dateRange, selectedEmployee]);
+  }, [users, attendanceRecords, dateRange, selectedEmployee, isHoliday]);
 
   const stats = useMemo(() => {
     const activeEmployees = users.filter(u => u.is_active && u.role === 'employee');

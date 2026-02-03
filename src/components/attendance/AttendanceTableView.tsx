@@ -97,8 +97,9 @@ export function AttendanceTableView({ data, isLoading }: AttendanceTableViewProp
               const isWorking = row.status === 'working';
               const isCompleted = row.status === 'completed';
               const isAbsent = row.status === 'absent';
+              const isNotClockIn = row.status === 'not_clock_in';
+              const isHoliday = row.status === 'holiday';
               const isAutoClockOut = row.clock_out_time && row.work_hours && parseFloat(row.work_hours.replace('h', '').replace('m', '')) > 10;
-              
               return (
                 <TableRow 
                   key={row.id}
@@ -178,9 +179,17 @@ export function AttendanceTableView({ data, isLoading }: AttendanceTableViewProp
                   <TableCell>
                     <div className="flex flex-col gap-1">
                       {/* Main status badge */}
-                      {isAbsent ? (
+                      {isHoliday ? (
+                        <Badge className="bg-orange-500 text-white border-0 text-xs font-medium w-fit">
+                          Holiday{row.holiday_name ? ` (${row.holiday_name})` : ''}
+                        </Badge>
+                      ) : isAbsent ? (
                         <Badge className="bg-red-500 text-white border-0 text-xs font-medium w-fit">
                           Absent
+                        </Badge>
+                      ) : isNotClockIn ? (
+                        <Badge className="bg-yellow-500 text-white border-0 text-xs font-medium w-fit">
+                          Not Clock In
                         </Badge>
                       ) : isCompleted ? (
                         isAutoClockOut ? (
