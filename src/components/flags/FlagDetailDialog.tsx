@@ -65,24 +65,25 @@ export function FlagDetailDialog({ flag, open, onOpenChange }: FlagDetailDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col p-0">
-        <DialogHeader className="p-6 pb-0">
+      <DialogContent className="sm:max-w-[650px] max-h-[90vh] flex flex-col p-0 gap-0">
+        {/* Header */}
+        <DialogHeader className="p-6 pb-4 border-b">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">
               <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-destructive/10 shrink-0">
                 <FlagIcon className="h-5 w-5 text-destructive" />
               </div>
-              <div>
-                <DialogTitle className="text-lg">{flag.title}</DialogTitle>
+              <div className="min-w-0">
+                <DialogTitle className="text-lg leading-tight">{flag.title}</DialogTitle>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                  <Calendar className="h-3.5 w-3.5" />
+                  <Calendar className="h-3.5 w-3.5 shrink-0" />
                   <span>{format(new Date(flag.created_at), 'dd MMM yyyy, hh:mm a')}</span>
                 </div>
               </div>
             </div>
             <Badge
               variant="outline"
-              className={cn('capitalize', statusColors[flag.status])}
+              className={cn('capitalize shrink-0', statusColors[flag.status])}
             >
               {flag.status === 'open' ? (
                 <Clock className="mr-1 h-3 w-3" />
@@ -94,50 +95,63 @@ export function FlagDetailDialog({ flag, open, onOpenChange }: FlagDetailDialogP
           </div>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 min-h-0 max-h-[40vh] px-6" scrollbarClassName="w-2" thumbClassName="bg-muted-foreground/30">
-          <div className="space-y-4 py-4">
-            {/* Employee Info */}
+        {/* Scrollable Content */}
+        <ScrollArea className="flex-1 min-h-0" scrollbarClassName="w-2" thumbClassName="bg-muted-foreground/30">
+          <div className="p-6 space-y-5">
+            {/* Employee Info Card */}
             {flag.employee_profile && (
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
-                <Avatar className="h-10 w-10">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border">
+                <Avatar className="h-12 w-12">
                   <AvatarImage src={flag.employee_profile.avatar_url || ''} />
-                  <AvatarFallback>
+                  <AvatarFallback className="text-base">
                     {flag.employee_profile.full_name?.charAt(0) || 'U'}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <p className="font-medium">{flag.employee_profile.full_name}</p>
-                  <p className="text-sm text-muted-foreground">
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold truncate">{flag.employee_profile.full_name}</p>
+                  <p className="text-sm text-muted-foreground truncate">
                     {flag.employee_profile.email}
                   </p>
                 </div>
               </div>
             )}
 
-            {/* Description */}
-            <div>
-              <h4 className="text-sm font-medium mb-2">Description</h4>
-              <div className="p-3 rounded-lg bg-muted/30 border">
-                <p className="text-sm whitespace-pre-wrap">{flag.description}</p>
+            {/* Description Section */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                Description
+              </h4>
+              <div className="p-4 rounded-xl bg-muted/30 border">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{flag.description}</p>
               </div>
             </div>
 
-            {/* Replies Section - Now below Description */}
-            <div>
-              <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+            {/* Issued By */}
+            {flag.issuer_profile && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground px-1">
+                <User className="h-4 w-4 shrink-0" />
+                <span>Issued by <span className="font-medium text-foreground">{flag.issuer_profile.full_name}</span></span>
+              </div>
+            )}
+
+            <Separator className="my-2" />
+
+            {/* Responses Section */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
                 Responses ({flagDetails?.replies?.length ?? flag?.replies_count ?? 0})
               </h4>
 
               {isLoading || isFetching ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <div className="flex items-center justify-center py-10 bg-muted/20 rounded-xl border border-dashed">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   <span className="ml-2 text-sm text-muted-foreground">Loading responses...</span>
                 </div>
               ) : error ? (
-                <div className="text-center py-6 text-destructive">
-                  <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">Failed to load responses. Please try again.</p>
+                <div className="text-center py-10 bg-destructive/5 rounded-xl border border-dashed border-destructive/20">
+                  <MessageSquare className="h-8 w-8 mx-auto mb-2 text-destructive/50" />
+                  <p className="text-sm text-destructive">Failed to load responses. Please try again.</p>
                 </div>
               ) : flagDetails?.replies && flagDetails.replies.length > 0 ? (
                 <div className="space-y-3">
@@ -145,14 +159,14 @@ export function FlagDetailDialog({ flag, open, onOpenChange }: FlagDetailDialogP
                     <div
                       key={reply.id}
                       className={cn(
-                        'p-3 rounded-lg border',
+                        'p-4 rounded-xl border',
                         reply.user_id === user?.id
-                          ? 'bg-primary/5 border-primary/20 ml-4'
+                          ? 'bg-primary/5 border-primary/20'
                           : 'bg-muted/30'
                       )}
                     >
                       <div className="flex items-center gap-2 mb-2">
-                        <Avatar className="h-6 w-6">
+                        <Avatar className="h-7 w-7">
                           <AvatarImage src={reply.user_profile?.avatar_url || ''} />
                           <AvatarFallback className="text-xs">
                             {reply.user_profile?.full_name?.charAt(0) || 'U'}
@@ -161,49 +175,38 @@ export function FlagDetailDialog({ flag, open, onOpenChange }: FlagDetailDialogP
                         <span className="text-sm font-medium">
                           {reply.user_profile?.full_name}
                         </span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs text-muted-foreground ml-auto">
                           {format(new Date(reply.created_at), 'dd MMM yyyy, hh:mm a')}
                         </span>
                       </div>
-                      <p className="text-sm whitespace-pre-wrap">{reply.reply_text}</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap pl-9">{reply.reply_text}</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-6 text-muted-foreground">
-                  <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No responses yet</p>
+                <div className="text-center py-10 bg-muted/20 rounded-xl border border-dashed">
+                  <MessageSquare className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+                  <p className="text-sm text-muted-foreground">No responses yet</p>
+                  <p className="text-xs text-muted-foreground/70 mt-1">Be the first to respond</p>
                 </div>
               )}
             </div>
-
-            <Separator />
-
-            {/* Issued By - Now at bottom */}
-            {flag.issuer_profile && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <User className="h-4 w-4" />
-                <span>Issued by {flag.issuer_profile.full_name}</span>
-              </div>
-            )}
           </div>
         </ScrollArea>
 
-        {/* Reply Input */}
-        <div className="p-4 border-t bg-muted/30">
-          <div className="flex gap-2">
-            <Textarea
-              placeholder="Write your response..."
-              value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
-              className="min-h-[80px] resize-none"
-            />
-          </div>
-          <div className="flex items-center justify-between mt-3">
-            <div className="text-xs text-muted-foreground">
+        {/* Fixed Footer - Reply Input */}
+        <div className="p-4 border-t bg-background">
+          <Textarea
+            placeholder="Write your response..."
+            value={replyText}
+            onChange={(e) => setReplyText(e.target.value)}
+            className="min-h-[80px] resize-none mb-3"
+          />
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs text-muted-foreground hidden sm:block">
               Responses cannot be edited after submission
-            </div>
-            <div className="flex gap-2">
+            </p>
+            <div className="flex gap-2 ml-auto">
               {isAdmin && flag.status === 'open' && (
                 <Button
                   variant="outline"
@@ -211,7 +214,7 @@ export function FlagDetailDialog({ flag, open, onOpenChange }: FlagDetailDialogP
                   onClick={handleAcknowledge}
                 >
                   <CheckCircle2 className="mr-1.5 h-4 w-4" />
-                  Mark Acknowledged
+                  Acknowledge
                 </Button>
               )}
               <Button
@@ -224,7 +227,7 @@ export function FlagDetailDialog({ flag, open, onOpenChange }: FlagDetailDialogP
                 ) : (
                   <Send className="mr-1.5 h-4 w-4" />
                 )}
-                Submit Response
+                Submit
               </Button>
             </div>
           </div>
