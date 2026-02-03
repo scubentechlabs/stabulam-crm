@@ -30,12 +30,7 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
 
   const fetchTasks = useCallback(async () => {
     // Only fetch if we have a valid target user ID
-    if (!user || !selectedUserId) {
-      console.log('[WorkCalendarTasks] Skipping fetch - user:', !!user, 'selectedUserId:', selectedUserId);
-      return;
-    }
-
-    console.log('[WorkCalendarTasks] Fetching tasks for userId:', selectedUserId, 'month:', selectedMonth?.toISOString());
+    if (!user || !selectedUserId) return;
 
     setIsLoading(true);
     try {
@@ -62,7 +57,6 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
       const { data, error } = await query;
 
       if (error) throw error;
-      console.log('[WorkCalendarTasks] Fetched', data?.length, 'tasks for userId:', selectedUserId);
       setTasks(data || []);
     } catch (error) {
       console.error('Error fetching tasks:', error);

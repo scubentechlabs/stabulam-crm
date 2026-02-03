@@ -26,43 +26,72 @@ type Task = Database['public']['Tables']['tasks']['Row'];
 export default function Tasks() {
   const { user } = useAuth();
   const { todayAttendance } = useAttendance();
-  const { todTasks, utodTasks, addTask, isLoading, refetch } = useTasks(todayAttendance?.id);
+  const { addTask, isLoading, refetch } = useTasks(todayAttendance?.id);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [historicalTasks, setHistoricalTasks] = useState<Task[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-  // Fetch tasks for selected date (history view)
+  // Fetch tasks for selected date (including tasks without attendance_id)
   useEffect(() => {
     async function fetchTasksForDate() {
       if (!user) return;
       
-      const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
+      
       if (isToday) {
-        setHistoricalTasks([]);
-        return;
-      }
-
-      setIsLoadingHistory(true);
-      try {
-        // First get attendance for that date
-        const { data: attendance } = await supabase
-          .from('attendance')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('date', format(selectedDate, 'yyyy-MM-dd'))
-          .maybeSingle();
-
-        if (attendance) {
+        // For today, we'll fetch all tasks for today regardless of attendance_id
+        setIsLoadingHistory(true);
+        try {
+          // Get start and end of day in UTC (accounting for IST)
+          const startOfDay = new Date(selectedDate);
+          startOfDay.setHours(0, 0, 0, 0);
+          const endOfDay = new Date(selectedDate);
+          endOfDay.setHours(23, 59, 59, 999);
+          
           const { data: tasks } = await supabase
             .from('tasks')
             .select('*')
-            .eq('attendance_id', attendance.id)
+            .eq('user_id', user.id)
+            .or(`created_at.gte.${startOfDay.toISOString()},submitted_at.gte.${startOfDay.toISOString()}`)
             .order('created_at', { ascending: true });
 
-          setHistoricalTasks(tasks || []);
-        } else {
-          setHistoricalTasks([]);
+          // Filter to only include tasks from today
+          const todayTasks = (tasks || []).filter(task => {
+            const taskDate = task.submitted_at 
+              ? format(new Date(task.submitted_at), 'yyyy-MM-dd')
+              : format(new Date(task.created_at), 'yyyy-MM-dd');
+            return taskDate === dateStr;
+          });
+          
+          setHistoricalTasks(todayTasks);
+        } catch (error) {
+          console.error('Error fetching today tasks:', error);
+        } finally {
+          setIsLoadingHistory(false);
         }
+        return;
+      }
+
+      // For historical dates
+      setIsLoadingHistory(true);
+      try {
+        // Fetch tasks by date (using submitted_at or created_at)
+        const { data: tasks } = await supabase
+          .from('tasks')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: true });
+
+        // Filter tasks for the selected date
+        const filteredTasks = (tasks || []).filter(task => {
+          const taskDate = task.submitted_at 
+            ? format(new Date(task.submitted_at), 'yyyy-MM-dd')
+            : format(new Date(task.created_at), 'yyyy-MM-dd');
+          return taskDate === dateStr;
+        });
+        
+        setHistoricalTasks(filteredTasks);
       } catch (error) {
         console.error('Error fetching historical tasks:', error);
       } finally {
@@ -84,7 +113,11 @@ export default function Tasks() {
   };
 
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
-  const displayTasks = isToday ? [...todTasks, ...utodTasks] : historicalTasks;
+  
+  // Use historicalTasks for all dates now (includes today's tasks fetched by date)
+  const displayTasks = historicalTasks;
+  const todTasksFiltered = displayTasks.filter(t => t.task_type === 'tod');
+  const utodTasksFiltered = displayTasks.filter(t => t.task_type === 'utod' || t.task_type === 'urgent_tod');
   const completedCount = displayTasks.filter(t => t.status === 'completed').length;
   const pendingCount = displayTasks.filter(t => t.status === 'pending').length;
 
@@ -171,8 +204,8 @@ export default function Tasks() {
               <Tabs defaultValue="all">
                 <TabsList>
                   <TabsTrigger value="all">All ({displayTasks.length})</TabsTrigger>
-                  <TabsTrigger value="tod">TOD ({todTasks.length})</TabsTrigger>
-                  <TabsTrigger value="utod">UTOD ({utodTasks.length})</TabsTrigger>
+                  <TabsTrigger value="tod">TOD ({todTasksFiltered.length})</TabsTrigger>
+                  <TabsTrigger value="utod">UTOD ({utodTasksFiltered.length})</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="all" className="mt-4">
@@ -180,11 +213,11 @@ export default function Tasks() {
                 </TabsContent>
                 
                 <TabsContent value="tod" className="mt-4">
-                  <TaskList tasks={todTasks} emptyMessage="No TOD tasks added" />
+                  <TaskList tasks={todTasksFiltered} emptyMessage="No TOD tasks added" />
                 </TabsContent>
                 
                 <TabsContent value="utod" className="mt-4">
-                  <TaskList tasks={utodTasks} emptyMessage="No UTOD tasks added" />
+                  <TaskList tasks={utodTasksFiltered} emptyMessage="No UTOD tasks added" />
                 </TabsContent>
               </Tabs>
             ) : (

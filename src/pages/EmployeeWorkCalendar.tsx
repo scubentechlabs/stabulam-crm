@@ -33,8 +33,6 @@ export default function EmployeeWorkCalendar() {
   // Only fetch tasks when a user is actually selected
   const effectiveUserId = selectedUserId || user?.id;
   
-  console.log('[EmployeeWorkCalendar] user.id:', user?.id, 'selectedUserId:', selectedUserId, 'effectiveUserId:', effectiveUserId);
-  
   const { 
     tasks, 
     tasksByDate, 
@@ -43,8 +41,6 @@ export default function EmployeeWorkCalendar() {
     createTask,
     updateTask,
   } = useWorkCalendarTasks(effectiveUserId, currentMonth);
-  
-  console.log('[EmployeeWorkCalendar] Received tasks count:', tasks.length);
 
   // Fetch users list
   useEffect(() => {
