@@ -953,6 +953,7 @@ export type Database = {
         | "regularization_request"
         | "regularization_approved"
         | "regularization_rejected"
+        | "task_assigned"
       regularization_status: "pending" | "approved" | "rejected"
       salary_cycle_type: "monthly" | "bi_weekly" | "custom"
       shoot_status: "pending" | "in_progress" | "completed" | "given_by_editor"
@@ -1110,6 +1111,7 @@ export const Constants = {
         "regularization_request",
         "regularization_approved",
         "regularization_rejected",
+        "task_assigned",
       ],
       regularization_status: ["pending", "approved", "rejected"],
       salary_cycle_type: ["monthly", "bi_weekly", "custom"],

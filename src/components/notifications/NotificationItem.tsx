@@ -8,7 +8,8 @@ import {
   Camera, 
   FileText,
   DollarSign,
-  AlertCircle 
+  AlertCircle,
+  ClipboardList
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,7 @@ const iconMap: Record<NotificationType, React.ReactNode> = {
   regularization_request: <Clock className="h-5 w-5 text-blue-500" />,
   regularization_approved: <CheckCircle className="h-5 w-5 text-green-500" />,
   regularization_rejected: <XCircle className="h-5 w-5 text-destructive" />,
+  task_assigned: <ClipboardList className="h-5 w-5 text-blue-500" />,
 };
 
 export function NotificationItem({ notification, onMarkRead, onClick }: NotificationItemProps) {
