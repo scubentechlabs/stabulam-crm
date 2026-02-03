@@ -107,7 +107,8 @@ export function useLeaves() {
 
   const calculateAdvanceNotice = (startDate: string): boolean => {
     const now = new Date();
-    const leaveStart = new Date(startDate);
+    // Parse the start date and set it to the beginning of the work day (9 AM IST)
+    const leaveStart = new Date(startDate + 'T09:00:00+05:30');
     const hoursDifference = (leaveStart.getTime() - now.getTime()) / (1000 * 60 * 60);
     return hoursDifference >= 48;
   };
