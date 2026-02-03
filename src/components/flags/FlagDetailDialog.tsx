@@ -154,8 +154,8 @@ export function FlagDetailDialog({ flag, open, onOpenChange }: FlagDetailDialogP
                   <p className="text-sm text-destructive">Failed to load responses. Please try again.</p>
                 </div>
               ) : flagDetails?.replies && flagDetails.replies.length > 0 ? (
-                <div className="rounded-xl border bg-muted/10">
-                  <ScrollArea className="max-h-[250px]" scrollbarClassName="w-2" thumbClassName="bg-muted-foreground/40">
+                <div className="rounded-xl border bg-muted/10 h-[250px] overflow-hidden">
+                  <ScrollArea className="h-full" scrollbarClassName="w-2.5 bg-muted/50" thumbClassName="bg-muted-foreground/50 hover:bg-muted-foreground/70">
                     <div className="space-y-3 p-3">
                       {flagDetails.replies.map((reply) => (
                         <div
