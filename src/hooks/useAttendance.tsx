@@ -72,15 +72,22 @@ export function useAttendance() {
   const calculateLateStatus = useCallback((clockInTime: Date) => {
     if (!profile?.work_start_time) return { isLate: false, lateMinutes: 0 };
 
+    const GRACE_PERIOD_MINUTES = 30; // 30-minute grace period
+    
     const [hours, minutes] = profile.work_start_time.split(':').map(Number);
     const startTime = new Date(clockInTime);
     startTime.setHours(hours, minutes, 0, 0);
 
     const diffMinutes = Math.floor((clockInTime.getTime() - startTime.getTime()) / (1000 * 60));
     
+    // Only mark as late if more than 30 minutes after start time
+    const isLate = diffMinutes > GRACE_PERIOD_MINUTES;
+    // Late minutes count from after the grace period
+    const lateMinutes = isLate ? diffMinutes - GRACE_PERIOD_MINUTES : 0;
+    
     return {
-      isLate: diffMinutes > 0,
-      lateMinutes: Math.max(0, diffMinutes),
+      isLate,
+      lateMinutes,
     };
   }, [profile]);
 
