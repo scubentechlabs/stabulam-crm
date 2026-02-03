@@ -187,6 +187,7 @@ export default function EmployeeWorkCalendar() {
         open={isTaskDialogOpen}
         onOpenChange={setIsTaskDialogOpen}
         users={isAdmin ? users : users.filter(u => u.user_id === user?.id)}
+        currentUserId={user?.id}
         selectedDate={selectedDate}
         editingTask={editingTask}
         onSubmit={handleTaskSubmit}

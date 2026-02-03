@@ -34,6 +34,7 @@ interface AdminTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   users: User[];
+  currentUserId?: string;
   selectedDate?: Date | null;
   editingTask?: WorkCalendarTask | null;
   onSubmit: (data: {
@@ -57,6 +58,7 @@ export function AdminTaskDialog({
   open,
   onOpenChange,
   users,
+  currentUserId,
   selectedDate,
   editingTask,
   onSubmit,
@@ -175,11 +177,20 @@ export function AdminTaskDialog({
                   <SelectValue placeholder="Select employee" />
                 </SelectTrigger>
                 <SelectContent>
-                  {users.map(user => (
-                    <SelectItem key={user.user_id} value={user.user_id}>
-                      {user.full_name}
+                  {/* Show "Self" first for current user */}
+                  {currentUserId && users.find(u => u.user_id === currentUserId) && (
+                    <SelectItem key={currentUserId} value={currentUserId}>
+                      Self
                     </SelectItem>
-                  ))}
+                  )}
+                  {/* Show other employees (excluding current user) */}
+                  {users
+                    .filter(u => u.user_id !== currentUserId)
+                    .map(user => (
+                      <SelectItem key={user.user_id} value={user.user_id}>
+                        {user.full_name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
