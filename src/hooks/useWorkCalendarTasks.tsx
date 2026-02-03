@@ -29,18 +29,15 @@ export function useWorkCalendarTasks(selectedUserId?: string, selectedMonth?: Da
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchTasks = useCallback(async () => {
-    if (!user) return;
-
-    // Don't fetch if no user is selected yet (wait for useEffect to set it)
-    const targetUserId = selectedUserId || user.id;
-    if (!targetUserId) return;
+    // Only fetch if we have a valid target user ID
+    if (!user || !selectedUserId) return;
 
     setIsLoading(true);
     try {
       let query = supabase
         .from('tasks')
         .select('*')
-        .eq('user_id', targetUserId)
+        .eq('user_id', selectedUserId)
         .order('created_at', { ascending: false });
 
       // Filter by month if provided - in IST boundaries, using submitted_at
