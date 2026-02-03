@@ -30,6 +30,9 @@ export default function EmployeeWorkCalendar() {
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<WorkCalendarTask | null>(null);
 
+  // Only fetch tasks when a user is actually selected
+  const effectiveUserId = selectedUserId || user?.id;
+  
   const { 
     tasks, 
     tasksByDate, 
@@ -37,7 +40,7 @@ export default function EmployeeWorkCalendar() {
     isSubmitting,
     createTask,
     updateTask,
-  } = useWorkCalendarTasks(selectedUserId || undefined, currentMonth);
+  } = useWorkCalendarTasks(effectiveUserId, currentMonth);
 
   // Fetch users list
   useEffect(() => {
