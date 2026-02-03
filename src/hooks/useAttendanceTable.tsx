@@ -6,6 +6,7 @@ import { useHolidays } from '@/hooks/useHolidays';
 import type { Database } from '@/integrations/supabase/types';
 
 type Attendance = Database['public']['Tables']['attendance']['Row'];
+type Leave = Database['public']['Tables']['leaves']['Row'];
 export interface DateRange {
   from: Date;
   to: Date;
@@ -25,9 +26,10 @@ export interface AttendanceTableRow {
   late_minutes: number | null;
   tod_submitted: boolean | null;
   eod_submitted: boolean | null;
-  status: 'present' | 'absent' | 'late' | 'working' | 'completed' | 'not_clock_in' | 'holiday';
+  status: 'present' | 'absent' | 'late' | 'working' | 'completed' | 'not_clock_in' | 'holiday' | 'on_leave';
   work_hours: string | null;
   holiday_name?: string;
+  is_on_leave?: boolean;
 }
 
 export function useAttendanceTable() {
@@ -39,6 +41,7 @@ export function useAttendanceTable() {
   });
   const [selectedEmployee, setSelectedEmployee] = useState<string>('all');
   const [attendanceRecords, setAttendanceRecords] = useState<Attendance[]>([]);
+  const [approvedLeaves, setApprovedLeaves] = useState<Leave[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchAttendance = useCallback(async () => {
@@ -47,7 +50,8 @@ export function useAttendanceTable() {
       const fromDate = format(dateRange.from, 'yyyy-MM-dd');
       const toDate = format(dateRange.to, 'yyyy-MM-dd');
       
-      let query = supabase
+      // Fetch attendance records
+      let attendanceQuery = supabase
         .from('attendance')
         .select('*')
         .gte('date', fromDate)
@@ -55,13 +59,31 @@ export function useAttendanceTable() {
         .order('date', { ascending: false });
 
       if (selectedEmployee !== 'all') {
-        query = query.eq('user_id', selectedEmployee);
+        attendanceQuery = attendanceQuery.eq('user_id', selectedEmployee);
       }
 
-      const { data, error } = await query;
+      // Fetch approved leaves that overlap with date range
+      let leavesQuery = supabase
+        .from('leaves')
+        .select('*')
+        .eq('status', 'approved')
+        .lte('start_date', toDate)
+        .gte('end_date', fromDate);
 
-      if (error) throw error;
-      setAttendanceRecords(data || []);
+      if (selectedEmployee !== 'all') {
+        leavesQuery = leavesQuery.eq('user_id', selectedEmployee);
+      }
+
+      const [attendanceResult, leavesResult] = await Promise.all([
+        attendanceQuery,
+        leavesQuery,
+      ]);
+
+      if (attendanceResult.error) throw attendanceResult.error;
+      if (leavesResult.error) throw leavesResult.error;
+
+      setAttendanceRecords(attendanceResult.data || []);
+      setApprovedLeaves(leavesResult.data || []);
     } catch (error) {
       console.error('Error fetching attendance:', error);
     } finally {
@@ -85,14 +107,27 @@ export function useAttendanceTable() {
     return `${hours}h ${minutes}m`;
   };
 
+  // Check if user is on approved leave for a specific date
+  const isUserOnLeave = (userId: string, dateStr: string): boolean => {
+    return approvedLeaves.some(leave => {
+      if (leave.user_id !== userId) return false;
+      return dateStr >= leave.start_date && dateStr <= leave.end_date;
+    });
+  };
+
   const getStatus = (
     record: Attendance | null, 
     date: Date, 
-    workEndTime: string | null
+    workEndTime: string | null,
+    userId: string,
+    dateStr: string
   ): AttendanceTableRow['status'] => {
     // Check if it's a holiday first
     const holidayCheck = isHoliday(date);
     if (holidayCheck.isHoliday) return 'holiday';
+
+    // Check if user is on approved leave
+    if (isUserOnLeave(userId, dateStr)) return 'on_leave';
 
     // If there's no record or no clock in
     if (!record || !record.clock_in_time) {
@@ -126,7 +161,6 @@ export function useAttendanceTable() {
     // Get all dates in range
     const datesInRange = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
     const today = new Date();
-    
     const rows: AttendanceTableRow[] = [];
     
     // Filter employees based on selection
@@ -145,8 +179,8 @@ export function useAttendanceTable() {
         );
         
         const holidayCheck = isHoliday(date);
-        const status = getStatus(record || null, date, employee.work_end_time);
-        
+        const onLeave = isUserOnLeave(employee.user_id, dateStr);
+        const status = getStatus(record || null, date, employee.work_end_time, employee.user_id, dateStr);
         if (record) {
           rows.push({
             id: record.id,
@@ -165,6 +199,7 @@ export function useAttendanceTable() {
             status,
             work_hours: calculateWorkHours(record.clock_in_time, record.clock_out_time),
             holiday_name: holidayCheck.isHoliday ? holidayCheck.reason : undefined,
+            is_on_leave: onLeave,
           });
         } else {
           // Create row for missing attendance
@@ -185,6 +220,7 @@ export function useAttendanceTable() {
             status,
             work_hours: null,
             holiday_name: holidayCheck.isHoliday ? holidayCheck.reason : undefined,
+            is_on_leave: onLeave,
           });
         }
       }
@@ -196,7 +232,7 @@ export function useAttendanceTable() {
       if (dateCompare !== 0) return dateCompare;
       return a.user_name.localeCompare(b.user_name);
     });
-  }, [users, attendanceRecords, dateRange, selectedEmployee, isHoliday]);
+  }, [users, attendanceRecords, approvedLeaves, dateRange, selectedEmployee, isHoliday]);
 
   const stats = useMemo(() => {
     const activeEmployees = users.filter(u => u.is_active && u.role === 'employee');
