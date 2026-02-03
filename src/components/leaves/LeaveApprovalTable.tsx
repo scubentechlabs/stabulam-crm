@@ -205,7 +205,7 @@ export function LeaveApprovalTable({
                   {leave.has_advance_notice ? (
                     <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Yes</Badge>
                   ) : (
-                    <Badge variant="destructive" className="bg-red-500/10 text-red-600 border-red-500/20">No (₹250)</Badge>
+                    <Badge variant="destructive" className="bg-red-500/10 text-red-600 border-red-500/20">No</Badge>
                   )}
                 </TableCell>
                 <TableCell className="max-w-[150px] truncate">
