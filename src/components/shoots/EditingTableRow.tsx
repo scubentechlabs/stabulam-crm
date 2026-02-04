@@ -127,6 +127,7 @@ export const EditingTableRow = memo(function EditingTableRow({
         <div>
           <p className="font-medium">{shoot.event_name}</p>
           <p className="text-sm text-muted-foreground">{shoot.brand_name}</p>
+          <p className="text-xs text-muted-foreground/60 font-mono">ID: {shoot.id.slice(0, 8)}</p>
         </div>
       </TableCell>
       <TableCell>
