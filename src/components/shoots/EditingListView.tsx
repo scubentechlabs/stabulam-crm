@@ -10,12 +10,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  PlayCircle, 
-  Clock, 
-  Eye, 
-  Send, 
-  RotateCcw, 
-  CheckCircle2, 
   Video,
   Calendar as CalendarIcon,
   Search,
@@ -36,61 +30,13 @@ interface EditingListViewProps {
   onEditingStatusChange?: (shootId: string, editingStatus: EditingStatus) => void;
 }
 
-const editingStatusConfig: Record<EditingStatus, { label: string; icon: React.ElementType; color: string; bgColor: string; borderColor: string; pillBg: string; pillText: string }> = {
-  not_started: { 
-    label: 'Not Started', 
-    icon: Clock, 
-    color: 'text-gray-600 dark:text-gray-400',
-    bgColor: 'bg-gray-50 dark:bg-gray-900/50',
-    borderColor: 'border-gray-200 dark:border-gray-700',
-    pillBg: 'bg-red-700 hover:bg-red-800',
-    pillText: 'text-white'
-  },
-  editing: { 
-    label: 'Editing', 
-    icon: PlayCircle, 
-    color: 'text-blue-600 dark:text-blue-400',
-    bgColor: 'bg-blue-50 dark:bg-blue-900/30',
-    borderColor: 'border-blue-200 dark:border-blue-700',
-    pillBg: 'bg-emerald-600 hover:bg-emerald-700',
-    pillText: 'text-white'
-  },
-  internal_review: { 
-    label: 'Internal Review', 
-    icon: Eye, 
-    color: 'text-purple-600 dark:text-purple-400',
-    bgColor: 'bg-purple-50 dark:bg-purple-900/30',
-    borderColor: 'border-purple-200 dark:border-purple-700',
-    pillBg: 'bg-blue-600 hover:bg-blue-700',
-    pillText: 'text-white'
-  },
-  sent_to_client: { 
-    label: 'Sent to Client', 
-    icon: Send, 
-    color: 'text-amber-600 dark:text-amber-400',
-    bgColor: 'bg-amber-50 dark:bg-amber-900/30',
-    borderColor: 'border-amber-200 dark:border-amber-700',
-    pillBg: 'bg-purple-600 hover:bg-purple-700',
-    pillText: 'text-white'
-  },
-  revisions_round: { 
-    label: 'Revisions Round', 
-    icon: RotateCcw, 
-    color: 'text-orange-600 dark:text-orange-400',
-    bgColor: 'bg-orange-50 dark:bg-orange-900/30',
-    borderColor: 'border-orange-200 dark:border-orange-700',
-    pillBg: 'bg-red-700 hover:bg-red-800',
-    pillText: 'text-white'
-  },
-  final_delivered: { 
-    label: 'Final Delivered', 
-    icon: CheckCircle2, 
-    color: 'text-green-600 dark:text-green-400',
-    bgColor: 'bg-green-50 dark:bg-green-900/30',
-    borderColor: 'border-green-200 dark:border-green-700',
-    pillBg: 'bg-emerald-600 hover:bg-emerald-700',
-    pillText: 'text-white'
-  },
+const statusLabels: Record<EditingStatus, string> = {
+  not_started: 'Not Started',
+  editing: 'Editing',
+  internal_review: 'Internal Review',
+  sent_to_client: 'Sent to Client',
+  revisions_round: 'Revisions Round',
+  final_delivered: 'Final Delivered',
 };
 
 const statusOrder: EditingStatus[] = ['not_started', 'editing', 'internal_review', 'sent_to_client', 'revisions_round', 'final_delivered'];
@@ -139,13 +85,6 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
     });
   }, [editorAssignedShoots, searchQuery, stageFilter, dateRange]);
 
-  const getShootsByStatus = useCallback((status: EditingStatus) => {
-    return filteredShoots.filter(shoot => (shoot.editing_status || 'not_started') === status);
-  }, [filteredShoots]);
-
-  const getStatusCount = useCallback((status: EditingStatus) => {
-    return getShootsByStatus(status).length;
-  }, [getShootsByStatus]);
 
   // CRITICAL: Handle status change with memoized callback
   // This ensures each row receives a stable function reference
@@ -159,7 +98,7 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
       totalShoots: editorAssignedShoots.length,
     });
     
-    const newStatusLabel = editingStatusConfig[newStatus].label;
+    const newStatusLabel = statusLabels[newStatus];
     
     // CRITICAL: Call the parent handler with ONLY this specific shootId
     // The shootId is passed directly from the row component
@@ -241,7 +180,7 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
                 <SelectItem value="all">All Stages</SelectItem>
                 {statusOrder.map((status) => (
                   <SelectItem key={status} value={status}>
-                    {editingStatusConfig[status].label}
+                    {statusLabels[status]}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -263,67 +202,54 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
         </CardContent>
       </Card>
 
-      {/* All Status Tables - Show each stage as a separate section */}
-      {statusOrder.map((status) => {
-        const shootsForStatus = getShootsByStatus(status);
-        const StatusIcon = editingStatusConfig[status].icon;
-        const config = editingStatusConfig[status];
-        
-        // Skip empty sections if a specific stage filter is applied (not 'all')
-        if (stageFilter !== 'all' && stageFilter !== status) {
-          return null;
-        }
-
-        return (
-          <Card key={status}>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <StatusIcon className={cn("h-5 w-5", config.color)} />
-                {config.label}
-                <Badge variant="secondary" className="ml-2">
-                  {shootsForStatus.length} shoots
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {shootsForStatus.length === 0 ? (
-                <div className="text-center py-6 text-muted-foreground">
-                  <Video className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No shoots in "{config.label}" status</p>
-                </div>
-              ) : (
-                <div className="rounded-md border overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Event / Brand</TableHead>
-                        <TableHead>Shoot Date</TableHead>
-                        <TableHead>Location</TableHead>
-                        <TableHead>Editor</TableHead>
-                        <TableHead>Current Stage</TableHead>
-                        <TableHead>Deadline</TableHead>
-                        <TableHead>Drive Link</TableHead>
-                        <TableHead>Requirements / Instructions</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {shootsForStatus.map((shoot) => (
-                        <EditingTableRow
-                          key={shoot.id}
-                          shoot={shoot}
-                          onShootClick={onShootClick}
-                          onStatusChange={handleStatusChange}
-                        />
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        );
-      })}
+      {/* Single Table with All Shoots */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Video className="h-5 w-5 text-primary" />
+            All Editing Projects
+            <Badge variant="secondary" className="ml-2">
+              {filteredShoots.length} shoots
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {filteredShoots.length === 0 ? (
+            <div className="text-center py-6 text-muted-foreground">
+              <Video className="h-10 w-10 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">No shoots found</p>
+            </div>
+          ) : (
+            <div className="rounded-md border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Event / Brand</TableHead>
+                    <TableHead>Shoot Date</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Editor</TableHead>
+                    <TableHead>Current Stage</TableHead>
+                    <TableHead>Deadline</TableHead>
+                    <TableHead>Drive Link</TableHead>
+                    <TableHead>Requirements / Instructions</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredShoots.map((shoot) => (
+                    <EditingTableRow
+                      key={shoot.id}
+                      shoot={shoot}
+                      onShootClick={onShootClick}
+                      onStatusChange={handleStatusChange}
+                    />
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
