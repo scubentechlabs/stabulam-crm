@@ -357,9 +357,13 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
                           )}
                         </TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()}>
-                          <DropdownMenu>
+                          <DropdownMenu modal={false}>
                             <DropdownMenuTrigger asChild>
-                              <button type="button" className="focus:outline-none">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-auto p-0 hover:bg-transparent focus-visible:ring-0"
+                              >
                                 {(() => {
                                   const statusConfig = editingStatusConfig[currentEditingStatus];
                                   const StatusIcon = statusConfig.icon;
@@ -374,7 +378,7 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
                                     </Badge>
                                   );
                                 })()}
-                              </button>
+                              </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start" className="w-48 bg-popover z-50">
                               <DropdownMenuLabel>Change Editing Status</DropdownMenuLabel>
@@ -386,8 +390,8 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
                                 return (
                                   <DropdownMenuItem
                                     key={statusKey}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
+                                    onSelect={(e) => {
+                                      e.preventDefault();
                                       handleStatusChange(shoot.id, statusKey);
                                     }}
                                     className="p-1 focus:bg-transparent"
