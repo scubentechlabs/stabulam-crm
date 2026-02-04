@@ -156,28 +156,30 @@ export function useShoots() {
       // can momentarily fetch with 0 assignments before assignment rows are visible.
       // IMPORTANT: Only preserve assignments for *very new* shoots to avoid breaking
       // legitimate cases where a shoot truly has 0 members (e.g., after removals).
+      // CRITICAL: Never merge editing_status or status from previous state - always use server data
       setShoots(prev => {
         const prevMap = new Map(prev.map(s => [s.id, s]));
         const now = Date.now();
 
-        return Array.from(shootsMap.values()).map((s) => {
-          const prevShoot = prevMap.get(s.id);
-          if (!prevShoot) return s;
+        return Array.from(shootsMap.values()).map((serverShoot) => {
+          const prevShoot = prevMap.get(serverShoot.id);
+          if (!prevShoot) return serverShoot;
 
-          const createdAtMs = Number.isNaN(Date.parse(s.created_at)) ? 0 : Date.parse(s.created_at);
+          const createdAtMs = Number.isNaN(Date.parse(serverShoot.created_at)) ? 0 : Date.parse(serverShoot.created_at);
           const isVeryNew = createdAtMs > 0 && now - createdAtMs < 10_000;
 
           const shouldPreserveAssignments =
             isVeryNew &&
             (prevShoot.assignments?.length ?? 0) > 0 &&
-            (s.assignments?.length ?? 0) === 0;
+            (serverShoot.assignments?.length ?? 0) === 0;
 
-          const mergedAssignments = shouldPreserveAssignments ? prevShoot.assignments : s.assignments;
-          const mergedEditor = s.assigned_editor ?? prevShoot.assigned_editor ?? null;
+          const mergedAssignments = shouldPreserveAssignments ? prevShoot.assignments : serverShoot.assignments;
+          const mergedEditor = serverShoot.assigned_editor ?? prevShoot.assigned_editor ?? null;
 
+          // CRITICAL: Always use server data for status fields - never merge from previous state
+          // This ensures that when one shoot is updated, other shoots don't get their status overwritten
           return {
-            ...prevShoot,
-            ...s,
+            ...serverShoot,  // Server data takes full precedence
             assignments: mergedAssignments,
             assigned_editor: mergedEditor,
           };
@@ -363,18 +365,27 @@ export function useShoots() {
   const updateShoot = async (shootId: string, data: UpdateShootData) => {
     if (!user) return { error: new Error('Not authenticated') };
 
+    // Store the shootId explicitly to ensure we only update the correct shoot
+    const targetShootId = shootId;
+
     // Snapshot current state for rollback on error
     let previousShoots: ShootWithAssignments[] = [];
 
     try {
       // Capture previous state before optimistic update
       setShoots(prev => {
-        previousShoots = prev;
-        return prev.map(shoot => 
-          shoot.id === shootId 
-            ? { ...shoot, ...data, updated_at: new Date().toISOString() }
-            : shoot
-        );
+        previousShoots = [...prev]; // Create a copy for rollback
+        return prev.map(shoot => {
+          // CRITICAL: Strict ID comparison - only update the exact shoot
+          if (shoot.id !== targetShootId) {
+            return shoot;
+          }
+          return { 
+            ...shoot, 
+            ...data, 
+            updated_at: new Date().toISOString() 
+          };
+        });
       });
 
       const { data: updatedData, error } = await supabase
@@ -383,7 +394,7 @@ export function useShoots() {
           ...data,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', shootId)
+        .eq('id', targetShootId)
         .select()
         .single();
 
@@ -395,17 +406,19 @@ export function useShoots() {
 
       // Update with confirmed server data to ensure consistency
       if (updatedData) {
-        setShoots(prev => prev.map(shoot => 
-          shoot.id === shootId 
-            ? { 
-                ...shoot, 
-                ...updatedData,
-                status: updatedData.status || 'pending',
-                editing_status: updatedData.editing_status || 'not_started',
-                location_coordinates: updatedData.location_coordinates as { lat: number; lng: number } | null,
-              }
-            : shoot
-        ));
+        setShoots(prev => prev.map(shoot => {
+          // CRITICAL: Strict ID comparison - only update the exact shoot
+          if (shoot.id !== targetShootId) {
+            return shoot;
+          }
+          return { 
+            ...shoot, 
+            ...updatedData,
+            status: updatedData.status || 'pending',
+            editing_status: updatedData.editing_status || 'not_started',
+            location_coordinates: updatedData.location_coordinates as { lat: number; lng: number } | null,
+          };
+        }));
       }
 
       // No toast here - let the caller (e.g., EditingListView) handle the toast
