@@ -97,16 +97,10 @@ const statusOrder: EditingStatus[] = ['not_started', 'editing', 'internal_review
 
 export function EditingListView({ shoots, onShootClick, onEditingStatusChange }: EditingListViewProps) {
   // Only show shoots that have been "Given by Editor" (status === 'given_by_editor')
-  const editorAssignedShoots = useMemo(() => {
-    const filtered = shoots.filter(shoot => shoot.status === 'given_by_editor');
-    console.log('[EditingListView] editorAssignedShoots:', filtered.map(s => ({
-      id: s.id.slice(0, 8),
-      event_name: s.event_name,
-      editing_status: s.editing_status,
-      status: s.status,
-    })));
-    return filtered;
-  }, [shoots]);
+  const editorAssignedShoots = useMemo(() => 
+    shoots.filter(shoot => shoot.status === 'given_by_editor'),
+    [shoots]
+  );
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
