@@ -363,34 +363,52 @@ export function useShoots() {
   const updateShoot = async (shootId: string, data: UpdateShootData) => {
     if (!user) return { error: new Error('Not authenticated') };
 
-    try {
-      // Optimistically update local state first
-      setShoots(prev => prev.map(shoot => 
-        shoot.id === shootId 
-          ? { ...shoot, ...data, updated_at: new Date().toISOString() }
-          : shoot
-      ));
+    // Snapshot current state for rollback on error
+    let previousShoots: ShootWithAssignments[] = [];
 
-      const { error } = await supabase
+    try {
+      // Capture previous state before optimistic update
+      setShoots(prev => {
+        previousShoots = prev;
+        return prev.map(shoot => 
+          shoot.id === shootId 
+            ? { ...shoot, ...data, updated_at: new Date().toISOString() }
+            : shoot
+        );
+      });
+
+      const { data: updatedData, error } = await supabase
         .from('shoots')
         .update({
           ...data,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', shootId);
+        .eq('id', shootId)
+        .select()
+        .single();
 
       if (error) {
-        // Revert on error by refetching (without loading state)
-        await fetchShoots(false);
+        // Rollback to previous state on error
+        setShoots(previousShoots);
         throw error;
       }
 
-      toast({
-        title: 'Success',
-        description: 'Shoot updated successfully',
-      });
+      // Update with confirmed server data to ensure consistency
+      if (updatedData) {
+        setShoots(prev => prev.map(shoot => 
+          shoot.id === shootId 
+            ? { 
+                ...shoot, 
+                ...updatedData,
+                status: updatedData.status || 'pending',
+                editing_status: updatedData.editing_status || 'not_started',
+                location_coordinates: updatedData.location_coordinates as { lat: number; lng: number } | null,
+              }
+            : shoot
+        ));
+      }
 
-      // No need to refetch - realtime subscription will handle sync
+      // No toast here - let the caller (e.g., EditingListView) handle the toast
       return { error: null };
     } catch (error) {
       console.error('Error updating shoot:', error);
