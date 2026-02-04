@@ -194,62 +194,6 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
 
   return (
     <div className="space-y-6">
-      {/* Status Cards Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {statusOrder.map((status) => {
-          const config = editingStatusConfig[status];
-          const Icon = config.icon;
-          const count = getStatusCount(status);
-          const isActive = activeStatus === status;
-          
-          return (
-            <button
-              key={status}
-              onClick={() => setActiveStatus(status)}
-              className={cn(
-                "relative p-4 rounded-xl border-2 transition-all duration-200 text-left group",
-                "hover:shadow-md hover:scale-[1.02]",
-                isActive 
-                  ? `${config.bgColor} ${config.borderColor} shadow-sm` 
-                  : "bg-card border-border hover:border-muted-foreground/30"
-              )}
-            >
-              <div className="flex flex-col gap-2">
-                <div className={cn(
-                  "p-2 rounded-lg w-fit transition-colors",
-                  isActive ? config.bgColor : "bg-muted/50 group-hover:bg-muted"
-                )}>
-                  <Icon className={cn(
-                    "h-5 w-5 transition-colors",
-                    isActive ? config.color : "text-muted-foreground group-hover:text-foreground"
-                  )} />
-                </div>
-                <div>
-                  <p className={cn(
-                    "text-2xl font-bold transition-colors",
-                    isActive ? config.color : "text-foreground"
-                  )}>
-                    {count}
-                  </p>
-                  <p className={cn(
-                    "text-xs font-medium truncate transition-colors",
-                    isActive ? config.color : "text-muted-foreground"
-                  )}>
-                    {config.label}
-                  </p>
-                </div>
-              </div>
-              {isActive && (
-                <div className={cn(
-                  "absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-1 rounded-t-full",
-                  config.color.replace('text-', 'bg-')
-                )} />
-              )}
-            </button>
-          );
-        })}
-      </div>
-
       {/* Filter Section */}
       <Card>
         <CardContent className="pt-4">
