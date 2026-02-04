@@ -107,18 +107,6 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
   const [stageFilter, setStageFilter] = useState<EditingStatus | 'all'>('all');
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
-  // Find the first status with at least one shoot, or default to 'not_started'
-  const getDefaultStatus = (): EditingStatus => {
-    for (const status of statusOrder) {
-      if (editorAssignedShoots.some(shoot => (shoot.editing_status || 'not_started') === status)) {
-        return status;
-      }
-    }
-    return 'not_started';
-  };
-
-  const [activeStatus, setActiveStatus] = useState<EditingStatus>(() => getDefaultStatus());
-
   // Apply filters to shoots
   const filteredShoots = useMemo(() => {
     return editorAssignedShoots.filter(shoot => {
@@ -179,9 +167,6 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
       onEditingStatusChange(shootId, newStatus);
     }
     
-    // Switch to the new status tab so user sees the shoot in its new location
-    setActiveStatus(newStatus);
-    
     // Show success toast with shoot name for clarity
     toast({
       title: "Status Updated",
@@ -196,9 +181,6 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
   };
 
   const hasActiveFilters = searchQuery || stageFilter !== 'all' || dateRange?.from;
-
-  const ActiveStatusIcon = editingStatusConfig[activeStatus].icon;
-  const shootsForActiveStatus = getShootsByStatus(activeStatus);
 
   return (
     <div className="space-y-6">
@@ -281,59 +263,67 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
         </CardContent>
       </Card>
 
-      {/* Active Status Table */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <ActiveStatusIcon className={cn("h-5 w-5", editingStatusConfig[activeStatus].color)} />
-            {editingStatusConfig[activeStatus].label}
-            <Badge variant="secondary" className="ml-2">
-              {getStatusCount(activeStatus)} shoots
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {shootsForActiveStatus.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Video className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>No shoots in "{editingStatusConfig[activeStatus].label}" status</p>
-              {hasActiveFilters && (
-                <Button variant="link" onClick={handleResetFilters} className="mt-2">
-                  Clear filters to see all shoots
-                </Button>
+      {/* All Status Tables - Show each stage as a separate section */}
+      {statusOrder.map((status) => {
+        const shootsForStatus = getShootsByStatus(status);
+        const StatusIcon = editingStatusConfig[status].icon;
+        const config = editingStatusConfig[status];
+        
+        // Skip empty sections if a specific stage filter is applied (not 'all')
+        if (stageFilter !== 'all' && stageFilter !== status) {
+          return null;
+        }
+
+        return (
+          <Card key={status}>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <StatusIcon className={cn("h-5 w-5", config.color)} />
+                {config.label}
+                <Badge variant="secondary" className="ml-2">
+                  {shootsForStatus.length} shoots
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {shootsForStatus.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  <Video className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No shoots in "{config.label}" status</p>
+                </div>
+              ) : (
+                <div className="rounded-md border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Event / Brand</TableHead>
+                        <TableHead>Shoot Date</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Editor</TableHead>
+                        <TableHead>Current Stage</TableHead>
+                        <TableHead>Deadline</TableHead>
+                        <TableHead>Drive Link</TableHead>
+                        <TableHead>Requirements / Instructions</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {shootsForStatus.map((shoot) => (
+                        <EditingTableRow
+                          key={shoot.id}
+                          shoot={shoot}
+                          onShootClick={onShootClick}
+                          onStatusChange={handleStatusChange}
+                        />
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
-            </div>
-          ) : (
-            <div className="rounded-md border overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Event / Brand</TableHead>
-                    <TableHead>Shoot Date</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Editor</TableHead>
-                    <TableHead>Current Stage</TableHead>
-                    <TableHead>Deadline</TableHead>
-                    <TableHead>Drive Link</TableHead>
-                    <TableHead>Requirements / Instructions</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {shootsForActiveStatus.map((shoot) => (
-                    <EditingTableRow
-                      key={shoot.id}
-                      shoot={shoot}
-                      onShootClick={onShootClick}
-                      onStatusChange={handleStatusChange}
-                    />
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }
