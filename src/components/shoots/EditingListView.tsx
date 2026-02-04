@@ -170,15 +170,23 @@ export function EditingListView({ shoots, onShootClick, onEditingStatusChange }:
 
   // Handle status change and switch to the new status tab
   const handleStatusChange = (shootId: string, newStatus: EditingStatus) => {
+    // Find the shoot being changed for better logging
+    const targetShoot = editorAssignedShoots.find(s => s.id === shootId);
+    console.log('[EditingListView] Changing status:', {
+      shootId,
+      shootName: targetShoot?.event_name,
+      newStatus,
+    });
+    
     const newStatusLabel = editingStatusConfig[newStatus].label;
-    // Call the parent handler first (optimistic update)
+    // Call the parent handler with ONLY this specific shootId
     onEditingStatusChange?.(shootId, newStatus);
     // Switch to the new status tab so user sees the shoot in its new location
     setActiveStatus(newStatus);
-    // Show success toast
+    // Show success toast with shoot name for clarity
     toast({
       title: "Status Updated",
-      description: `Editing status changed to "${newStatusLabel}"`,
+      description: `"${targetShoot?.event_name}" changed to "${newStatusLabel}"`,
     });
   };
 
