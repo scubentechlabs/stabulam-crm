@@ -1,5 +1,5 @@
 import { memo, useCallback } from 'react';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TableCell, TableRow } from '@/components/ui/table';
@@ -133,7 +133,7 @@ export const EditingTableRow = memo(function EditingTableRow({
       <TableCell>
         <div className="flex items-center gap-1.5">
           <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-          <span>{format(parseISO(shoot.shoot_date), 'MMM d, yyyy')}</span>
+          <span>{format(new Date(shoot.shoot_date + 'T00:00:00'), 'MMM d, yyyy')}</span>
         </div>
       </TableCell>
       <TableCell>
@@ -212,7 +212,7 @@ export const EditingTableRow = memo(function EditingTableRow({
       <TableCell>
         {shoot.editor_deadline ? (
           <span className="text-sm">
-            {format(parseISO(shoot.editor_deadline), 'MMM d, yyyy')}
+            {format(new Date(shoot.editor_deadline + 'T00:00:00'), 'MMM d, yyyy')}
           </span>
         ) : (
           <span className="text-muted-foreground text-sm">—</span>
