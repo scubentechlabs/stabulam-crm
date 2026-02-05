@@ -25,29 +25,50 @@
      
      console.log(`[auto-clock-out] Running at ${istNow.toISOString()} (IST), today: ${todayIST}`);
  
+    // Get all admin user IDs to exclude them
+    const { data: adminRoles, error: adminError } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .eq('role', 'admin');
+
+    if (adminError) {
+      console.error('[auto-clock-out] Error fetching admin roles:', adminError);
+      throw adminError;
+    }
+
+    const adminUserIds = adminRoles?.map(r => r.user_id) || [];
+    console.log(`[auto-clock-out] Excluding ${adminUserIds.length} admin users`);
+
      // Find all attendance records where:
      // 1. clock_in_time exists
      // 2. clock_out_time is null
      // 3. date is before today (past dates)
-     const { data: openAttendance, error: fetchError } = await supabase
+    // 4. user is NOT an admin
+    let query = supabase
        .from('attendance')
        .select(`
          id,
          user_id,
          date,
-         clock_in_time,
-         clock_out_time
+        clock_in_time
        `)
        .not('clock_in_time', 'is', null)
        .is('clock_out_time', null)
        .lt('date', todayIST);
  
+    // Exclude admin users if there are any
+    if (adminUserIds.length > 0) {
+      query = query.not('user_id', 'in', `(${adminUserIds.join(',')})`);
+    }
+
+    const { data: openAttendance, error: fetchError } = await query;
+
      if (fetchError) {
        console.error('[auto-clock-out] Error fetching open attendance:', fetchError);
        throw fetchError;
      }
  
-     console.log(`[auto-clock-out] Found ${openAttendance?.length || 0} records needing auto clock-out`);
+    console.log(`[auto-clock-out] Found ${openAttendance?.length || 0} employee records needing auto clock-out`);
  
      if (!openAttendance || openAttendance.length === 0) {
        return new Response(
@@ -88,11 +109,21 @@
  
        console.log(`[auto-clock-out] Processing: ${profile?.full_name || record.user_id} - ${record.date}, setting clock_out to ${clockOutUTC}`);
  
+      // Get the existing notes first
+      const { data: existingRecord } = await supabase
+        .from('attendance')
+        .select('notes')
+        .eq('id', record.id)
+        .single();
+
+      const existingNotes = existingRecord?.notes || '';
+      const updatedNotes = existingNotes ? `${existingNotes} | Auto clock-out applied` : 'Auto clock-out applied';
+
        const { error: updateError } = await supabase
          .from('attendance')
          .update({ 
            clock_out_time: clockOutUTC,
-           notes: (record as any).notes ? `${(record as any).notes} | Auto clock-out applied` : 'Auto clock-out applied'
+          notes: updatedNotes
          })
          .eq('id', record.id);
  
