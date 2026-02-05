@@ -15,9 +15,10 @@ interface TaskListProps {
   tasks: Task[];
   emptyMessage?: string;
   showType?: boolean;
+  alwaysShowType?: boolean;
 }
 
-export function TaskList({ tasks, emptyMessage = 'No tasks yet', showType = false }: TaskListProps) {
+export function TaskList({ tasks, emptyMessage = 'No tasks yet', showType = false, alwaysShowType = false }: TaskListProps) {
   if (tasks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
@@ -30,7 +31,7 @@ export function TaskList({ tasks, emptyMessage = 'No tasks yet', showType = fals
   return (
     <div className="space-y-2">
       {tasks.map((task) => (
-        <TaskItem key={task.id} task={task} showType={showType} />
+        <TaskItem key={task.id} task={task} showType={showType || alwaysShowType} />
       ))}
     </div>
   );
@@ -46,6 +47,7 @@ function TaskItem({ task, showType }: TaskItemProps) {
   const isCompleted = task.status === 'completed';
   const isUtod = task.task_type === 'utod' || task.task_type === 'urgent_tod';
   const isEod = task.task_type === 'eod';
+  const isTod = task.task_type === 'tod';
 
   // Fetch assigner name if task was assigned by someone else
   useEffect(() => {
@@ -72,15 +74,15 @@ function TaskItem({ task, showType }: TaskItemProps) {
   };
 
   const getBadgeColor = () => {
-    if (isUtod) return 'bg-red-500 text-white';
-    if (isEod) return 'bg-green-500 text-white';
-    return 'bg-blue-500 text-white'; // TOD = blue
+    if (isUtod) return 'bg-red-500 hover:bg-red-500 text-white';
+    if (isEod) return 'bg-green-500 hover:bg-green-500 text-white';
+    return 'bg-blue-500 hover:bg-blue-500 text-white'; // TOD = blue
   };
 
   return (
     <Card className={cn(
       'transition-all',
-      isCompleted && 'opacity-75'
+      isCompleted && 'bg-muted/30'
     )}>
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
@@ -106,7 +108,7 @@ function TaskItem({ task, showType }: TaskItemProps) {
                 {task.title}
               </h4>
               
-              {showType && (
+              {(showType || isCompleted) && (
                 <Badge className={cn('text-xs', getBadgeColor())}>
                   {getTaskLabel()}
                 </Badge>
