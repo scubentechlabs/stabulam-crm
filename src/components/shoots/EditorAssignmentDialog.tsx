@@ -87,11 +87,18 @@ export function EditorAssignmentDialog({
   const handleSubmit = async () => {
     if (!validateForm()) return;
     
+    // Format deadline using local date components to prevent timezone shifts
+    // Using toISOString() would convert to UTC which can shift the date by one day
+    const year = deadline!.getFullYear();
+    const month = String(deadline!.getMonth() + 1).padStart(2, '0');
+    const day = String(deadline!.getDate()).padStart(2, '0');
+    const formattedDeadline = `${year}-${month}-${day}`;
+    
     await onSubmit({
       editor_drive_link: driveLink,
       editor_description: description,
       assigned_editor_id: selectedEditor,
-      editor_deadline: deadline!.toISOString().split('T')[0],
+      editor_deadline: formattedDeadline,
     });
     
     // Reset form
