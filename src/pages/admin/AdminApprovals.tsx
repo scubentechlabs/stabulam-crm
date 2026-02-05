@@ -1,18 +1,35 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, Briefcase, Loader2 } from 'lucide-react';
+import { Calendar, Briefcase, Loader2, History } from 'lucide-react';
 import { useLeaves } from '@/hooks/useLeaves';
 import { useExtraWork } from '@/hooks/useExtraWork';
 import { LeaveApprovalTable } from '@/components/leaves/LeaveApprovalTable';
 import { ExtraWorkApprovalTable } from '@/components/extra-work/ExtraWorkApprovalTable';
+import { LeaveTable } from '@/components/leaves/LeaveTable';
+import { ExtraWorkTable } from '@/components/extra-work/ExtraWorkTable';
 
 export default function AdminApprovals() {
   const [isProcessing, setIsProcessing] = useState(false);
-  const { pendingLeaves, isLoading: leavesLoading, updateLeaveStatus } = useLeaves();
-  const { pendingRequests: pendingExtraWork, isLoading: extraWorkLoading, updateExtraWorkStatus } = useExtraWork();
+  const { pendingLeaves, approvedLeaves, rejectedLeaves, isLoading: leavesLoading, updateLeaveStatus } = useLeaves();
+  const { pendingRequests: pendingExtraWork, approvedRequests: approvedExtraWork, rejectedRequests: rejectedExtraWork, isLoading: extraWorkLoading, updateExtraWorkStatus } = useExtraWork();
 
   const isLoading = leavesLoading || extraWorkLoading;
+
+  // Combine approved and rejected for history views
+  const leaveHistory = useMemo(() => 
+    [...approvedLeaves, ...rejectedLeaves].sort((a, b) => 
+      new Date(b.processed_at || b.created_at).getTime() - new Date(a.processed_at || a.created_at).getTime()
+    ), 
+    [approvedLeaves, rejectedLeaves]
+  );
+
+  const extraWorkHistory = useMemo(() => 
+    [...approvedExtraWork, ...rejectedExtraWork].sort((a, b) => 
+      new Date(b.processed_at || b.created_at).getTime() - new Date(a.processed_at || a.created_at).getTime()
+    ), 
+    [approvedExtraWork, rejectedExtraWork]
+  );
 
   const handleApproveLeave = async (leaveId: string, comments?: string, penalty?: number) => {
     setIsProcessing(true);
@@ -72,6 +89,14 @@ export default function AdminApprovals() {
             <Briefcase className="h-4 w-4" />
             Extra Work ({pendingExtraWork.length})
           </TabsTrigger>
+            <TabsTrigger value="leave-history" className="gap-2">
+              <History className="h-4 w-4" />
+              Leave History ({leaveHistory.length})
+            </TabsTrigger>
+            <TabsTrigger value="extra-work-history" className="gap-2">
+              <History className="h-4 w-4" />
+              Extra Work History ({extraWorkHistory.length})
+            </TabsTrigger>
         </TabsList>
 
         <TabsContent value="leaves" className="mt-6">
@@ -103,6 +128,38 @@ export default function AdminApprovals() {
                 onApprove={handleApproveExtraWork}
                 onReject={handleRejectExtraWork}
                 isProcessing={isProcessing}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="leave-history" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Leave History</CardTitle>
+              <CardDescription>View all approved and rejected leave requests</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <LeaveTable
+                leaves={leaveHistory}
+                showEmployeeName
+                emptyMessage="No leave history found"
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="extra-work-history" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Extra Work History</CardTitle>
+              <CardDescription>View all approved and rejected extra work requests</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ExtraWorkTable
+                extraWorkList={extraWorkHistory}
+                showEmployeeName
+                emptyMessage="No extra work history found"
               />
             </CardContent>
           </Card>
