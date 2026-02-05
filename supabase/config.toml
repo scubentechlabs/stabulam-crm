@@ -1,5 +1,8 @@
 project_id = "nhbumxmvtzuddribooks"
 
+[functions.auto-clock-out]
+verify_jwt = false
+
 [functions.generate-salary-pdf]
 verify_jwt = false
 
