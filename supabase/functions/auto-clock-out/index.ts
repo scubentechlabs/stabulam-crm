@@ -102,12 +102,15 @@
        const profile = profileMap.get(record.user_id);
        const workEndTime = profile?.work_end_time || '19:00:00';
        
-       // Create clock_out_time as date + work_end_time in IST, then convert to UTC
+      // Create clock_out_time as date + work_end_time + 30 minutes in IST, then convert to UTC
        // The date is stored as YYYY-MM-DD, work_end_time as HH:MM:SS
        const clockOutDateTimeIST = `${record.date}T${workEndTime}+05:30`;
-       const clockOutUTC = new Date(clockOutDateTimeIST).toISOString();
+      const clockOutDate = new Date(clockOutDateTimeIST);
+      // Add 30 minutes
+      clockOutDate.setMinutes(clockOutDate.getMinutes() + 30);
+      const clockOutUTC = clockOutDate.toISOString();
  
-       console.log(`[auto-clock-out] Processing: ${profile?.full_name || record.user_id} - ${record.date}, setting clock_out to ${clockOutUTC}`);
+      console.log(`[auto-clock-out] Processing: ${profile?.full_name || record.user_id} - ${record.date}, work_end: ${workEndTime}, setting clock_out to ${clockOutUTC} (end time + 30min)`);
  
       // Get the existing notes first
       const { data: existingRecord } = await supabase
