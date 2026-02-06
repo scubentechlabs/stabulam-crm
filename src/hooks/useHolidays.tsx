@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { queryKeys } from '@/lib/queryKeys';
 import { format } from 'date-fns';
 
 export interface Holiday {
@@ -29,7 +30,7 @@ export function useHolidays() {
 
   // Fetch all holidays
   const { data: holidays = [], isLoading } = useQuery({
-    queryKey: ['holidays'],
+    queryKey: queryKeys.holidays.list(),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('holidays')
@@ -39,6 +40,7 @@ export function useHolidays() {
       if (error) throw error;
       return data as Holiday[];
     },
+    staleTime: 1000 * 60 * 30, // 30 minutes - holidays rarely change
   });
 
   // Add holiday
@@ -60,7 +62,7 @@ export function useHolidays() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['holidays'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.holidays.all });
       toast({
         title: 'Holiday Added',
         description: 'The holiday has been added successfully.',
@@ -94,7 +96,7 @@ export function useHolidays() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['holidays'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.holidays.all });
       toast({
         title: 'Holiday Updated',
         description: 'The holiday has been updated successfully.',
@@ -120,7 +122,7 @@ export function useHolidays() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['holidays'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.holidays.all });
       toast({
         title: 'Holiday Deleted',
         description: 'The holiday has been deleted successfully.',

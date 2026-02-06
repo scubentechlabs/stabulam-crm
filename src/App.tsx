@@ -1,11 +1,14 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
+import { queryClient, setupCachePersistence } from "@/lib/queryClient";
+import { PrefetchProvider } from "@/components/PrefetchProvider";
+import { useEffect } from "react";
 
 // Pages
 import Auth from "./pages/Auth";
@@ -38,14 +41,16 @@ import AdminFlags from "./pages/admin/AdminFlags";
 import AdminHolidays from "./pages/admin/AdminHolidays";
 import Flags from "./pages/Flags";
 
-const queryClient = new QueryClient();
+// Initialize cache persistence on app load
+setupCachePersistence();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
+      <PrefetchProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
@@ -171,7 +176,8 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </TooltipProvider>
+        </TooltipProvider>
+      </PrefetchProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
